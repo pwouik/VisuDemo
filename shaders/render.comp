@@ -7,14 +7,29 @@ uniform uvec2 screen_size;
 uniform vec3 camera;
 uniform float time;
 
-
-float sdf( vec3 p0 ){
-    vec4 p = vec4(p0, 1.);
-    for(int i = 0; i < 16; i++){
-      p.xyz = mod(p.xyz-1.,2.)-1.;
-      p*=1.4/dot(p.xyz,p.xyz);
+	
+#define fold45(p)(p.y>p.x)?p.yx:p
+float sdf( vec3 p ){
+    float scale = 2.1, off0 = .8, off1 = .3, off2 = .83;
+    vec3 off =vec3(2.,.2,.1);
+    float s=1.0;
+    for(int i = 0;++i<20;) {
+      p.xy = abs(p.xy);
+      p.xy = fold45(p.xy);
+      p.y -= off0;
+      p.y = -abs(p.y);
+      p.y += off0;
+      p.x += off1;
+      p.xz = fold45(p.xz);
+      p.x -= off2;
+      p.xz = fold45(p.xz);
+      p.x += off1;
+      p -= off;
+      p *= scale;
+      p += off;
+      s *= scale;
     }
-    return (length(p.xz/p.w)*0.25);
+    return length(p)/s;
   }
 const uint max_iter = 128;
 
@@ -23,7 +38,7 @@ void main() {
         return;
     uvec3 grid_size = gl_WorkGroupSize * gl_NumWorkGroups;
     vec3 dir = normalize( mat3(inv_view) * vec3(inv_proj * vec4(float(gl_GlobalInvocationID.x)/grid_size.x*2.0-1.0, float(gl_GlobalInvocationID.y)/grid_size.y*2.0-1.0,1.0,1.0)));
-    vec3 pos = camera;
+    vec3 pos = camera / 100;
     uint steps = 0;
     for( int i=0; i<max_iter; i++ )
     {
