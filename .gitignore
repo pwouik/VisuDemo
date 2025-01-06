@@ -59,5 +59,7 @@ local_settings.cpp
 *.d 
 *.i 
 
+.cache
+
 # Temporary files
 *~
