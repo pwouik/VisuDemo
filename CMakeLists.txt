@@ -8,15 +8,24 @@ project (opengl-cmake-skeleton)
 # C4244 conversion double to float
 # C4100 idk 
 # C5039 idk
+# C5045 C5219 C4514 idk
+#ideally suppressed warning only comming from given path
 if(MSVC)
-    add_compile_options(/wd4710 /wd4711 /wd4191 /wd4244 /wd4100 /wd5039)
+    add_compile_options(/wd4710 /wd4711 /wd4191 /wd4244 /wd4100 /wd4514 /wd4464 /wd4820)
 endif()
 
 
 file(GLOB cpp_source_files "${CMAKE_SOURCE_DIR}/src/*.cpp")
 file(GLOB c_source_files "${CMAKE_SOURCE_DIR}/src/gl.c")
+file(GLOB IMGUI_source_files "${CMAKE_SOURCE_DIR}/include/imgui/*.cpp")
+
+#disable all warning for imgui src
+foreach(src_file ${IMGUI_source_files})
+    set_source_files_properties(${src_file} PROPERTIES COMPILE_FLAGS "/W0")
+endforeach()
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-add_executable(VisuDemo ${cpp_source_files} ${c_source_files} )
+add_executable(VisuDemo ${cpp_source_files} ${c_source_files} ${IMGUI_source_files})
 set_property(TARGET VisuDemo PROPERTY CXX_STANDARD 11)
 target_compile_options(VisuDemo PRIVATE -Wall -lGL -lglfw)
 

@@ -5,6 +5,10 @@
 #include <glad/gl.h>
 
 #include <GLFW/glfw3.h>
+
+#include "../include/imgui/_IMP_IMGUI.hpp" //all imgui dependencies here
+
+
 GLfloat cubeVertices[8][3] = { {-0.5, -0.5, -0.5}, {0.5, -0.5, -0.5}, {0.5, 0.5, -0.5}, {-0.5, 0.5, -0.5},
                               {-0.5, -0.5, 0.5},  {0.5, -0.5, 0.5},  {0.5, 0.5, 0.5},  {-0.5, 0.5, 0.5} };
 GLfloat cubeColors[6][3] = {
@@ -31,6 +35,7 @@ int main(void) {
 
     GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "[glad] GL with GLFW", NULL, NULL);
     glfwMakeContextCurrent(window);
+    utl::initIMGUI(window);
 
     glfwSetKeyCallback(window, key_callback);
     float p0x = 0.0;
@@ -60,6 +65,7 @@ int main(void) {
             p2y=ypos/HEIGHT*2.0-1.0;
         }
         glfwPollEvents();
+        utl::newframeIMGUI();
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
         {
             
@@ -67,9 +73,13 @@ int main(void) {
         glClearColor(0.0f, 0.0f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+
+        utl::enframeIMGUI();
+        utl::multiViewportIMGUI(window);
         glfwSwapBuffers(window);
     }
 
+    utl::shutdownIMGUI();
     glfwTerminate();
 
     return 0;
