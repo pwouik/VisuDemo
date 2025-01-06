@@ -1,4 +1,4 @@
-
+#pragma once
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -8,7 +8,7 @@
 
 namespace utl{
 
-void initIMGUI(GLFWwindow* window){
+static void initIMGUI(GLFWwindow* window){
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -23,7 +23,7 @@ void initIMGUI(GLFWwindow* window){
     ImGui_ImplOpenGL3_Init();
 }
 
-void newframeIMGUI(){
+static void newframeIMGUI(){
     // (Your code calls glfwPollEvents())
     // ...
     // Start the Dear ImGui frame
@@ -33,7 +33,7 @@ void newframeIMGUI(){
     ImGui::ShowDemoWindow(); // Show demo window! :)
 }
 
-void enframeIMGUI(){
+static void enframeIMGUI(){
     // Rendering
     // (Your code clears your framebuffer, renders your other stuff etc.)
     ImGui::Render();
@@ -41,7 +41,7 @@ void enframeIMGUI(){
     // (Your code calls glfwSwapBuffers() etc.)
 }
 
-void multiViewportIMGUI(GLFWwindow* window){
+static void multiViewportIMGUI(GLFWwindow* window){
     ImGuiIO& io = ImGui::GetIO();
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable){
         // Update and Render additional Platform Windows
@@ -53,7 +53,7 @@ void multiViewportIMGUI(GLFWwindow* window){
     }
 }
 
-void shutdownIMGUI(){
+static void shutdownIMGUI(){
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();

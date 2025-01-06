@@ -9,7 +9,6 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/matrix.hpp"
 #include "glm/ext.hpp"
-#include "imgui/_IMP_IMGUI.hpp" 
 #define BUFFER_OFFSET(offset) ((GLvoid*)(offset))
 
 using namespace std;

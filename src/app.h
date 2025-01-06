@@ -8,11 +8,7 @@
 #include <glad/gl.h>
 #include <cmath>
 #include <cstdio>
-#include <iostream>
-#include <vector>
-#include <sstream>
-#include <string>
-#include <fstream>
+#include "imgui/_IMP_IMGUI.hpp" 
 #define GLM_ENABLE_EXPERIMENTAL
 
 #define PI 3.14159265358979323f
@@ -24,6 +20,8 @@ public:
     App(int w,int h);
 	~App()
 	{
+
+        utl::shutdownIMGUI();
         glfwTerminate();
 	}
     void run();
