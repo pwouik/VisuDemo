@@ -1,2 +1,60 @@
-build
-.cache
+# Compiled object files
+*.o
+*.obj
+*.a
+*.lib
+
+# Executables
+*.exe
+*.bin
+
+# Debug files
+*.pdb
+*.idb
+
+# Visual Studio project files
+*.vcxproj
+*.vcxproj.filters
+*.sln
+*.user
+
+# clion config
+.idea/
+
+# CMake generated files
+build/
+cmake-build-debug/
+CMakeFiles/
+CMakeCache.txt
+CMakeLists.txt.user
+CMakeBuildSystem.txt
+
+# Doxygen generated files
+html/
+latex/
+rtf/
+man/
+
+# Profiling data
+*.prof
+
+# Coverage data
+*.gcda
+*.gcno
+
+# IDE-specific files
+*.suo 
+*.userprefs
+*.opendb
+*.VC.db
+
+# Local configuration files
+local_settings.h
+local_settings.cpp
+
+# Generated files by tools
+*.d 
+*.i 
+
+# Temporary files
+*~
