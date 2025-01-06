@@ -62,7 +62,10 @@ public:
     }
 
     //getter. Maybe put everything public so we don't have those ?
-    glm::vec3 getPos() const;
+    
+    glm::vec3 getPos() const {
+        return pos;
+    }
 
 private:
     GLFWwindow* window;
@@ -92,6 +95,7 @@ private:
     float pitch;
     float yaw;
     glm::vec3 pos;
+    glm::vec3 light_pos;
     float speed;
     GLuint compute_program;
     GLuint blit_program;

@@ -21,7 +21,7 @@ namespace ui{
         ImGui::Begin("Base info");
             ImGui::SeparatorText("generic debug info");
             glm::vec3 pos = app.getPos();
-            ImGui::Text("camera in %.2fx, %.2fy, %.2fz", pos.x, pos.y, pos.y);
+            ImGui::Text("camera in %.2fx, %.2fy, %.2fz", pos.x, pos.y, pos.z);
 
         ImGui::End();
     }
@@ -73,6 +73,7 @@ GLuint loadshader(const char* file,GLuint type)
 App::App(int w,int h)
 {
     pos = glm::vec3(0.0,0.0,0.0);
+    light_pos = glm::vec3(0.0,0.0,0.0);
     width = w;
     height = h;
     speed = 1.0;
@@ -156,10 +157,6 @@ App::App(int w,int h)
     glUniformMatrix4fv(glGetUniformLocation(compute_program, "persp"),1, GL_FALSE, glm::value_ptr(proj));
 }
 
-glm::vec3 App::getPos() const {
-    return pos;
-}
-
 void App::run(){
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -178,6 +175,9 @@ void App::run(){
 
         if(glfwGetKey(window, GLFW_KEY_D)==GLFW_PRESS){
             pos+= glm::rotateY(glm::vec3(1.0,0.0,0.0),yaw * PI / 180.0f) * speed;
+        }
+        if(glfwGetKey(window, GLFW_KEY_L)==GLFW_PRESS){
+            light_pos = pos;
         }
 
         if(glfwGetKey(window, GLFW_KEY_SPACE)==GLFW_PRESS){
@@ -208,6 +208,7 @@ void App::run(){
         glUniformMatrix4fv(glGetUniformLocation(compute_program, "inv_proj"),1, GL_FALSE, glm::value_ptr(glm::inverse(proj)));
         glUniform2ui(glGetUniformLocation(compute_program, "screen_size"), width,height);
         glUniform3fv(glGetUniformLocation(compute_program, "camera"), 1, glm::value_ptr(pos));
+        glUniform3fv(glGetUniformLocation(compute_program, "light_pos"), 1, glm::value_ptr(light_pos));
         glUniform1f(glGetUniformLocation(compute_program, "time"), glfwGetTime());
         glDispatchCompute((width-1)/32+1, (height-1)/32+1, 1);
 
