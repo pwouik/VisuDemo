@@ -10,7 +10,7 @@ uniform float time;
 
 	
 #define fold45(p)(p.y>p.x)?p.yx:p
-float de1( vec3 p ){
+float de2( vec3 p ){
     float scale = 2.1, off0 = .8, off1 = .3, off2 = .83;
     vec3 off =vec3(2.,.2,.1);
     float s=1.0;
@@ -30,7 +30,7 @@ float de1( vec3 p ){
       p += off;
       s *= scale;
     }
-    return length(p)/s;
+    return length(p)/s-0.0001;
 }
 const uint max_iter = 256;
 const float EPSILON = 1e-4;
@@ -38,7 +38,7 @@ const float PI = 3.14159265358979;
 
 #define CSize vec3(1., 1.7, 1.)
 
-float de( vec3 p )
+float de1( vec3 p )
 {
 	p = p.xzy;
 	float scale = 1.1;
@@ -57,6 +57,24 @@ float de( vec3 p )
 	rxy = max(rxy, (n) / 8.);
 	return (rxy) / abs(scale);
 }
+float de(vec3 p){
+    p.z-=16.; float s=3.; float e=0.;
+    p.y=abs(p.y)-1.8;
+    p=clamp(p,-3.,3.)*2.-p;
+    s*=e=6./clamp(dot(p,p),1.5,50.);
+    p=abs(p)*e-vec3(0,1.8,0);
+    p.xz =.8-abs(p.xz-2.);
+    p.y =1.7-abs(p.y-2.);
+    s*=e=12./clamp(dot(p,p),1.0,50.);
+    p=abs(p)*e-vec2(.2,1).xyx;
+    p.y =1.5-abs(p.y-2.);
+    s*=e=16./clamp(dot(p,p),.1,9.);
+    p=abs(p)*e-vec2(.3,-.7).xyx;
+    return min(
+            length(p.xz)-.5,
+            length(vec2(length(p.xz)-12.,p.y))-3.
+            )/s;
+  }
 vec3 estimateNormal(vec3 p) {
     return normalize(vec3(
         de(vec3(p.x + EPSILON, p.y, p.z)) - de(vec3(p.x - EPSILON, p.y, p.z)),
@@ -73,7 +91,7 @@ vec4 phong(vec3 pos,float k_a, float k_d, float k_s, float alpha) {
     float diffuse = max(dot(normal,light_dir),0.0) * k_d;
     float specular = pow(max(dot(pos_dir,reflect_dir),0.0),alpha) * k_s * (sign(dot(light_dir,normal))*0.5+0.5);
     return vec4(vec3(0.0,0.0,1.0) * k_a +
-                    vec3(1.0,0.4,0.0) * diffuse * k_d + 
+                    vec3(1.0,0.8,0.0) * diffuse * k_d + 
                     vec3(1.0,1.0,1.0) * specular * k_s,1.0);
 }
 
@@ -91,13 +109,13 @@ void main() {
         pos += dir*d;
         dist+=d;
         steps+=1;
-        if(d<dist*1e-4){
+        if(d<dist*1e-5){
             break;
         }
     }
     vec4 color = vec4(0.0,0.0,0.0,1.0);
     if(steps<max_iter){
-        color = phong(pos,0.1,1.0,1.0,10.0);
+        color = phong(pos,0.1,0.7,1.0,10.0);
     }
     imageStore(imgOutput, ivec2(gl_GlobalInvocationID.xy), color);
 }

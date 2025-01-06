@@ -14,20 +14,6 @@
 using namespace std;
 
 
-namespace ui{
-    bool displayUI = true;
-    void baseInfo(App& app){
-        if(!displayUI) return;
-        ImGui::Begin("Base info");
-            ImGui::SeparatorText("generic debug info");
-            glm::vec3 pos = app.getPos();
-            ImGui::Text("camera in %.2fx, %.2fy, %.2fz", pos.x, pos.y, pos.z);
-
-        ImGui::End();
-    }
-
-
-}//end namespace ui
 
 GLchar* readShaderSource(const char * shaderFile)
 {
@@ -157,6 +143,14 @@ App::App(int w,int h)
     glUniformMatrix4fv(glGetUniformLocation(compute_program, "persp"),1, GL_FALSE, glm::value_ptr(proj));
 }
 
+void App::draw_ui(){
+    ImGui::Begin("Base info");
+        ImGui::SeparatorText("generic debug info");
+        ImGui::Text("camera in %.2fx, %.2fy, %.2fz", pos.x, pos.y, pos.z);
+        ImGui::Text("light in %.2fx, %.2fy, %.2fz . Set with L", light_pos.x, light_pos.y, light_pos.z);
+        ImGui::Text("speed %.2e. Scroll to change", speed);
+    ImGui::End();
+}
 void App::run(){
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -197,7 +191,7 @@ void App::run(){
             glm::vec3(-pos.x, -pos.y, -pos.z));
         
         utl::newframeIMGUI();
-        ui::baseInfo(*this);
+        draw_ui();
 
         glClearColor(0.0f, 0.0f, 0.1f, 1.0f);
 

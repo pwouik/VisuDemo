@@ -8,7 +8,7 @@
 #include <glad/gl.h>
 #include <cmath>
 #include <cstdio>
-#include "imgui/_IMP_IMGUI.hpp" 
+#include "imgui_util.hpp" 
 #define GLM_ENABLE_EXPERIMENTAL
 
 #define PI 3.14159265358979323f
@@ -66,6 +66,8 @@ public:
     glm::vec3 getPos() const {
         return pos;
     }
+
+    void draw_ui();
 
 private:
     GLFWwindow* window;
