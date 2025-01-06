@@ -83,6 +83,8 @@ private:
     GLuint compute_program;
     GLuint blit_program;
     GLuint texture;
+    GLuint dummy_vbo;
+    GLuint dummy_vao;
     glm::mat4 proj;
     glm::mat4 view;
 

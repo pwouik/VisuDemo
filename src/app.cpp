@@ -127,6 +127,11 @@ App::App(int w,int h)
         delete[] logMsg;
         exit(EXIT_FAILURE);
     }
+
+    glGenVertexArrays(1, &dummy_vao);
+    glBindVertexArray(dummy_vao);
+    glGenBuffers(1, &dummy_vbo);
+
     proj = glm::perspective(glm::radians(70.0f),(float)width/(float)height,0.1f,10000.0f);
     glUniformMatrix4fv(glGetUniformLocation(compute_program, "persp"),1, GL_FALSE, glm::value_ptr(proj));
 }
@@ -171,6 +176,7 @@ void App::run(){
 		glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(blit_program);
+        glBindVertexArray(dummy_vao);
         glBindTexture(GL_TEXTURE_2D, texture);
         glDrawArrays(GL_TRIANGLES,0,3);
 
