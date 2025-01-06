@@ -14,6 +14,22 @@
 
 using namespace std;
 
+
+namespace ui{
+    bool displayUI = true;
+    void baseInfo(App& app){
+        if(!displayUI) return;
+        ImGui::Begin("Base info");
+            ImGui::SeparatorText("generic debug info");
+            glm::vec3 pos = app.getPos();
+            ImGui::Text("camera in %.2fx, %.2fy, %.2fz", pos.x, pos.y, pos.y);
+
+        ImGui::End();
+    }
+
+
+}//end namespace ui
+
 GLchar* readShaderSource(const char * shaderFile)
 {
     FILE* fp = fopen(shaderFile, "r");
@@ -141,9 +157,14 @@ App::App(int w,int h)
     glUniformMatrix4fv(glGetUniformLocation(compute_program, "persp"),1, GL_FALSE, glm::value_ptr(proj));
 }
 
+glm::vec3 App::getPos() const {
+    return pos;
+}
+
 void App::run(){
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
+        
 
         if(glfwGetKey(window, GLFW_KEY_W)==GLFW_PRESS){
             pos+= glm::rotateY(glm::vec3(0.0,0.0,-1.0),yaw * PI / 180.0f) * speed;
@@ -164,7 +185,7 @@ void App::run(){
             pos.y += speed;
         }
 
-        if(glfwGetKey(window, GLFW_KEY_R)==GLFW_PRESS){
+        if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)==GLFW_PRESS){
             pos.y -= speed;
         }
 
@@ -177,6 +198,7 @@ void App::run(){
             glm::vec3(-pos.x, -pos.y, -pos.z));
         
         utl::newframeIMGUI();
+        ui::baseInfo(*this);
 
         glClearColor(0.0f, 0.0f, 0.1f, 1.0f);
 

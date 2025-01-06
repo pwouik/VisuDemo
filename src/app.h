@@ -63,6 +63,9 @@ public:
         glUniformMatrix4fv(glGetUniformLocation(compute_program, "persp"),1, GL_FALSE, glm::value_ptr(proj));
     }
 
+    //getter. Maybe put everything public so we don't have those ?
+    glm::vec3 getPos() const;
+
 private:
     GLFWwindow* window;
 
