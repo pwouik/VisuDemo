@@ -20,9 +20,11 @@ file(GLOB c_source_files "${CMAKE_SOURCE_DIR}/src/gl.c")
 file(GLOB IMGUI_source_files "${CMAKE_SOURCE_DIR}/include/imgui/*.cpp")
 
 #disable all warning for imgui src
-foreach(src_file ${IMGUI_source_files})
-    set_source_files_properties(${src_file} PROPERTIES COMPILE_FLAGS "/W0")
-endforeach()
+if(MSVC)
+    foreach(src_file ${IMGUI_source_files})
+        set_source_files_properties(${src_file} PROPERTIES COMPILE_FLAGS "/W0")
+    endforeach()
+endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(VisuDemo ${cpp_source_files} ${c_source_files} ${IMGUI_source_files})
