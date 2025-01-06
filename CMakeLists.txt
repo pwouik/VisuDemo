@@ -2,6 +2,17 @@
 cmake_minimum_required (VERSION 3.12)
 project (opengl-cmake-skeleton)
 
+#Suppressed warning :
+# C4710 C4711 purely informational (source : internet)
+# C4191 idk
+# C4244 conversion double to float
+# C4100 idk 
+# C5039 idk
+if(MSVC)
+    add_compile_options(/wd4710 /wd4711 /wd4191 /wd4244 /wd4100 /wd5039)
+endif()
+
+
 file(GLOB cpp_source_files "${CMAKE_SOURCE_DIR}/src/*.cpp")
 file(GLOB c_source_files "${CMAKE_SOURCE_DIR}/src/gl.c")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -10,9 +21,12 @@ set_property(TARGET VisuDemo PROPERTY CXX_STANDARD 11)
 target_compile_options(VisuDemo PRIVATE -Wall -lGL -lglfw)
 
 find_package(OpenGL REQUIRED)
-include(FetchContent)
-FetchContent_Declare(GLFW GIT_REPOSITORY https://github.com/glfw/glfw.git)
-fetchcontent_makeavailable(GLFW)
+find_package(glfw3 QUIET)
+if(NOT glfw3_FOUND)
+    include(FetchContent)
+    FetchContent_Declare(GLFW GIT_REPOSITORY https://github.com/glfw/glfw.git)
+    FetchContent_MakeAvailable(GLFW)
+endif()
 
 include_directories(${OPENGL_INCLUDE_DIR})
 target_include_directories(VisuDemo PRIVATE "${CMAKE_SOURCE_DIR}/include")
