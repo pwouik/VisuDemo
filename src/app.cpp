@@ -1,9 +1,14 @@
 #include "app.h"
+#include <GLFW/glfw3.h>
 #include <cstdlib>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/fwd.hpp>
 #include <glm/trigonometric.hpp>
 #include <glm/gtx/rotate_vector.hpp>
+#include <iostream>
+#include "glm/gtc/type_ptr.hpp"
+#include "glm/matrix.hpp"
+#include "glm/ext.hpp"
 #include "imgui/_IMP_IMGUI.hpp" 
 #define BUFFER_OFFSET(offset) ((GLvoid*)(offset))
 
@@ -162,12 +167,27 @@ void App::run(){
         if(glfwGetKey(window, GLFW_KEY_R)==GLFW_PRESS){
             pos.y -= speed;
         }
+
+        view = glm::translate(glm::rotate(
+                glm::rotate(glm::identity<glm::mat4>(),
+                    -glm::radians(pitch),
+                    glm::vec3(1.0, 0.0, 0.0)),
+                -glm::radians(yaw),
+                glm::vec3(0.0, 1.0, 0.0)),
+            glm::vec3(-pos.x, -pos.y, -pos.z));
+        
         utl::newframeIMGUI();
 
         glClearColor(0.0f, 0.0f, 0.1f, 1.0f);
 
         glUseProgram(compute_program);
         glActiveTexture(GL_TEXTURE0);
+
+        glUniformMatrix4fv(glGetUniformLocation(compute_program, "inv_view"),1, GL_FALSE, glm::value_ptr(glm::inverse(view)));
+        glUniformMatrix4fv(glGetUniformLocation(compute_program, "inv_proj"),1, GL_FALSE, glm::value_ptr(glm::inverse(proj)));
+        glUniform2ui(glGetUniformLocation(compute_program, "screen_size"), width,height);
+        glUniform3fv(glGetUniformLocation(compute_program, "camera"), 1, glm::value_ptr(pos));
+        glUniform1f(glGetUniformLocation(compute_program, "time"), glfwGetTime());
         glDispatchCompute((width-1)/32+1, (height-1)/32+1, 1);
 
         // make sure writing to image has finished before read

@@ -1,12 +1,43 @@
-#version 430 core
+#version 460 core
 layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 layout(rgba32f, binding = 0) uniform image2D imgOutput;
+uniform mat4 inv_proj;
+uniform mat4 inv_view;
+uniform uvec2 screen_size;
+uniform vec3 camera;
+uniform float time;
+
+
+float sdf( vec3 p0 ){
+    vec4 p = vec4(p0, 1.);
+    for(int i = 0; i < 16; i++){
+      p.xyz = mod(p.xyz-1.,2.)-1.;
+      p*=1.4/dot(p.xyz,p.xyz);
+    }
+    return (length(p.xz/p.w)*0.25);
+  }
+const uint max_iter = 128;
 
 void main() {
-
-    vec4 value = vec4(0.0, 0.0, 0.0, 1.0);
-    ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
-    value.x = float(gl_LocalInvocationID.x)/(gl_WorkGroupSize.x);
-    value.y = float(gl_LocalInvocationID.y)/(gl_WorkGroupSize.y) * float(gl_WorkGroupID.y)/(gl_NumWorkGroups.y);
-    imageStore(imgOutput, texelCoord, value);
+    if(gl_GlobalInvocationID.x>=screen_size.x || gl_GlobalInvocationID.y>=screen_size.y)
+        return;
+    uvec3 grid_size = gl_WorkGroupSize * gl_NumWorkGroups;
+    vec3 dir = normalize( mat3(inv_view) * vec3(inv_proj * vec4(float(gl_GlobalInvocationID.x)/grid_size.x*2.0-1.0, float(gl_GlobalInvocationID.y)/grid_size.y*2.0-1.0,1.0,1.0)));
+    vec3 pos = camera;
+    uint steps = 0;
+    for( int i=0; i<max_iter; i++ )
+    {
+        float dist = sdf(pos);
+        pos += dir*dist;
+        steps+=1;
+        if(dist<=0.01){
+            break;
+        }
+    }
+    vec4 color = vec4(0.0,0.0,0.0,1.0);
+    if(steps<max_iter){
+        float c = float(steps)/max_iter;
+        color = vec4(c,c,c,1.0);
+    }
+    imageStore(imgOutput, ivec2(gl_GlobalInvocationID.xy), color);
 }

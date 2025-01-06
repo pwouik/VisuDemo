@@ -60,6 +60,6 @@ local_settings.cpp
 *.i 
 
 .cache
-
+imgui.ini
 # Temporary files
 *~
