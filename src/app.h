@@ -36,6 +36,7 @@ public:
     // virtual in case you want to override it in child class
     void onMouse(double xpos, double ypos)
     {
+        if(lockcam) return;
         pitch = -(ypos*180.0/height-90.0);
         yaw = -(xpos*2.0*360.0/width);
     }
@@ -114,5 +115,6 @@ public:
     glm::mat4 view;
 
     int curr_mode = RAYMARCHING;
+    bool lockcam = false; //don't process on mouse of true
 
 };

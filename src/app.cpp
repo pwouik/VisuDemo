@@ -11,11 +11,13 @@
 #include "glm/matrix.hpp"
 #include "glm/ext.hpp"
 #include <algorithm> //for std::fill
+#include <vector>
 #define BUFFER_OFFSET(offset) ((GLvoid*)(offset))
 
 using namespace std;
 
 #define NBPTS 100000
+
 
 std::string readShaderSource(const std::string& shaderFile)
 {
@@ -56,8 +58,13 @@ namespace gbl{
     bool paused = false;
 }
 namespace atr{
-    GLuint ssbo_pts;
-    GLfloat* blackData; //need a backscreen to reset
+    GLfloat* blackData; //need a blackscreen to reset
+    GLuint ssbo_pts; //ssbo of points
+    
+    //glm::mat4 for attractors
+    GLuint uboM4;
+    std::vector<glm::mat4> matrices;
+    int curr_mat_count = 0;
 
     void randArray(float* array, int size, float range){
         for(int i=0; i<size; i+=4){
@@ -73,6 +80,7 @@ namespace atr{
         blackData = new GLfloat[w * h * 4];
         std::fill(blackData, blackData + w * h * 4, 0.0f);
 
+        //generates points SSBO
         float* data = new float[NBPTS*4];
         randArray(data, NBPTS, 5);
         glGenBuffers(1, &ssbo_pts);
@@ -82,7 +90,15 @@ namespace atr{
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo_pts);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
 
-        delete data; //free on HOST
+        delete data; //points memory only needed on GPU
+
+        //attractors (a max of 10 matrices stored as UBO)
+        glGenBuffers(1, &uboM4);
+        glBindBuffer(GL_UNIFORM_BUFFER, uboM4);
+        glBufferData(GL_UNIFORM_BUFFER, 10 * sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW); // Allocate space for up to 10 matrices
+        glBindBufferBase(GL_UNIFORM_BUFFER, 1, uboM4); // Binding point 0
+        glBindBuffer(GL_UNIFORM_BUFFER, 0); // Unbind
+        matrices.reserve(10);
     }
     void clean_data(){
         delete[] blackData;
@@ -94,6 +110,31 @@ namespace atr{
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGBA, GL_FLOAT, blackData);
     }
 
+}
+
+namespace preset{
+    void sierpinski(){
+        atr::curr_mat_count = 3;
+        atr::matrices.clear();
+        atr::matrices.emplace_back(glm::mat4(
+                0.5f, 0.0f,  0.0f, 0.0f,
+                0.0f, 0.5f,  0.0f, 0.36f,
+                0.0f, 0.0f,  1.0f, 0.0f,
+                0.0f, 0.0f,  0.0f, 1.0f
+        ));
+        atr::matrices.emplace_back(glm::mat4(
+                0.5f, 0.0f,  0.0f, -0.5f,
+                0.0f, 0.5f,  0.0f, -0.5f,
+                0.0f, 0.0f,  0.0f, 0.0f,
+                0.0f, 0.0f,  0.0f, 1.0f
+        ));
+        atr::matrices.emplace_back(glm::mat4(
+                0.5f, 0.0f,  0.0f, 0.5f,
+                0.0f, 0.5f,  0.0f, -0.5f,
+                0.0f, 0.0f,  0.0f, 0.0f,
+                0.0f, 0.0f,  0.0f, 1.0f
+        ));
+    }
 }
 
 App::App(int w,int h)
@@ -230,7 +271,16 @@ void App::draw_ui(){
 
 void App::draw_ui_attractor(){
     ImGui::Begin("attractir");
-        ImGui::SeparatorText("hello");
+        ImGui::SeparatorText("debug");
+        if(ImGui::Button("pref Speed")) speed = 0.15f;
+        if(ImGui::Button("reset cam")) pos = glm::vec3(0.0,0.0,10.0);
+        
+        ImGui::SeparatorText("attractor preset");
+        if(ImGui::Button("Sierpinski")) preset::sierpinski();
+
+        ImGui::SeparatorText("debug");
+        ImGui::InputInt("nb", &atr::curr_mat_count);
+        utl::HelpMarker("The number of different random matrices. Live editing may fucked up everything");
 
     ImGui::End();
 }
@@ -307,6 +357,9 @@ void App::run(){
             if(gbl::paused) continue;
             glfwPollEvents();
             
+
+            if(glfwGetKey(window, GLFW_KEY_Q)==GLFW_PRESS) lockcam = !lockcam;
+       
             if(glfwGetKey(window, GLFW_KEY_W)==GLFW_PRESS){
                 pos+= glm::rotateY(glm::vec3(0.0,0.0,-1.0),yaw * PI / 180.0f) * speed;
             }
@@ -326,9 +379,10 @@ void App::run(){
                 pos.y += speed;
             }
             if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)==GLFW_PRESS){
-                pos.y -= speed;
-            }
+                    pos.y -= speed;
+                }
 
+            
             view = glm::translate(glm::rotate(
                     glm::rotate(glm::identity<glm::mat4>(),
                         -glm::radians(pitch),
@@ -347,13 +401,20 @@ void App::run(){
             glUseProgram(compute_program_attractor);
             glActiveTexture(GL_TEXTURE0);
 
+            //send parameter to compute shader
             glUniformMatrix4fv(glGetUniformLocation(compute_program_attractor, "inv_view"),1, GL_FALSE, glm::value_ptr(view)); //does'nt inverse view because erm ...
             glUniformMatrix4fv(glGetUniformLocation(compute_program_attractor, "inv_proj"),1, GL_FALSE, glm::value_ptr(glm::inverse(proj)));
             glUniform2ui(glGetUniformLocation(compute_program_attractor, "screen_size"), width,height);
-            //glUniform3fv(glGetUniformLocation(compute_program, "param1"), 1, glm::value_ptr(param1)); //TODO REMOVE
             glUniform3fv(glGetUniformLocation(compute_program_attractor, "camera"), 1, glm::value_ptr(pos));
             glUniform3fv(glGetUniformLocation(compute_program_attractor, "light_pos"), 1, glm::value_ptr(light_pos));
             glUniform1f(glGetUniformLocation(compute_program_attractor, "time"), glfwGetTime());
+            glUniform1i(glGetUniformLocation(compute_program_attractor, "curr_mat_count"),atr::curr_mat_count);
+            
+            //send attroctor data to compute shader
+            glBindBuffer(GL_UNIFORM_BUFFER, atr::uboM4);
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, atr::matrices.size() * sizeof(glm::mat4), atr::matrices.data());
+            glBindBuffer(GL_UNIFORM_BUFFER, 0);
+            
             glDispatchCompute((NBPTS-1)/1024+1, 1, 1);
 
             // make sure writing to image has finished before read
