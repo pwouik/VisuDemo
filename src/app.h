@@ -114,6 +114,8 @@ private:
     glm::vec3 diffuse;
     glm::vec3 specular;
     float occlusion;
+    glm::vec3 fractal_position{0.0f, 0.0f, 0.0f};
+    glm::vec3 fractal_rotation{0.0f, 0.0f, 0.0f};
     float speed;
     GLuint compute_program;
     GLuint compute_program_attractor;

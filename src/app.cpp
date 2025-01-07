@@ -174,6 +174,8 @@ void App::draw_ui(){
         ImGui::SeparatorText("generic debug info");
         ImGui::Text("camera in %.2fx, %.2fy, %.2fz", pos.x, pos.y, pos.z);
         ImGui::Text("light in %.2fx, %.2fy, %.2fz . Set with L", light_pos.x, light_pos.y, light_pos.z);
+        ImGui::Text("fractal at %.2fx, %.2fy, %.2fz. Move with arrows", fractal_position.x, fractal_position.y, fractal_position.z);
+        ImGui::Text("fractal rotation at pitch: %.2f, yaw: %.2f, roll: %.2f. Change with numpad 1, 2 or 3", fractal_rotation.x, fractal_rotation.y, fractal_rotation.z);
         ImGui::Text("speed %.2e. Scroll to change", speed);
         ImGui::SeparatorText("params");
         ImGui::SliderFloat("param1.x", &param1.x, -5.0f, 5.0f);
@@ -205,6 +207,33 @@ void App::run(){
             }
             if(glfwGetKey(window, GLFW_KEY_D)==GLFW_PRESS){
                 pos+= glm::rotateY(glm::vec3(1.0,0.0,0.0),yaw * PI / 180.0f) * speed;
+            }
+            if(glfwGetKey(window, GLFW_KEY_UP)==GLFW_PRESS){
+                fractal_position += glm::vec3(-1.0f ,0.0f, 0.0f) * speed;
+            }
+            if(glfwGetKey(window, GLFW_KEY_DOWN)==GLFW_PRESS){
+                fractal_position += glm::vec3(1.0f ,0.0f, 0.0f) * speed;
+            }
+            if(glfwGetKey(window, GLFW_KEY_LEFT)==GLFW_PRESS){
+                fractal_position += glm::vec3(0.0f ,0.0f, 1.0f) * speed;
+            }
+            if(glfwGetKey(window, GLFW_KEY_RIGHT)==GLFW_PRESS){
+                fractal_position += glm::vec3(0.0f ,0.0f, -1.0f) * speed;
+            }
+            if(glfwGetKey(window, GLFW_KEY_PAGE_UP)==GLFW_PRESS){
+                fractal_position += glm::vec3(0.0f ,1.0f, 0.0f) * speed;
+            }
+            if(glfwGetKey(window, GLFW_KEY_PAGE_DOWN)==GLFW_PRESS){
+                fractal_position += glm::vec3(0.0f ,-1.0f, 0.0f) * speed;
+            }
+            if(glfwGetKey(window, GLFW_KEY_KP_1)==GLFW_PRESS){
+                fractal_rotation += glm::vec3(0.1f ,0.0f, 0.0f) * speed;
+            }
+            if(glfwGetKey(window, GLFW_KEY_KP_2)==GLFW_PRESS){
+                fractal_rotation += glm::vec3(0.0f ,0.1f, 0.0f) * speed;
+            }
+            if(glfwGetKey(window, GLFW_KEY_KP_3)==GLFW_PRESS){
+                fractal_rotation += glm::vec3(0.0f ,0.0f, 0.1f) * speed;
             }
             if(glfwGetKey(window, GLFW_KEY_L)==GLFW_PRESS){
                 light_pos = pos;
@@ -245,6 +274,8 @@ void App::run(){
             glUniform3fv(glGetUniformLocation(compute_program, "specular"), 1, glm::value_ptr(specular));
             glUniform1f(glGetUniformLocation(compute_program, "occlusion"), occlusion);
             glUniform1f(glGetUniformLocation(compute_program, "time"), glfwGetTime());
+            glUniform3fv(glGetUniformLocation(compute_program, "fractal_position"), 1, glm::value_ptr(fractal_position));
+            glUniform3fv(glGetUniformLocation(compute_program, "fractal_rotation"), 1, glm::value_ptr(fractal_rotation));
             glDispatchCompute((width-1)/32+1, (height-1)/32+1, 1);
 
             // make sure writing to image has finished before read
