@@ -78,6 +78,15 @@ namespace atr{
         }
     }
 
+    void origindArray(float* array, int size){
+        for(int i=0; i<size; i+=4){
+            array[i] = 0.0f;
+            array[i+1] = 0.0f;
+            array[i+2] = 0.0f;
+            array[i+3] = 1.0f;
+        }
+    }
+
 
     void init_data(int w, int h){
         blackData = new GLfloat[w * h * 4];
@@ -86,6 +95,7 @@ namespace atr{
         //generates points SSBO
         float* data = new float[NBPTS*4];
         randArray(data, NBPTS, 5);
+        //origindArray(data, NBPTS);
         glGenBuffers(1, &ssbo_pts);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_pts);
         glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(float) * 4 * NBPTS, data, GL_DYNAMIC_DRAW); //GL_DYNAMIC_DRAW update occasionel et lecture frequente
@@ -430,6 +440,7 @@ while (!glfwWindowShouldClose(window)) {
             glUniform3fv(glGetUniformLocation(compute_program_attractor, "light_pos"), 1, glm::value_ptr(light_pos));
             glUniform1f(glGetUniformLocation(compute_program_attractor, "time"), glfwGetTime());
             glUniform1i(glGetUniformLocation(compute_program_attractor, "curr_mat_count"),atr::curr_mat_count);
+            glUniform1i(glGetUniformLocation(compute_program_attractor, "randInt_seed"),rand()%RAND_MAX);
             
             //send attroctor data to compute shader
             glBindBuffer(GL_UNIFORM_BUFFER, atr::uboM4);
