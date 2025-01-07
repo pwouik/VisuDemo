@@ -12,6 +12,9 @@
 #include "glm/ext.hpp"
 #include <algorithm> //for std::fill
 #include <vector>
+
+// #include <thread> //this therad
+// #include <chrono> //sleep
 #define BUFFER_OFFSET(offset) ((GLvoid*)(offset))
 
 using namespace std;
@@ -119,7 +122,7 @@ namespace preset{
         atr::matrices.emplace_back(glm::mat4(
                 0.5f, 0.0f,  0.0f, 0.0f,
                 0.0f, 0.5f,  0.0f, 0.36f,
-                0.0f, 0.0f,  1.0f, 0.0f,
+                0.0f, 0.0f,  0.0f, 0.0f,
                 0.0f, 0.0f,  0.0f, 1.0f
         ));
         atr::matrices.emplace_back(glm::mat4(
@@ -296,9 +299,12 @@ void App::draw_ui_attractor(){
         ImGui::SeparatorText("attractor preset");
         if(ImGui::Button("Sierpinski")) preset::sierpinski();
 
-        ImGui::SeparatorText("debug");
+        ImGui::SeparatorText("Attractors");
         ImGui::InputInt("nb", &atr::curr_mat_count);
         utl::HelpMarker("The number of different random matrices. Live editing may fucked up everything");
+        utl::ShowMatrix4("mat0", atr::matrices[0]);
+        utl::ShowMatrix4("mat1", atr::matrices[1]);
+        utl::ShowMatrix4("mat2", atr::matrices[2]);
 
     ImGui::End();
 }
