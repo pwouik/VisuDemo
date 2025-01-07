@@ -17,7 +17,19 @@ uniform vec3 light_pos;
 uniform float time;
 
 
-//
+//tmp hardcode matrices here for now
+mat4 matri0 = mat4( 0.5f, 0.0f,  0.0f, 0.0f,
+                    0.0f, 0.5f,  0.0f, 0.36f,
+                    0.0f, 0.0f,  0.0f, 0.0f,
+                    0.0f, 0.0f,  0.0f, 1.0f);
+mat4 matri1 = mat4( 0.5f, 0.0f,  0.0f, -0.5f,
+                    0.0f, 0.5f,  0.0f, -0.5f,
+                    0.0f, 0.0f,  0.0f, 0.0f,
+                    0.0f, 0.0f,  0.0f, 1.0f);
+mat4 matri2 = mat4( 0.5f, 0.0f,  0.0f, 0.5f,
+                    0.0f, 0.5f,  0.0f, -0.5f,
+                    0.0f, 0.0f,  0.0f, 0.0f,
+                    0.0f, 0.0f,  0.0f, 1.0f);
 
 	
 
@@ -32,7 +44,6 @@ void screenWriteCoord(vec4 pt){
     vec4 camera_space = inv_view * pt;
 
     vec4 projected_point = inv_proj * camera_space;
-    if(projected_point.z > 0) return; //le depth buffer du pauvre
     if (projected_point.w != 0.0) {
         projected_point.xyz /= projected_point.w; // Perspective divide
     }
@@ -43,7 +54,7 @@ void screenWriteCoord(vec4 pt){
     //default color for now
     vec4 color = vec4(1.0, 0.5, 0.5, 1.0); 
 
-    //who needs a clipping plane or a z buffer ?
+    //who needs a clipping plane or a z buffer ? 
     imageStore(imgOutput, ivec2(screen_coord), color);
 }
 
@@ -55,7 +66,11 @@ void main() {
 
     //update point coordinate with attractor (for now choose attractor with % index but later have custom weight)
     if(curr_mat_count > 0) {
-        point = matrixArray[idx%curr_mat_count] * point;
+        //points[idx] = matrixArray[idx%curr_mat_count] * point;
+        uint rand = idx%curr_mat_count;
+        if(rand == 0) points[idx] = matri0 * point;
+        if(rand == 1) points[idx] = matri1 * point;
+        if(rand == 2) points[idx] = matri2 * point;
     }
 
     screenWriteCoord(point);

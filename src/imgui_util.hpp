@@ -20,6 +20,14 @@ static void HelpMarker(const char* desc){
     }
 }
 
+static void ShowMatrix4(const char* desc, const glm::mat4& mat) {
+    ImGui::Text(desc);
+    for (int row = 0; row < 4; ++row) {
+        ImGui::Text("%.2f  %.2f  %.2f  %.2f", 
+                    mat[row][0], mat[row][1], mat[row][2], mat[row][3]);
+    }
+}
+
 
 static void initIMGUI(GLFWwindow* window){
     // Setup Dear ImGui context
