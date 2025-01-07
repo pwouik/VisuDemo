@@ -6,7 +6,7 @@
 
 
 int main(void) {
-    App app(800,800);
+    App app(1600,900);
     app.run();
     return 0;
 }

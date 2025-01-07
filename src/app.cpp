@@ -55,12 +55,12 @@ App::App(int w,int h)
 {
     pos = glm::vec3(0.0,0.0,0.0);
     light_pos = glm::vec3(0.0,0.0,0.0);
-    param1 = glm::vec3( -4.54f, -1.26f, 0.1f );
-    occlusion = 5.0;
-    ambient = glm::vec3(0.2,0.2,0.2);
+    param1 = glm::vec3( -5.0f, -5.0f, 0.55f );
+    occlusion = 3.0;
+    ambient = glm::vec3(1.0,0.6,0.9);
     diffuse = glm::vec3(1.0,0.6,0.0);
     specular = glm::vec3(1.0,1.0,1.0);
-    k_a = 0.3;
+    k_a = 0.32;
     k_d = 1.0;
     k_s = 1.0;
     alpha = 3.0;
