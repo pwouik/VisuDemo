@@ -1,6 +1,9 @@
 #version 460 core
-layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+layout (local_size_x = 1024, local_size_y = 1, local_size_z = 1) in;
 layout(rgba32f, binding = 0) uniform image2D imgOutput;
+layout(std430, binding = 3) buffer PointBuffer {          // SSBO binding point 3
+    vec4 points[];
+};
 uniform mat4 inv_proj;
 uniform mat4 inv_view;
 uniform uvec2 screen_size;
@@ -14,13 +17,34 @@ const uint max_iter = 256;
 const float EPSILON = 1e-4;
 const float PI = 3.14159265358979;
 
-//black canvas for now
+#define NBPTS 100000
+//optimisation : lower number of thread to process multiples point per thread ?
 
+void screenWriteCoord(vec4 pt){
+    vec4 camera_space = inv_view * pt; // Apply inverse view matrix
 
+    // Project the point onto screen space using the inverse projection matrix
+    vec4 projected_point = inv_proj * camera_space;
+    if (projected_point.w != 0.0) {
+        projected_point.xyz /= projected_point.w; // Perspective divide
+    }
+
+    // Map the projected 3D coordinates to 2D screen coordinates
+    vec2 screen_coord = (projected_point.xy + 1.0) * 0.5; // [-1,1] to [0,1]
+    screen_coord *= vec2(screen_size); // Map to screen space (pixels)
+
+    // Write the color to the output image (simple color for now)
+    vec4 color = vec4(1.0, 0.5, 0.5, 1.0); 
+    imageStore(imgOutput, ivec2(screen_coord), color);
+}
 
 void main() {
-    if(gl_GlobalInvocationID.x>=screen_size.x || gl_GlobalInvocationID.y>=screen_size.y)
-        return;
-    vec4 color = vec4(0.0,0.0,0.0,1.0);
-    imageStore(imgOutput, ivec2(gl_GlobalInvocationID.xy), color);
+    uint idx = gl_GlobalInvocationID.x;
+    if(idx >= NBPTS) return;
+
+    vec4 point = points[idx];
+
+    //todo update point coordinate with attractor
+
+    screenWriteCoord(point);
 }
