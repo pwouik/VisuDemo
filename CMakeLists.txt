@@ -33,12 +33,16 @@ set_property(TARGET VisuDemo PROPERTY CXX_STANDARD 11)
 target_compile_options(VisuDemo PRIVATE -Wall)
 
 find_package(OpenGL REQUIRED)
+
+# GLFW
 find_package(glfw3 QUIET)
 if(NOT glfw3_FOUND)
     include(FetchContent)
     FetchContent_Declare(GLFW GIT_REPOSITORY https://github.com/glfw/glfw.git)
     FetchContent_MakeAvailable(GLFW)
 endif()
+
+# GLM
 find_package(glm CONFIG QUIET)
 if (NOT glm_FOUND)
     include(FetchContent)
@@ -47,7 +51,24 @@ if (NOT glm_FOUND)
 endif ()
 
 
+# Leap motion SDK
+if (WIN32)
+    set(ULTRALEAP_PATH_ROOT "$ENV{ProgramFiles}/Ultraleap")
+elseif (APPLE)
+    set(ULTRALEAP_PATH_ROOT "/Applications/Ultraleap\ Hand\ Tracking.app/Contents/LeapSDK/lib/cmake/LeapSDK")
+else()
+    # Linux and other OSs
+    set(ULTRALEAP_PATH_ROOT "/usr/lib/ultraleap-hand-tracking-service")
+endif()
+
+find_package(LeapSDK
+        5
+        REQUIRED
+        PATHS
+        "${ULTRALEAP_PATH_ROOT}")
+
+
 include_directories(${OPENGL_INCLUDE_DIR})
 target_include_directories(VisuDemo PRIVATE "${CMAKE_SOURCE_DIR}/include")
-target_link_libraries(VisuDemo ${OPENGL_gl_LIBRARY} glfw glm::glm-header-only)
+target_link_libraries(VisuDemo ${OPENGL_gl_LIBRARY} glfw glm::glm-header-only LeapSDK::LeapC)
 
