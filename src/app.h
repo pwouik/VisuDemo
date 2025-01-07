@@ -76,8 +76,9 @@ public:
     }
 
     void draw_ui();
+    void draw_ui_attractor();
 
-private:
+public:
     GLFWwindow* window;
 
     static void onKey(GLFWwindow* window, int key, int scancode, int actions, int mods)

@@ -10,12 +10,12 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/matrix.hpp"
 #include "glm/ext.hpp"
-#include "imgui/imgui.h"
+#include <algorithm> //for std::fill
 #define BUFFER_OFFSET(offset) ((GLvoid*)(offset))
 
 using namespace std;
 
-
+#define NBPTS 100000
 
 std::string readShaderSource(const std::string& shaderFile)
 {
@@ -51,6 +51,51 @@ GLuint loadshader(const char* file,GLuint type)
     }
     return shader;
 }
+
+namespace gbl{
+    bool paused = false;
+}
+namespace atr{
+    GLuint ssbo_pts;
+    GLfloat* blackData; //need a backscreen to reset
+
+    void randArray(float* array, int size, float range){
+        for(int i=0; i<size; i+=4){
+            array[i] = range * (((float)rand()/RAND_MAX) *2 -1);
+            array[i+1] = range * (((float)rand()/RAND_MAX) *2 -1);
+            array[i+2] = range * (((float)rand()/RAND_MAX) *2 -1);
+            array[i+3] = 1;
+        }
+    }
+
+
+    void init_data(int w, int h){
+        blackData = new GLfloat[w * h * 4];
+        std::fill(blackData, blackData + w * h * 4, 0.0f);
+
+        float* data = new float[NBPTS*4];
+        randArray(data, NBPTS, 5);
+        glGenBuffers(1, &ssbo_pts);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_pts);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(float) * 4 * NBPTS, data, GL_DYNAMIC_DRAW); //GL_DYNAMIC_DRAW update occasionel et lecture frequente
+        //glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, size, data); //to update partially
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo_pts);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
+
+        delete data; //free on HOST
+    }
+    void clean_data(){
+        delete[] blackData;
+        //todo unbind ssbo
+    }
+
+    void clearTexture(int w, int h, GLuint texture){
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGBA, GL_FLOAT, blackData);
+    }
+
+}
+
 App::App(int w,int h)
 {
     pos = glm::vec3(0.0,0.0,0.0);
@@ -171,7 +216,16 @@ void App::draw_ui(){
     ImGui::Begin("Base info");
         ImGui::SeparatorText("current rendering");
             const char* items_cb1[] = { "Raymarching", "Attractor"}; //MUST MATCH DEFINE IN app.h !
-            ImGui::Combo("combo", (int*)&curr_mode, items_cb1, IM_ARRAYSIZE(items_cb1));
+            if(ImGui::Combo("combo", (int*)&curr_mode, items_cb1, IM_ARRAYSIZE(items_cb1))){
+                gbl::paused = true;
+                if(curr_mode == Attractor){
+                    atr::init_data(width, height);
+                }
+                else {
+                    atr::clean_data();
+                }
+                gbl::paused = false;
+            }
         ImGui::SeparatorText("generic debug info");
         ImGui::Text("camera in %.2fx, %.2fy, %.2fz", pos.x, pos.y, pos.z);
         ImGui::Text("light in %.2fx, %.2fy, %.2fz . Set with L", light_pos.x, light_pos.y, light_pos.z);
@@ -191,9 +245,18 @@ void App::draw_ui(){
         ImGui::SliderFloat("occlusion", &occlusion, -10.0f, 10.0f);
     ImGui::End();
 }
+
+void App::draw_ui_attractor(){
+    ImGui::Begin("attractir");
+        ImGui::SeparatorText("hello");
+
+    ImGui::End();
+}
+
 void App::run(){
 while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
+        if(gbl::paused) continue;
         
         if(glfwGetKey(window, GLFW_KEY_W)==GLFW_PRESS){
             pos+= glm::rotateY(glm::vec3(0.0,0.0,-1.0),yaw * PI / 180.0f) * speed;
@@ -296,19 +359,22 @@ while (!glfwWindowShouldClose(window)) {
 
             utl::newframeIMGUI();
             draw_ui();
+            draw_ui_attractor();
+
             glClearColor(0.0f, 0.0f, 0.1f, 1.0f);
 
+            atr::clearTexture(width, height, texture); //balck background for texture
             glUseProgram(compute_program_attractor);
             glActiveTexture(GL_TEXTURE0);
 
             glUniformMatrix4fv(glGetUniformLocation(compute_program_attractor, "inv_view"),1, GL_FALSE, glm::value_ptr(inv_camera_view));
             glUniformMatrix4fv(glGetUniformLocation(compute_program_attractor, "inv_proj"),1, GL_FALSE, glm::value_ptr(glm::inverse(proj)));
             glUniform2ui(glGetUniformLocation(compute_program_attractor, "screen_size"), width,height);
+            //glUniform3fv(glGetUniformLocation(compute_program, "param1"), 1, glm::value_ptr(param1)); //TODO REMOVE
             glUniform3fv(glGetUniformLocation(compute_program_attractor, "camera"), 1, glm::value_ptr(pos));
             glUniform3fv(glGetUniformLocation(compute_program_attractor, "light_pos"), 1, glm::value_ptr(light_pos));
-            glUniform3fv(glGetUniformLocation(compute_program_attractor, "param1"), 1, glm::value_ptr(param1));
             glUniform1f(glGetUniformLocation(compute_program_attractor, "time"), glfwGetTime());
-            glDispatchCompute((width-1)/32+1, (height-1)/32+1, 1);
+            glDispatchCompute((NBPTS-1)/1024+1, 1, 1);
 
             // make sure writing to image has finished before read
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
