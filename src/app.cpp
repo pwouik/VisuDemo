@@ -1,6 +1,7 @@
 #include "app.h"
 #include <GLFW/glfw3.h>
 #include <cstdlib>
+#include <fstream>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/fwd.hpp>
 #include <glm/trigonometric.hpp>
@@ -15,31 +16,25 @@ using namespace std;
 
 
 
-GLchar* readShaderSource(const char * shaderFile)
+std::string readShaderSource(const std::string& shaderFile)
 {
-    FILE* fp = fopen(shaderFile, "r");
-    GLchar* buf;
-    long size;
-    if (fp == NULL) return NULL;
-    fseek(fp, 0L, SEEK_END);//go to end
-    size = ftell(fp); //get size
-    fseek(fp, 0L, SEEK_SET);//go to beginning
-    buf = (GLchar*)malloc((size+1)*sizeof(GLchar));
-    fread(buf, 1, size, fp);
-    buf[size] = 0;
-    fclose(fp);
-    return buf;
+    std::ifstream file(shaderFile);
+    if (!file.is_open())
+    {
+        std::cerr << "Error could not open file " << shaderFile << std::endl;
+        return "";
+    }
+    std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    file.close();
+    return content;
 }
 
 GLuint loadshader(const char* file,GLuint type)
 {
-    GLchar* source = readShaderSource(file);
-    if (source == NULL) {
-        printf("Failed to read %s\n", file);
-        exit(EXIT_FAILURE);
-    }
+    const std::string shaderSource = readShaderSource(file);
+    const GLchar* source = shaderSource.c_str();
     GLuint shader = glCreateShader(type);
-    glShaderSource(shader, 1, (const GLchar**)&source, NULL);
+    glShaderSource(shader, 1, &source, nullptr);
     glCompileShader(shader);
     GLint compiled;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
@@ -48,12 +43,11 @@ GLuint loadshader(const char* file,GLuint type)
         GLint logSize;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logSize);
         char* logMsg = new char[logSize];
-        glGetShaderInfoLog(shader, logSize, NULL, logMsg);
+        glGetShaderInfoLog(shader, logSize, nullptr, logMsg);
         printf("%s\n", logMsg);
         delete[] logMsg;
         exit(EXIT_FAILURE);
     }
-    delete[] source;
     return shader;
 }
 App::App(int w,int h)
@@ -70,7 +64,7 @@ App::App(int w,int h)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    window = glfwCreateWindow(width, height, "[glad] GL with GLFW", NULL, NULL);
+    window = glfwCreateWindow(width, height, "[glad] GL with GLFW", nullptr, nullptr);
     glfwMakeContextCurrent(window);
 
     glfwSetWindowUserPointer(window, this);
@@ -95,7 +89,7 @@ App::App(int w,int h)
         GLint logSize;
         glGetProgramiv(compute_program, GL_INFO_LOG_LENGTH, &logSize);
         char* logMsg = new char[logSize];
-        glGetProgramInfoLog(compute_program, logSize, NULL, logMsg);
+        glGetProgramInfoLog(compute_program, logSize, nullptr, logMsg);
         printf("%s\n", logMsg);
         delete[] logMsg;
         exit(EXIT_FAILURE);
@@ -110,7 +104,7 @@ App::App(int w,int h)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, w, h, 0, GL_RGBA, 
-                GL_FLOAT, NULL);
+                GL_FLOAT, nullptr);
 
     glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
@@ -129,7 +123,7 @@ App::App(int w,int h)
         GLint logSize;
         glGetProgramiv(blit_program, GL_INFO_LOG_LENGTH, &logSize);
         char* logMsg = new char[logSize];
-        glGetProgramInfoLog(blit_program, logSize, NULL, logMsg);
+        glGetProgramInfoLog(blit_program, logSize, nullptr, logMsg);
         printf("%s\n", logMsg);
         delete[] logMsg;
         exit(EXIT_FAILURE);
