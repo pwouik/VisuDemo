@@ -19,7 +19,7 @@
 
 using namespace std;
 
-#define NBPTS 100000
+#define NBPTS 1000000
 
 
 std::string readShaderSource(const std::string& shaderFile)
@@ -80,7 +80,8 @@ namespace atr{
 
     void origindArray(float* array, int size){
         for(int i=0; i<size; i+=4){
-            array[i] = 0.0f;
+            //which is x, whihc is y, which is z, which is w ?
+            array[i] = 0.0f; 
             array[i+1] = 0.0f;
             array[i+2] = 0.0f;
             array[i+3] = 1.0f;
@@ -94,7 +95,7 @@ namespace atr{
 
         //generates points SSBO
         float* data = new float[NBPTS*4];
-        randArray(data, NBPTS, 5);
+        randArray(data, NBPTS, 1);
         //origindArray(data, NBPTS);
         glGenBuffers(1, &ssbo_pts);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_pts);
@@ -285,8 +286,8 @@ void App::draw_ui(){
 void App::draw_ui_attractor(){
     ImGui::Begin("attractir");
         ImGui::SeparatorText("debug");
-        if(ImGui::Button("pref Speed")) speed = 0.15f;
-        if(ImGui::Button("reset cam")) pos = glm::vec3(0.0,0.0,10.0);
+        if(ImGui::Button("pref Speed")) speed = 0.025f;
+        if(ImGui::Button("reset cam")) pos = glm::vec3(0.0,0.0,-0.5);
         
         ImGui::SeparatorText("attractor preset");
         if(ImGui::Button("Sierpinski")) preset::sierpinski();

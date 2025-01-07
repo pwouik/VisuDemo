@@ -19,44 +19,33 @@ uniform float time;
 
 
 //tmp hardcode matrices here for now
-// mat4 matri0 = mat4( 0.5f, 0.0f,  0.0f, 0.0f,
-//                     0.0f, 0.5f,  0.0f, 0.36f,
-//                     0.0f, 0.0f,  0.0f, 0.0f,
-//                     0.0f, 0.0f,  0.0f, 1.0f);
-// mat4 matri1 = mat4( 0.5f, 0.0f,  0.0f, -0.5f,
-//                     0.0f, 0.5f,  0.0f, -0.5f,
-//                     0.0f, 0.0f,  0.0f, 0.0f,
-//                     0.0f, 0.0f,  0.0f, 1.0f);
-// mat4 matri2 = mat4( 0.5f, 0.0f,  0.0f, 0.5f,
-//                     0.0f, 0.5f,  0.0f, -0.5f,
-//                     0.0f, 0.0f,  0.0f, 0.0f,
-//                     0.0f, 0.0f,  0.0f, 1.0f);
-// mat4 matri0 = mat4( 1.0f, 0.0f,  0.0f, 0.0f,
-//                     0.0f, 1.0f,  0.0f, 0.72f,
-//                     0.0f, 0.0f,  0.0f, 0.0f,
-//                     0.0f, 0.0f,  0.0f, 1.0f);
-// mat4 matri1 = mat4( 1.0f, 0.0f,  0.0f, -1.0f,
-//                     0.0f, 1.0f,  0.0f, -1.0f,
-//                     0.0f, 0.0f,  0.0f, 0.0f,
-//                     0.0f, 0.0f,  0.0f, 1.0f);
-// mat4 matri2 = mat4( 1.0f, 0.0f,  0.0f, 1.0f,
-//                     0.0f, 1.0f,  0.0f, -1.0,
-//                     0.0f, 0.0f,  0.0f, 0.0f,
-//                     0.0f, 0.0f,  0.0f, 1.0f);
-mat4 matri0 = mat4( 0.995f, 0.0f,  0.0f, 0.0f,
-                    0.0f, 1.0f,  0.0f, 0.0f,
-                    0.0f, 0.0f,  1.0, 0.0f,
-                    0.0f, 0.0f,  0.0f, 1.0f);
+mat4 matri0 = transpose(mat4(   0.5f, 0.0f,  0.0f, 0.0f,
+                                0.0f, 0.5f,  0.0f, 0.36f,
+                                0.0f, 0.0f,  0.0f, 0.0f,
+                                0.0f, 0.0f,  0.0f, 1.0f));
+mat4 matri1 = transpose(mat4(   0.5f, 0.0f,  0.0f, -0.5f,
+                                0.0f, 0.5f,  0.0f, -0.5f,
+                                0.0f, 0.0f,  0.0f, 0.0f,
+                                0.0f, 0.0f,  0.0f, 1.0f));
+mat4 matri2 = transpose(mat4(   0.5f, 0.0f,  0.0f, 0.5f,
+                                0.0f, 0.5f,  0.0f, -0.5f,
+                                0.0f, 0.0f,  0.0f, 0.0f,
+                                0.0f, 0.0f,  0.0f, 1.0f));
 
-mat4 matri1 = mat4( 1.0f, 0.0f,  0.0f, 0.0f,
-                    0.0f, 0.995f,  0.0f, 0.0f,
-                    0.0f, 0.0f,  1.0f, 0.0f,
-                    0.0f, 0.0f,  0.0f, 1.0f);
+// mat4 matri0 = mat4( 0.995f, 0.0f,  0.0f, 0.0f,
+//                     0.0f, 1.0f,  0.0f, 0.0f,
+//                     0.0f, 0.0f,  1.0, 0.0f,
+//                     0.0f, 0.0f,  0.0f, 1.0f);
 
-mat4 matri2 = mat4( 1.0f, 0.0f,  0.0f, 0.0f,
-                    0.0f, 1.0f,  0.0f, 0.0f,
-                    0.0f, 0.0f,  0.995f, 0.0f,
-                    0.0f, 0.0f,  0.0f, 1.0f);
+// mat4 matri1 = mat4( 1.0f, 0.0f,  0.0f, 0.0f,
+//                     0.0f, 0.995f,  0.0f, 0.0f,
+//                     0.0f, 0.0f,  1.0f, 0.0f,
+//                     0.0f, 0.0f,  0.0f, 1.0f);
+
+// mat4 matri2 = mat4( 1.0f, 0.0f,  0.0f, 0.0f,
+//                     0.0f, 1.0f,  0.0f, 0.0f,
+//                     0.0f, 0.0f,  0.995f, 0.0f,
+//                     0.0f, 0.0f,  0.0f, 1.0f);
 
 
 	
@@ -65,7 +54,7 @@ const uint max_iter = 256;
 const float EPSILON = 1e-4;
 const float PI = 3.14159265358979;
 
-#define NBPTS 100000
+#define NBPTS 1000000
 //TODO optimisation : lower number of thread to process multiples point per thread ?
 
 void screenWriteCoord(vec4 pt){
@@ -91,17 +80,27 @@ void main() {
     if(idx >= NBPTS) return;
 
     vec4 point = points[idx];
+    vec4 pts[3];
 
     //update point coordinate with attractor (for now choose attractor with % index but later have custom weight)
     if(curr_mat_count > 0) {
         //points[idx] = matrixArray[idx%curr_mat_count] * point;
         
-        //uint rand = (idx%randInt_seed)%curr_mat_count;
-        uint rand = idx%curr_mat_count;
-        if(rand == 0) points[idx] = matri0 * point;
-        if(rand == 1) points[idx] = matri1 * point;
-        if(rand == 2) points[idx] = matri2 * point;
+        uint rand = (idx%randInt_seed)%curr_mat_count;
+        //uint rand = idx%curr_mat_count;
+
+        //compute all points to display
+        pts[0] = matri0 * point;
+        pts[1] = matri1 * point;
+        pts[2] = matri2 * point;
+
+        //pick only one 
+        if(rand == 0) points[idx] = pts[0];
+        if(rand == 1) points[idx] = pts[1];
+        if(rand == 2) points[idx] = pts[2];
     }
     //optimization : draw multiple from one
-    screenWriteCoord(point);
+    screenWriteCoord(pts[0]);
+    screenWriteCoord(pts[1]);
+    screenWriteCoord(pts[2]);
 }
