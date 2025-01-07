@@ -10,6 +10,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/matrix.hpp"
 #include "glm/ext.hpp"
+#include "imgui/imgui.h"
 #define BUFFER_OFFSET(offset) ((GLvoid*)(offset))
 
 using namespace std;
@@ -55,9 +56,17 @@ App::App(int w,int h)
     pos = glm::vec3(0.0,0.0,0.0);
     light_pos = glm::vec3(0.0,0.0,0.0);
     param1 = glm::vec3( -4.54f, -1.26f, 0.1f );
+    occlusion = 5.0;
+    ambient = glm::vec3(0.2,0.2,0.2);
+    diffuse = glm::vec3(1.0,0.6,0.0);
+    specular = glm::vec3(1.0,1.0,1.0);
+    k_a = 0.3;
+    k_d = 1.0;
+    k_s = 1.0;
+    alpha = 3.0;
+    speed = 1.0;
     width = w;
     height = h;
-    speed = 1.0;
 
     glfwInit();
 
@@ -170,6 +179,14 @@ void App::draw_ui(){
         ImGui::SliderFloat("param1.x", &param1.x, -5.0f, 5.0f);
         ImGui::SliderFloat("param1.y", &param1.y, -5.0f, 5.0f);
         ImGui::SliderFloat("param1.z", &param1.z, -5.0f, 5.0f);
+        ImGui::SliderFloat("k_a", &k_a, 0.0f, 2.0f);
+        ImGui::ColorEdit3("ambient", glm::value_ptr(ambient));
+        ImGui::SliderFloat("k_d", &k_d, 0.0f, 2.0f);
+        ImGui::ColorEdit3("diffuse", glm::value_ptr(diffuse));
+        ImGui::SliderFloat("k_s", &k_s, 0.0f, 2.0f);
+        ImGui::SliderFloat("alpha", &alpha, 1.0f, 5.0f);
+        ImGui::ColorEdit3("specular", glm::value_ptr(specular));
+        ImGui::SliderFloat("occlusion", &occlusion, -10.0f, 10.0f);
     ImGui::End();
 }
 void App::run(){
@@ -210,8 +227,6 @@ void App::run(){
             utl::newframeIMGUI();
             draw_ui();
 
-            glClearColor(0.0f, 0.0f, 0.1f, 1.0f);
-
             glUseProgram(compute_program);
             glActiveTexture(GL_TEXTURE0);
 
@@ -221,13 +236,19 @@ void App::run(){
             glUniform3fv(glGetUniformLocation(compute_program, "camera"), 1, glm::value_ptr(pos));
             glUniform3fv(glGetUniformLocation(compute_program, "light_pos"), 1, glm::value_ptr(light_pos));
             glUniform3fv(glGetUniformLocation(compute_program, "param1"), 1, glm::value_ptr(param1));
+            glUniform1f(glGetUniformLocation(compute_program, "k_a"), k_a);
+            glUniform3fv(glGetUniformLocation(compute_program, "ambient"), 1, glm::value_ptr(ambient));
+            glUniform1f(glGetUniformLocation(compute_program, "k_d"), k_d);
+            glUniform3fv(glGetUniformLocation(compute_program, "diffuse"), 1, glm::value_ptr(diffuse));
+            glUniform1f(glGetUniformLocation(compute_program, "k_s"), k_s);
+            glUniform1f(glGetUniformLocation(compute_program, "alpha"), alpha);
+            glUniform3fv(glGetUniformLocation(compute_program, "specular"), 1, glm::value_ptr(specular));
+            glUniform1f(glGetUniformLocation(compute_program, "occlusion"), occlusion);
             glUniform1f(glGetUniformLocation(compute_program, "time"), glfwGetTime());
             glDispatchCompute((width-1)/32+1, (height-1)/32+1, 1);
 
             // make sure writing to image has finished before read
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-            glClear(GL_COLOR_BUFFER_BIT);
 
             glUseProgram(blit_program);
             glBindVertexArray(dummy_vao);

@@ -32,12 +32,16 @@ public:
     // virtual in case you want to override it in child class
     void onKey(int key, int scancode, int actions, int mods)
     {
+        if(key == GLFW_KEY_M && actions == GLFW_PRESS)
+            mouse_lock=!mouse_lock;
     }
     // virtual in case you want to override it in child class
     void onMouse(double xpos, double ypos)
     {
-        pitch = -(ypos*180.0/height-90.0);
-        yaw = -(xpos*2.0*360.0/width);
+        if(!mouse_lock){
+            pitch = -(ypos*180.0/height-90.0);
+            yaw = -(xpos*2.0*360.0/width);
+        }
     }
     void onScroll(double xoffset, double yoffset)
     {
@@ -102,6 +106,14 @@ private:
     glm::vec3 pos;
     glm::vec3 light_pos;
     glm::vec3 param1;
+    float k_a;
+    float k_d;
+    float k_s;
+    float alpha;
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
+    float occlusion;
     float speed;
     GLuint compute_program;
     GLuint compute_program_attractor;
@@ -111,6 +123,7 @@ private:
     GLuint dummy_vao;
     glm::mat4 proj;
     glm::mat4 view;
+    bool mouse_lock = false;
 
     int curr_mode = RAYMARCHING;
 

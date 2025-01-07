@@ -7,6 +7,14 @@ uniform uvec2 screen_size;
 uniform vec3 camera;
 uniform vec3 light_pos;
 uniform vec3 param1;
+uniform float k_a;
+uniform vec3 ambient;
+uniform float k_d;
+uniform vec3 diffuse;
+uniform float k_s;
+uniform float alpha;
+uniform vec3 specular;
+uniform float occlusion;
 uniform float time;
 
 	
@@ -91,16 +99,16 @@ vec3 estimateNormal(vec3 p,float e) {
     ));
 }
 
-vec4 phong(vec3 pos,float k_a, float k_d, float k_s, float alpha,float e) {
+vec4 phong(vec3 pos,float e) {
     vec3 normal = estimateNormal(pos,e);
     vec3 light_dir = normalize(light_pos-pos);
     vec3 reflect_dir = reflect(-light_dir,normal);
     vec3 pos_dir = normalize(camera - pos);
-    float diffuse = max(dot(normal,light_dir),0.0) * k_d;
-    float specular = pow(max(dot(pos_dir,reflect_dir),0.0),alpha) * k_s * (sign(dot(light_dir,normal))*0.5+0.5);
-    return vec4(vec3(0.0,0.0,1.0) * k_a +
-                    vec3(1.0,0.8,0.0) * diffuse * k_d + 
-                    vec3(1.0,1.0,1.0) * specular * k_s,1.0);
+    float coeff_diffuse = max(dot(normal,light_dir),0.0) * k_d;
+    float coeff_specular = pow(max(dot(pos_dir,reflect_dir),0.0),exp(alpha)) * k_s * (sign(dot(light_dir,normal))*0.5+0.5);
+    return vec4(ambient * k_a +
+                    diffuse * coeff_diffuse * k_d + 
+                    specular * coeff_specular * k_s,1.0);
 }
 
 void main() {
@@ -121,9 +129,7 @@ void main() {
             break;
         }
     }
-    vec4 color = vec4(0.0,0.0,0.0,1.0);
-    if(steps<max_iter){
-        color = phong(pos,0.3,0.7,1.0,10.0,dist*EPSILON)*float(max_iter-steps)/max_iter;
-    }
+    float ao = exp(-float(steps)/exp(occlusion));
+    vec4 color =  phong(pos,dist*EPSILON);
     imageStore(imgOutput, ivec2(gl_GlobalInvocationID.xy), color);
 }
