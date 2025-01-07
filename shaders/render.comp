@@ -10,7 +10,8 @@ uniform mat4 inv_view;                                  // Inverted view matrix
 uniform uvec2 screen_size;                              // Screen size (width and height)
 uniform vec3 camera;                                    // Camera position
 uniform vec3 light_pos;                                 // Light position
-uniform vec3 param1;                                    // Additional parameter for some fractals (e.g., shift)
+uniform vec3 param1;                                    // Additional parameter for some fractals (e.g., shift)                            // Light position
+uniform vec3 param2;     
 uniform float k_a;
 uniform vec3 ambient;
 uniform float k_d;
@@ -23,6 +24,13 @@ uniform float time;                                     // Time variable (unused
 uniform vec3 fractal_position;                          // Position of the fractal
 uniform vec3 fractal_rotation;                          // Rotation of the fractal
 
+
+	
+float sdBox( vec3 p, vec3 b )
+{
+  vec3 q = abs(p) - b;
+  return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+}
 
 #define fold45(p)(p.y>p.x)?p.yx:p
 
@@ -79,39 +87,57 @@ float de1(vec3 p)
     rxy = max(rxy, (n) / 8.);   // Adjust distance based on z component
     return (rxy) / abs(scale);  // Return the normalized distance estimate
 }
-
-// Function to estimate the distance for the Sponge fractal
-float de(vec3 p) {
-    // The Sponge fractal parameters
-    float scale = 1.88f;
-    float angle1 = 1.52f;
-    float angle2 = 4.91f;
-    vec3 shift = param1;                        // Additional parameter for shifting   
-    vec2 a1 = vec2(sin(angle1), cos(angle1));
-    vec2 a2 = vec2(sin(angle2), cos(angle2));
-    mat2 rmZ = mat2(a1.y, a1.x, -a1.x, a1.y);   // Rotation matrix around the Z-axis
-    mat2 rmX = mat2(a2.y, a2.x, -a2.x, a2.y);   // Rotation matrix around the X-axis
-    float s = 1.0;
-    
-    for (int i = 0; i <12; ++i) {
-        // Apply a series of transformations (rotations, reflections, scaling, and shifting)
-        p.xyz = abs(p.xyz);
-        p.xy *= rmZ;
-        p.xy += min(p.x - p.y, 0.0) * vec2(-1., 1.);
-        p.xz += min(p.x - p.z, 0.0) * vec2(-1., 1.);
-        p.yz += min(p.y - p.z, 0.0) * vec2(-1., 1.);
-        p.yz *= rmX;
-        p *= scale;
-        s *= scale;
-        p.xyz += shift;
-    }
-
-    vec3 d = abs(p) - vec3(6.0f);                                           // Calculate the distance from the surface
-    return (min(max(d.x, max(d.y, d.z)), 0.0) + length(max(d, 0.0))) / s;   // Return the normalized distance
+float de3( vec3 p ) {
+  //The Sponge
+  float scale = 1.88f;
+  float angle1 = 1.52f;
+  float angle2 = 4.91f;
+  vec3 shift = param1;
+  vec2 a1 = vec2(sin(angle1), cos(angle1));
+  vec2 a2 = vec2(sin(angle2), cos(angle2));
+  mat2 rmZ = mat2(a1.y, a1.x, -a1.x, a1.y);
+  mat2 rmX = mat2(a2.y, a2.x, -a2.x, a2.y);
+  float s = 1.0;
+  for (int i = 0; i <12; ++i) {
+    p.xyz = abs(p.xyz);
+    p.xy *= rmZ;
+    p.xy += min( p.x - p.y, 0.0 ) * vec2( -1., 1. );
+    p.xz += min( p.x - p.z, 0.0 ) * vec2( -1., 1. );
+    p.yz += min( p.y - p.z, 0.0 ) * vec2( -1., 1. );
+    p.yz *= rmX;
+    p *= scale;
+    s *= scale;
+    p.xyz += shift;
+  }
+  vec3 d = abs( p ) - vec3( 6.0f );
+  return ( min( max( d.x, max( d.y, d.z ) ), 0.0 ) + length( max( d, 0.0 ) ) ) / s;
 }
 
-// Function to estimate the normal vector at a given point
-vec3 estimateNormal(vec3 p, float e) {
+float de(vec3 position) {  
+  vec3 transformedPos = position;
+  float scaleFactor = 1.5;
+  float fractalIterations = 16.0;
+  vec3 angles = param1;
+  for (float i = 0.0; i < fractalIterations; i++) {
+     transformedPos *= scaleFactor;
+     transformedPos = abs(transformedPos) - param2;
+     transformedPos.xy *= mat2(
+        cos(angles.x), -sin(angles.x), sin(angles.x), cos(angles.x)
+     );
+     transformedPos.yz *= mat2(
+        cos(angles.y), -sin(angles.y), sin(angles.y), cos(angles.y)
+     );
+     transformedPos.xz *= mat2(
+        cos(angles.z), -sin(angles.z), sin(angles.z), cos(angles.z)
+     );
+  }
+  float combinedScaleFactor = pow(scaleFactor, -round(fractalIterations));
+  transformedPos *= combinedScaleFactor;
+  float minDist = length(transformedPos) - combinedScaleFactor*4.0;
+  return minDist;
+}
+
+vec3 estimateNormal(vec3 p,float e) {
     return normalize(vec3(
     de(vec3(p.x + e, p.y, p.z)) - de(vec3(p.x - e, p.y, p.z)),
     de(vec3(p.x, p.y + e, p.z)) - de(vec3(p.x, p.y - e, p.z)),

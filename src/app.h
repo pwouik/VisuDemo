@@ -106,6 +106,7 @@ private:
     glm::vec3 pos;
     glm::vec3 light_pos;
     glm::vec3 param1;
+    glm::vec3 param2;
     float k_a;
     float k_d;
     float k_s;

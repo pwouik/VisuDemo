@@ -55,8 +55,9 @@ App::App(int w,int h)
 {
     pos = glm::vec3(0.0,0.0,0.0);
     light_pos = glm::vec3(0.0,0.0,0.0);
-    param1 = glm::vec3( -5.0f, -5.0f, 0.55f );
-    occlusion = 3.0;
+    param1 = glm::vec3( -3.0f, 1.0f, 0.55f );
+    param2 = glm::vec3( 1.0f, 1.1f, 2.2f );
+    occlusion = 4.5;
     ambient = glm::vec3(1.0,0.6,0.9);
     diffuse = glm::vec3(1.0,0.6,0.0);
     specular = glm::vec3(1.0,1.0,1.0);
@@ -178,9 +179,8 @@ void App::draw_ui(){
         ImGui::Text("fractal rotation at pitch: %.2f, yaw: %.2f, roll: %.2f. Change with numpad 1, 2 or 3", fractal_rotation.x, fractal_rotation.y, fractal_rotation.z);
         ImGui::Text("speed %.2e. Scroll to change", speed);
         ImGui::SeparatorText("params");
-        ImGui::SliderFloat("param1.x", &param1.x, -5.0f, 5.0f);
-        ImGui::SliderFloat("param1.y", &param1.y, -5.0f, 5.0f);
-        ImGui::SliderFloat("param1.z", &param1.z, -5.0f, 5.0f);
+        ImGui::SliderFloat3("param1", glm::value_ptr(param1), -4.0, 4.0);
+        ImGui::SliderFloat3("param2", glm::value_ptr(param2), -4.0, 4.0);
         ImGui::SliderFloat("k_a", &k_a, 0.0f, 2.0f);
         ImGui::ColorEdit3("ambient", glm::value_ptr(ambient));
         ImGui::SliderFloat("k_d", &k_d, 0.0f, 2.0f);
@@ -265,6 +265,7 @@ void App::run(){
             glUniform3fv(glGetUniformLocation(compute_program, "camera"), 1, glm::value_ptr(pos));
             glUniform3fv(glGetUniformLocation(compute_program, "light_pos"), 1, glm::value_ptr(light_pos));
             glUniform3fv(glGetUniformLocation(compute_program, "param1"), 1, glm::value_ptr(param1));
+            glUniform3fv(glGetUniformLocation(compute_program, "param2"), 1, glm::value_ptr(param2));
             glUniform1f(glGetUniformLocation(compute_program, "k_a"), k_a);
             glUniform3fv(glGetUniformLocation(compute_program, "ambient"), 1, glm::value_ptr(ambient));
             glUniform1f(glGetUniformLocation(compute_program, "k_d"), k_d);
