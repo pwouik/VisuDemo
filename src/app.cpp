@@ -347,7 +347,7 @@ void App::run(){
             glUseProgram(compute_program_attractor);
             glActiveTexture(GL_TEXTURE0);
 
-            glUniformMatrix4fv(glGetUniformLocation(compute_program_attractor, "inv_view"),1, GL_FALSE, glm::value_ptr(glm::inverse(view)));
+            glUniformMatrix4fv(glGetUniformLocation(compute_program_attractor, "inv_view"),1, GL_FALSE, glm::value_ptr(view)); //does'nt inverse view because erm ...
             glUniformMatrix4fv(glGetUniformLocation(compute_program_attractor, "inv_proj"),1, GL_FALSE, glm::value_ptr(glm::inverse(proj)));
             glUniform2ui(glGetUniformLocation(compute_program_attractor, "screen_size"), width,height);
             //glUniform3fv(glGetUniformLocation(compute_program, "param1"), 1, glm::value_ptr(param1)); //TODO REMOVE
