@@ -4,12 +4,20 @@ layout(rgba32f, binding = 0) uniform image2D imgOutput;
 layout(std430, binding = 3) buffer PointBuffer {          // SSBO binding point 3
     vec4 points[];
 };
+layout(std140, binding = 1) uniform Matrices { // the list of mat4 attractors
+    mat4 matrixArray[10];
+};
+uniform int curr_mat_count; //number of matrices in array
+
 uniform mat4 inv_proj;
 uniform mat4 inv_view;
 uniform uvec2 screen_size;
 uniform vec3 camera;
 uniform vec3 light_pos;
 uniform float time;
+
+
+//
 
 	
 
@@ -18,12 +26,13 @@ const float EPSILON = 1e-4;
 const float PI = 3.14159265358979;
 
 #define NBPTS 100000
-//optimisation : lower number of thread to process multiples point per thread ?
+//TODO optimisation : lower number of thread to process multiples point per thread ?
 
 void screenWriteCoord(vec4 pt){
     vec4 camera_space = inv_view * pt;
 
     vec4 projected_point = inv_proj * camera_space;
+    if(projected_point.z > 0) return; //le depth buffer du pauvre
     if (projected_point.w != 0.0) {
         projected_point.xyz /= projected_point.w; // Perspective divide
     }
@@ -44,7 +53,10 @@ void main() {
 
     vec4 point = points[idx];
 
-    //todo update point coordinate with attractor
+    //update point coordinate with attractor (for now choose attractor with % index but later have custom weight)
+    if(curr_mat_count > 0) {
+        point = matrixArray[idx%curr_mat_count] * point;
+    }
 
     screenWriteCoord(point);
 }
