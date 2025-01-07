@@ -13,9 +13,10 @@
 
 #define PI 3.14159265358979323f
 
-
-#define RAYMARCHING 0
-#define ATTRACTOR 1
+enum Mode{
+    Raymarching,
+    Attractor
+};
 
 class App
 {
@@ -125,9 +126,8 @@ private:
     GLuint dummy_vbo;
     GLuint dummy_vao;
     glm::mat4 proj;
-    glm::mat4 view;
     bool mouse_lock = false;
 
-    int curr_mode = RAYMARCHING;
+    Mode curr_mode = Raymarching;
 
 };

@@ -1,14 +1,13 @@
 #version 460 core
 
 // Defines the size of a thread group for efficient execution on the GPU
-layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 // Uniforms for accessing data from the main shader
 layout(rgba32f, binding = 0) uniform image2D imgOutput; // Output image to write results
 uniform mat4 inv_proj;                                  // Inverted projection matrix
 uniform mat4 inv_view;                                  // Inverted view matrix
 uniform uvec2 screen_size;                              // Screen size (width and height)
-uniform vec3 camera;                                    // Camera position
 uniform vec3 light_pos;                                 // Light position
 uniform vec3 param1;                                    // Additional parameter for some fractals (e.g., shift)                            // Light position
 uniform vec3 param2;     
@@ -21,8 +20,6 @@ uniform float alpha;
 uniform vec3 specular;
 uniform float occlusion;
 uniform float time;                                     // Time variable (unused in this shader)
-uniform vec3 fractal_position;                          // Position of the fractal
-uniform vec3 fractal_rotation;                          // Rotation of the fractal
 
 
 	
@@ -34,7 +31,6 @@ float sdBox( vec3 p, vec3 b )
 
 #define fold45(p)(p.y>p.x)?p.yx:p
 
-// Function to estimate the distance for the Mandelbrot fractal variation
 float de2(vec3 p){
     float scale = 2.1, off0 = .8, off1 = .3, off2 = .83;
     vec3 off =vec3(2., .2, .1); // Offset vector
@@ -145,33 +141,10 @@ vec3 estimateNormal(vec3 p,float e) {
     ));
 }
 
-mat3 rotationMatrix(vec3 angles) {
-    float cx = cos(angles.x), sx = sin(angles.x);
-    float cy = cos(angles.y), sy = sin(angles.y);
-    float cz = cos(angles.z), sz = sin(angles.z);
-
-    // Rotation matrices for each axis
-    mat3 rx = mat3(1.0, 0.0, 0.0,
-    0.0, cx, -sx,
-    0.0, sx, cx);
-
-    mat3 ry = mat3(cy, 0.0, sy,
-    0.0, 1.0, 0.0,
-    -sy, 0.0, cy);
-
-    mat3 rz = mat3(cz, -sz, 0.0,
-    sz, cz, 0.0,
-    0.0, 0.0, 1.0);
-
-    return rz * ry * rx; // Combine rotations (order: z * y * x)
-}
-
 // Phong lighting model for calculating color
-vec4 phong(vec3 pos, float ao, float e) {
-    mat3 rot = rotationMatrix(fractal_rotation);
-    vec3 local_pos = rot * (pos - fractal_position); // Transform into fractal space
+vec4 phong(vec3 pos,vec3 camera, float ao, float e) {
     
-    vec3 normal = estimateNormal(local_pos, e);           // Estimate the normal vector at the point
+    vec3 normal = estimateNormal(pos, e);           // Estimate the normal vector at the point
     if (dot(normal, pos - camera) > 0.0) {
         normal = -normal; // Flip the normal if it faces away from the camera
     }
@@ -198,17 +171,15 @@ void main() {
     vec3 dir = normalize(mat3(inv_view) * vec3(inv_proj * vec4(float(gl_GlobalInvocationID.x)/grid_size.x*2.0-1.0, float(gl_GlobalInvocationID.y)/grid_size.y*2.0-1.0, 1.0, 1.0)));
 
     // Initialize ray marching variables
+    vec3 camera  = inv_view[3].xyz;
     vec3 pos = camera;  // Starting position of the ray
     uint steps = 0;
     float dist = 0;
-
-    mat3 rot = rotationMatrix(fractal_rotation);
     
     // Ray marching loop
     for (int i=0; i<max_iter; i++)
     {
-        vec3 local_pos = rot * (pos - fractal_position); // Transform into fractal space
-        float d = de(local_pos);  // Calculate the distance to the surface
+        float d = de(pos);  // Calculate the distance to the surface
         
         pos += dir*d;       // Step along the ray
         dist += d;
@@ -217,6 +188,6 @@ void main() {
             break;
         }
     }
-    vec4 color =  phong(pos, exp(-float(steps)*exp(-occlusion)),dist*EPSILON);
+    vec4 color =  phong(pos,camera, exp(-float(steps)*exp(-occlusion)),dist*EPSILON);
     imageStore(imgOutput, ivec2(gl_GlobalInvocationID.xy), color);
 }

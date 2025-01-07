@@ -171,7 +171,7 @@ void App::draw_ui(){
     ImGui::Begin("Base info");
         ImGui::SeparatorText("current rendering");
             const char* items_cb1[] = { "Raymarching", "Attractor"}; //MUST MATCH DEFINE IN app.h !
-            ImGui::Combo("combo", &curr_mode, items_cb1, IM_ARRAYSIZE(items_cb1));
+            ImGui::Combo("combo", (int*)&curr_mode, items_cb1, IM_ARRAYSIZE(items_cb1));
         ImGui::SeparatorText("generic debug info");
         ImGui::Text("camera in %.2fx, %.2fy, %.2fz", pos.x, pos.y, pos.z);
         ImGui::Text("light in %.2fx, %.2fy, %.2fz . Set with L", light_pos.x, light_pos.y, light_pos.z);
@@ -192,22 +192,39 @@ void App::draw_ui(){
     ImGui::End();
 }
 void App::run(){
-    while (!glfwWindowShouldClose(window)) {
-        if(curr_mode == RAYMARCHING){
-            glfwPollEvents();
-            
-            if(glfwGetKey(window, GLFW_KEY_W)==GLFW_PRESS){
-                pos+= glm::rotateY(glm::vec3(0.0,0.0,-1.0),yaw * PI / 180.0f) * speed;
-            }
-            if(glfwGetKey(window, GLFW_KEY_S)==GLFW_PRESS){
-                pos+= glm::rotateY(glm::vec3(0.0,0.0,1.0),yaw * PI / 180.0f) * speed;
-            }
-            if(glfwGetKey(window, GLFW_KEY_A)==GLFW_PRESS){
-                pos+= glm::rotateY(glm::vec3(-1.0,0.0,0.0),yaw * PI / 180.0f) * speed;
-            }
-            if(glfwGetKey(window, GLFW_KEY_D)==GLFW_PRESS){
-                pos+= glm::rotateY(glm::vec3(1.0,0.0,0.0),yaw * PI / 180.0f) * speed;
-            }
+while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+        
+        if(glfwGetKey(window, GLFW_KEY_W)==GLFW_PRESS){
+            pos+= glm::rotateY(glm::vec3(0.0,0.0,-1.0),yaw * PI / 180.0f) * speed;
+        }
+        if(glfwGetKey(window, GLFW_KEY_S)==GLFW_PRESS){
+            pos+= glm::rotateY(glm::vec3(0.0,0.0,1.0),yaw * PI / 180.0f) * speed;
+        }
+        if(glfwGetKey(window, GLFW_KEY_A)==GLFW_PRESS){
+            pos+= glm::rotateY(glm::vec3(-1.0,0.0,0.0),yaw * PI / 180.0f) * speed;
+        }
+        if(glfwGetKey(window, GLFW_KEY_D)==GLFW_PRESS){
+            pos+= glm::rotateY(glm::vec3(1.0,0.0,0.0),yaw * PI / 180.0f) * speed;
+        }
+        if(glfwGetKey(window, GLFW_KEY_SPACE)==GLFW_PRESS){
+            pos.y += speed;
+        }
+        if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)==GLFW_PRESS){
+            pos.y -= speed;
+        }
+        if(glfwGetKey(window, GLFW_KEY_L)==GLFW_PRESS){
+            light_pos = pos;
+        }
+
+        glm::mat4 inv_camera_view = glm::inverse(glm::translate(glm::rotate(
+                glm::rotate(glm::identity<glm::mat4>(),
+                    -glm::radians(pitch),
+                    glm::vec3(1.0, 0.0, 0.0)),
+                -glm::radians(yaw),
+                glm::vec3(0.0, 1.0, 0.0)),
+            glm::vec3(-pos.x, -pos.y, -pos.z)));
+        if(curr_mode == Raymarching){
             if(glfwGetKey(window, GLFW_KEY_UP)==GLFW_PRESS){
                 fractal_position += glm::vec3(-1.0f ,0.0f, 0.0f) * speed;
             }
@@ -238,32 +255,21 @@ void App::run(){
             if(glfwGetKey(window, GLFW_KEY_L)==GLFW_PRESS){
                 light_pos = pos;
             }
-            if(glfwGetKey(window, GLFW_KEY_SPACE)==GLFW_PRESS){
-                pos.y += speed;
-            }
-            if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)==GLFW_PRESS){
-                pos.y -= speed;
-            }
 
-            view = glm::translate(glm::rotate(
-                    glm::rotate(glm::identity<glm::mat4>(),
-                        -glm::radians(pitch),
-                        glm::vec3(1.0, 0.0, 0.0)),
-                    -glm::radians(yaw),
-                    glm::vec3(0.0, 1.0, 0.0)),
-                glm::vec3(-pos.x, -pos.y, -pos.z));
-            
+            glm::mat4 fractal_transform = glm::orientate4(fractal_rotation)*glm::translate(glm::identity<glm::mat4>(),fractal_position);
+            glm::mat4 total_transform = fractal_transform*inv_camera_view;
+
             utl::newframeIMGUI();
             draw_ui();
 
             glUseProgram(compute_program);
             glActiveTexture(GL_TEXTURE0);
 
-            glUniformMatrix4fv(glGetUniformLocation(compute_program, "inv_view"),1, GL_FALSE, glm::value_ptr(glm::inverse(view)));
+            glUniformMatrix4fv(glGetUniformLocation(compute_program, "inv_view"),1, GL_FALSE, glm::value_ptr(total_transform));
             glUniformMatrix4fv(glGetUniformLocation(compute_program, "inv_proj"),1, GL_FALSE, glm::value_ptr(glm::inverse(proj)));
             glUniform2ui(glGetUniformLocation(compute_program, "screen_size"), width,height);
             glUniform3fv(glGetUniformLocation(compute_program, "camera"), 1, glm::value_ptr(pos));
-            glUniform3fv(glGetUniformLocation(compute_program, "light_pos"), 1, glm::value_ptr(light_pos));
+            glUniform3fv(glGetUniformLocation(compute_program, "light_pos"), 1, glm::value_ptr(light_pos+glm::vec3(fractal_transform[3])));
             glUniform3fv(glGetUniformLocation(compute_program, "param1"), 1, glm::value_ptr(param1));
             glUniform3fv(glGetUniformLocation(compute_program, "param2"), 1, glm::value_ptr(param2));
             glUniform1f(glGetUniformLocation(compute_program, "k_a"), k_a);
@@ -275,9 +281,7 @@ void App::run(){
             glUniform3fv(glGetUniformLocation(compute_program, "specular"), 1, glm::value_ptr(specular));
             glUniform1f(glGetUniformLocation(compute_program, "occlusion"), occlusion);
             glUniform1f(glGetUniformLocation(compute_program, "time"), glfwGetTime());
-            glUniform3fv(glGetUniformLocation(compute_program, "fractal_position"), 1, glm::value_ptr(fractal_position));
-            glUniform3fv(glGetUniformLocation(compute_program, "fractal_rotation"), 1, glm::value_ptr(fractal_rotation));
-            glDispatchCompute((width-1)/32+1, (height-1)/32+1, 1);
+            glDispatchCompute((width-1)/8+1, (height-1)/8+1, 1);
 
             // make sure writing to image has finished before read
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -287,53 +291,17 @@ void App::run(){
             glBindTexture(GL_TEXTURE_2D, texture);
             glDrawArrays(GL_TRIANGLES,0,3);
 
-
-            utl::enframeIMGUI();
-            utl::multiViewportIMGUI(window);
-            glfwSwapBuffers(window);
         }
-        else if(curr_mode == ATTRACTOR){
-            glfwPollEvents();
-            
-            if(glfwGetKey(window, GLFW_KEY_W)==GLFW_PRESS){
-                pos+= glm::rotateY(glm::vec3(0.0,0.0,-1.0),yaw * PI / 180.0f) * speed;
-            }
-            if(glfwGetKey(window, GLFW_KEY_S)==GLFW_PRESS){
-                pos+= glm::rotateY(glm::vec3(0.0,0.0,1.0),yaw * PI / 180.0f) * speed;
-            }
-            if(glfwGetKey(window, GLFW_KEY_A)==GLFW_PRESS){
-                pos+= glm::rotateY(glm::vec3(-1.0,0.0,0.0),yaw * PI / 180.0f) * speed;
-            }
-            if(glfwGetKey(window, GLFW_KEY_D)==GLFW_PRESS){
-                pos+= glm::rotateY(glm::vec3(1.0,0.0,0.0),yaw * PI / 180.0f) * speed;
-            }
-            if(glfwGetKey(window, GLFW_KEY_L)==GLFW_PRESS){
-                light_pos = pos;
-            }
-            if(glfwGetKey(window, GLFW_KEY_SPACE)==GLFW_PRESS){
-                pos.y += speed;
-            }
-            if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)==GLFW_PRESS){
-                pos.y -= speed;
-            }
+        else if(curr_mode == Attractor){
 
-            view = glm::translate(glm::rotate(
-                    glm::rotate(glm::identity<glm::mat4>(),
-                        -glm::radians(pitch),
-                        glm::vec3(1.0, 0.0, 0.0)),
-                    -glm::radians(yaw),
-                    glm::vec3(0.0, 1.0, 0.0)),
-                glm::vec3(-pos.x, -pos.y, -pos.z));
-            
             utl::newframeIMGUI();
             draw_ui();
-
             glClearColor(0.0f, 0.0f, 0.1f, 1.0f);
 
             glUseProgram(compute_program_attractor);
             glActiveTexture(GL_TEXTURE0);
 
-            glUniformMatrix4fv(glGetUniformLocation(compute_program_attractor, "inv_view"),1, GL_FALSE, glm::value_ptr(glm::inverse(view)));
+            glUniformMatrix4fv(glGetUniformLocation(compute_program_attractor, "inv_view"),1, GL_FALSE, glm::value_ptr(inv_camera_view));
             glUniformMatrix4fv(glGetUniformLocation(compute_program_attractor, "inv_proj"),1, GL_FALSE, glm::value_ptr(glm::inverse(proj)));
             glUniform2ui(glGetUniformLocation(compute_program_attractor, "screen_size"), width,height);
             glUniform3fv(glGetUniformLocation(compute_program_attractor, "camera"), 1, glm::value_ptr(pos));
@@ -352,10 +320,9 @@ void App::run(){
             glBindTexture(GL_TEXTURE_2D, texture);
             glDrawArrays(GL_TRIANGLES,0,3);
 
-
-            utl::enframeIMGUI();
-            utl::multiViewportIMGUI(window);
-            glfwSwapBuffers(window);
         }
+        utl::enframeIMGUI();
+        utl::multiViewportIMGUI(window);
+        glfwSwapBuffers(window);
     }
 }
