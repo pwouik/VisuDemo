@@ -14,6 +14,9 @@
 #define PI 3.14159265358979323f
 
 
+#define RAYMARCHING 0
+#define ATTRACTOR 1
+
 class App
 {
 public:
@@ -101,11 +104,14 @@ private:
     glm::vec3 param1;
     float speed;
     GLuint compute_program;
+    GLuint compute_program_attractor;
     GLuint blit_program;
     GLuint texture;
     GLuint dummy_vbo;
     GLuint dummy_vao;
     glm::mat4 proj;
     glm::mat4 view;
+
+    int curr_mode = RAYMARCHING;
 
 };

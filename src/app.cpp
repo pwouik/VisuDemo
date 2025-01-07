@@ -79,6 +79,7 @@ App::App(int w,int h)
     int version = gladLoadGL(glfwGetProcAddress);
     printf("GL %d.%d\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
     
+    //compute_program for ray marching
     compute_program = glCreateProgram();
     GLint comp = loadshader("shaders/render.comp", GL_COMPUTE_SHADER);
     glAttachShader(compute_program, comp);
@@ -110,6 +111,24 @@ App::App(int w,int h)
     glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
 
+    //compute_program for attractor
+    compute_program_attractor = glCreateProgram();
+    GLint comp_attractor = loadshader("shaders/render_attractor.comp", GL_COMPUTE_SHADER);
+    glAttachShader(compute_program_attractor, comp_attractor);
+    glLinkProgram(compute_program_attractor);
+    GLint linked_attractor; //probably useless to redeclare
+    glGetProgramiv(compute_program_attractor, GL_LINK_STATUS, &linked_attractor);
+    if (!linked_attractor) {
+        printf("Shader program failed to link:\n");
+        GLint logSize;
+        glGetProgramiv(compute_program_attractor, GL_INFO_LOG_LENGTH, &logSize);
+        char* logMsg = new char[logSize];
+        glGetProgramInfoLog(compute_program_attractor, logSize, nullptr, logMsg);
+        printf("%s\n", logMsg);
+        delete[] logMsg;
+        exit(EXIT_FAILURE);
+    }
+
 
     blit_program = glCreateProgram();
     GLint vert = loadshader("shaders/blit.vert", GL_VERTEX_SHADER);
@@ -140,6 +159,9 @@ App::App(int w,int h)
 
 void App::draw_ui(){
     ImGui::Begin("Base info");
+        ImGui::SeparatorText("current rendering");
+            const char* items_cb1[] = { "Raymarching", "Attractor"}; //MUST MATCH DEFINE IN app.h !
+            ImGui::Combo("combo", &curr_mode, items_cb1, IM_ARRAYSIZE(items_cb1));
         ImGui::SeparatorText("generic debug info");
         ImGui::Text("camera in %.2fx, %.2fy, %.2fz", pos.x, pos.y, pos.z);
         ImGui::Text("light in %.2fx, %.2fy, %.2fz . Set with L", light_pos.x, light_pos.y, light_pos.z);
@@ -152,73 +174,135 @@ void App::draw_ui(){
 }
 void App::run(){
     while (!glfwWindowShouldClose(window)) {
-        glfwPollEvents();
-        
+        if(curr_mode == RAYMARCHING){
+            glfwPollEvents();
+            
+            if(glfwGetKey(window, GLFW_KEY_W)==GLFW_PRESS){
+                pos+= glm::rotateY(glm::vec3(0.0,0.0,-1.0),yaw * PI / 180.0f) * speed;
+            }
+            if(glfwGetKey(window, GLFW_KEY_S)==GLFW_PRESS){
+                pos+= glm::rotateY(glm::vec3(0.0,0.0,1.0),yaw * PI / 180.0f) * speed;
+            }
+            if(glfwGetKey(window, GLFW_KEY_A)==GLFW_PRESS){
+                pos+= glm::rotateY(glm::vec3(-1.0,0.0,0.0),yaw * PI / 180.0f) * speed;
+            }
+            if(glfwGetKey(window, GLFW_KEY_D)==GLFW_PRESS){
+                pos+= glm::rotateY(glm::vec3(1.0,0.0,0.0),yaw * PI / 180.0f) * speed;
+            }
+            if(glfwGetKey(window, GLFW_KEY_L)==GLFW_PRESS){
+                light_pos = pos;
+            }
+            if(glfwGetKey(window, GLFW_KEY_SPACE)==GLFW_PRESS){
+                pos.y += speed;
+            }
+            if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)==GLFW_PRESS){
+                pos.y -= speed;
+            }
 
-        if(glfwGetKey(window, GLFW_KEY_W)==GLFW_PRESS){
-            pos+= glm::rotateY(glm::vec3(0.0,0.0,-1.0),yaw * PI / 180.0f) * speed;
+            view = glm::translate(glm::rotate(
+                    glm::rotate(glm::identity<glm::mat4>(),
+                        -glm::radians(pitch),
+                        glm::vec3(1.0, 0.0, 0.0)),
+                    -glm::radians(yaw),
+                    glm::vec3(0.0, 1.0, 0.0)),
+                glm::vec3(-pos.x, -pos.y, -pos.z));
+            
+            utl::newframeIMGUI();
+            draw_ui();
+
+            glClearColor(0.0f, 0.0f, 0.1f, 1.0f);
+
+            glUseProgram(compute_program);
+            glActiveTexture(GL_TEXTURE0);
+
+            glUniformMatrix4fv(glGetUniformLocation(compute_program, "inv_view"),1, GL_FALSE, glm::value_ptr(glm::inverse(view)));
+            glUniformMatrix4fv(glGetUniformLocation(compute_program, "inv_proj"),1, GL_FALSE, glm::value_ptr(glm::inverse(proj)));
+            glUniform2ui(glGetUniformLocation(compute_program, "screen_size"), width,height);
+            glUniform3fv(glGetUniformLocation(compute_program, "camera"), 1, glm::value_ptr(pos));
+            glUniform3fv(glGetUniformLocation(compute_program, "light_pos"), 1, glm::value_ptr(light_pos));
+            glUniform3fv(glGetUniformLocation(compute_program, "param1"), 1, glm::value_ptr(param1));
+            glUniform1f(glGetUniformLocation(compute_program, "time"), glfwGetTime());
+            glDispatchCompute((width-1)/32+1, (height-1)/32+1, 1);
+
+            // make sure writing to image has finished before read
+            glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            glUseProgram(blit_program);
+            glBindVertexArray(dummy_vao);
+            glBindTexture(GL_TEXTURE_2D, texture);
+            glDrawArrays(GL_TRIANGLES,0,3);
+
+
+            utl::enframeIMGUI();
+            utl::multiViewportIMGUI(window);
+            glfwSwapBuffers(window);
         }
-        if(glfwGetKey(window, GLFW_KEY_S)==GLFW_PRESS){
-            pos+= glm::rotateY(glm::vec3(0.0,0.0,1.0),yaw * PI / 180.0f) * speed;
+        else if(curr_mode == ATTRACTOR){
+            glfwPollEvents();
+            
+            if(glfwGetKey(window, GLFW_KEY_W)==GLFW_PRESS){
+                pos+= glm::rotateY(glm::vec3(0.0,0.0,-1.0),yaw * PI / 180.0f) * speed;
+            }
+            if(glfwGetKey(window, GLFW_KEY_S)==GLFW_PRESS){
+                pos+= glm::rotateY(glm::vec3(0.0,0.0,1.0),yaw * PI / 180.0f) * speed;
+            }
+            if(glfwGetKey(window, GLFW_KEY_A)==GLFW_PRESS){
+                pos+= glm::rotateY(glm::vec3(-1.0,0.0,0.0),yaw * PI / 180.0f) * speed;
+            }
+            if(glfwGetKey(window, GLFW_KEY_D)==GLFW_PRESS){
+                pos+= glm::rotateY(glm::vec3(1.0,0.0,0.0),yaw * PI / 180.0f) * speed;
+            }
+            if(glfwGetKey(window, GLFW_KEY_L)==GLFW_PRESS){
+                light_pos = pos;
+            }
+            if(glfwGetKey(window, GLFW_KEY_SPACE)==GLFW_PRESS){
+                pos.y += speed;
+            }
+            if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)==GLFW_PRESS){
+                pos.y -= speed;
+            }
+
+            view = glm::translate(glm::rotate(
+                    glm::rotate(glm::identity<glm::mat4>(),
+                        -glm::radians(pitch),
+                        glm::vec3(1.0, 0.0, 0.0)),
+                    -glm::radians(yaw),
+                    glm::vec3(0.0, 1.0, 0.0)),
+                glm::vec3(-pos.x, -pos.y, -pos.z));
+            
+            utl::newframeIMGUI();
+            draw_ui();
+
+            glClearColor(0.0f, 0.0f, 0.1f, 1.0f);
+
+            glUseProgram(compute_program_attractor);
+            glActiveTexture(GL_TEXTURE0);
+
+            glUniformMatrix4fv(glGetUniformLocation(compute_program_attractor, "inv_view"),1, GL_FALSE, glm::value_ptr(glm::inverse(view)));
+            glUniformMatrix4fv(glGetUniformLocation(compute_program_attractor, "inv_proj"),1, GL_FALSE, glm::value_ptr(glm::inverse(proj)));
+            glUniform2ui(glGetUniformLocation(compute_program_attractor, "screen_size"), width,height);
+            glUniform3fv(glGetUniformLocation(compute_program_attractor, "camera"), 1, glm::value_ptr(pos));
+            glUniform3fv(glGetUniformLocation(compute_program_attractor, "light_pos"), 1, glm::value_ptr(light_pos));
+            glUniform3fv(glGetUniformLocation(compute_program_attractor, "param1"), 1, glm::value_ptr(param1));
+            glUniform1f(glGetUniformLocation(compute_program_attractor, "time"), glfwGetTime());
+            glDispatchCompute((width-1)/32+1, (height-1)/32+1, 1);
+
+            // make sure writing to image has finished before read
+            glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            glUseProgram(blit_program);
+            glBindVertexArray(dummy_vao);
+            glBindTexture(GL_TEXTURE_2D, texture);
+            glDrawArrays(GL_TRIANGLES,0,3);
+
+
+            utl::enframeIMGUI();
+            utl::multiViewportIMGUI(window);
+            glfwSwapBuffers(window);
         }
-
-        if(glfwGetKey(window, GLFW_KEY_A)==GLFW_PRESS){
-            pos+= glm::rotateY(glm::vec3(-1.0,0.0,0.0),yaw * PI / 180.0f) * speed;
-        }
-
-        if(glfwGetKey(window, GLFW_KEY_D)==GLFW_PRESS){
-            pos+= glm::rotateY(glm::vec3(1.0,0.0,0.0),yaw * PI / 180.0f) * speed;
-        }
-        if(glfwGetKey(window, GLFW_KEY_L)==GLFW_PRESS){
-            light_pos = pos;
-        }
-
-        if(glfwGetKey(window, GLFW_KEY_SPACE)==GLFW_PRESS){
-            pos.y += speed;
-        }
-
-        if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)==GLFW_PRESS){
-            pos.y -= speed;
-        }
-
-        view = glm::translate(glm::rotate(
-                glm::rotate(glm::identity<glm::mat4>(),
-                    -glm::radians(pitch),
-                    glm::vec3(1.0, 0.0, 0.0)),
-                -glm::radians(yaw),
-                glm::vec3(0.0, 1.0, 0.0)),
-            glm::vec3(-pos.x, -pos.y, -pos.z));
-        
-        utl::newframeIMGUI();
-        draw_ui();
-
-        glClearColor(0.0f, 0.0f, 0.1f, 1.0f);
-
-        glUseProgram(compute_program);
-        glActiveTexture(GL_TEXTURE0);
-
-        glUniformMatrix4fv(glGetUniformLocation(compute_program, "inv_view"),1, GL_FALSE, glm::value_ptr(glm::inverse(view)));
-        glUniformMatrix4fv(glGetUniformLocation(compute_program, "inv_proj"),1, GL_FALSE, glm::value_ptr(glm::inverse(proj)));
-        glUniform2ui(glGetUniformLocation(compute_program, "screen_size"), width,height);
-        glUniform3fv(glGetUniformLocation(compute_program, "camera"), 1, glm::value_ptr(pos));
-        glUniform3fv(glGetUniformLocation(compute_program, "light_pos"), 1, glm::value_ptr(light_pos));
-        glUniform3fv(glGetUniformLocation(compute_program, "param1"), 1, glm::value_ptr(param1));
-        glUniform1f(glGetUniformLocation(compute_program, "time"), glfwGetTime());
-        glDispatchCompute((width-1)/32+1, (height-1)/32+1, 1);
-
-        // make sure writing to image has finished before read
-        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-		glClear(GL_COLOR_BUFFER_BIT);
-
-        glUseProgram(blit_program);
-        glBindVertexArray(dummy_vao);
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glDrawArrays(GL_TRIANGLES,0,3);
-
-
-        utl::enframeIMGUI();
-        utl::multiViewportIMGUI(window);
-        glfwSwapBuffers(window);
     }
 }

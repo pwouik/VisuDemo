@@ -1,0 +1,26 @@
+#version 460 core
+layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+layout(rgba32f, binding = 0) uniform image2D imgOutput;
+uniform mat4 inv_proj;
+uniform mat4 inv_view;
+uniform uvec2 screen_size;
+uniform vec3 camera;
+uniform vec3 light_pos;
+uniform float time;
+
+	
+
+const uint max_iter = 256;
+const float EPSILON = 1e-4;
+const float PI = 3.14159265358979;
+
+//black canvas for now
+
+
+
+void main() {
+    if(gl_GlobalInvocationID.x>=screen_size.x || gl_GlobalInvocationID.y>=screen_size.y)
+        return;
+    vec4 color = vec4(0.0,0.0,0.0,1.0);
+    imageStore(imgOutput, ivec2(gl_GlobalInvocationID.xy), color);
+}
