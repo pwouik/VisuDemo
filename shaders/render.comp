@@ -6,6 +6,7 @@ uniform mat4 inv_view;
 uniform uvec2 screen_size;
 uniform vec3 camera;
 uniform vec3 light_pos;
+uniform vec3 param1;
 uniform float time;
 
 	
@@ -33,7 +34,7 @@ float de2( vec3 p ){
     return length(p)/s-0.0001;
 }
 const uint max_iter = 256;
-const float EPSILON = 1e-4;
+const float EPSILON = 1e-3;
 const float PI = 3.14159265358979;
 
 #define CSize vec3(1., 1.7, 1.)
@@ -57,34 +58,41 @@ float de1( vec3 p )
 	rxy = max(rxy, (n) / 8.);
 	return (rxy) / abs(scale);
 }
-float de(vec3 p){
-    p.z-=16.; float s=3.; float e=0.;
-    p.y=abs(p.y)-1.8;
-    p=clamp(p,-3.,3.)*2.-p;
-    s*=e=6./clamp(dot(p,p),1.5,50.);
-    p=abs(p)*e-vec3(0,1.8,0);
-    p.xz =.8-abs(p.xz-2.);
-    p.y =1.7-abs(p.y-2.);
-    s*=e=12./clamp(dot(p,p),1.0,50.);
-    p=abs(p)*e-vec2(.2,1).xyx;
-    p.y =1.5-abs(p.y-2.);
-    s*=e=16./clamp(dot(p,p),.1,9.);
-    p=abs(p)*e-vec2(.3,-.7).xyx;
-    return min(
-            length(p.xz)-.5,
-            length(vec2(length(p.xz)-12.,p.y))-3.
-            )/s;
+float de( vec3 p ) {
+  //The Sponge
+  float scale = 1.88f;
+  float angle1 = 1.52f;
+  float angle2 = 4.91f;
+  vec3 shift = param1;
+  vec2 a1 = vec2(sin(angle1), cos(angle1));
+  vec2 a2 = vec2(sin(angle2), cos(angle2));
+  mat2 rmZ = mat2(a1.y, a1.x, -a1.x, a1.y);
+  mat2 rmX = mat2(a2.y, a2.x, -a2.x, a2.y);
+  float s = 1.0;
+  for (int i = 0; i <12; ++i) {
+    p.xyz = abs(p.xyz);
+    p.xy *= rmZ;
+    p.xy += min( p.x - p.y, 0.0 ) * vec2( -1., 1. );
+    p.xz += min( p.x - p.z, 0.0 ) * vec2( -1., 1. );
+    p.yz += min( p.y - p.z, 0.0 ) * vec2( -1., 1. );
+    p.yz *= rmX;
+    p *= scale;
+    s *= scale;
+    p.xyz += shift;
   }
-vec3 estimateNormal(vec3 p) {
+  vec3 d = abs( p ) - vec3( 6.0f );
+  return ( min( max( d.x, max( d.y, d.z ) ), 0.0 ) + length( max( d, 0.0 ) ) ) / s;
+}
+vec3 estimateNormal(vec3 p,float e) {
     return normalize(vec3(
-        de(vec3(p.x + EPSILON, p.y, p.z)) - de(vec3(p.x - EPSILON, p.y, p.z)),
-        de(vec3(p.x, p.y + EPSILON, p.z)) - de(vec3(p.x, p.y - EPSILON, p.z)),
-        de(vec3(p.x, p.y, p.z  + EPSILON)) - de(vec3(p.x, p.y, p.z - EPSILON))
+        de(vec3(p.x + e, p.y, p.z)) - de(vec3(p.x - e, p.y, p.z)),
+        de(vec3(p.x, p.y + e, p.z)) - de(vec3(p.x, p.y - e, p.z)),
+        de(vec3(p.x, p.y, p.z  + e)) - de(vec3(p.x, p.y, p.z - e))
     ));
 }
 
-vec4 phong(vec3 pos,float k_a, float k_d, float k_s, float alpha) {
-    vec3 normal = estimateNormal(pos);
+vec4 phong(vec3 pos,float k_a, float k_d, float k_s, float alpha,float e) {
+    vec3 normal = estimateNormal(pos,e);
     vec3 light_dir = normalize(light_pos-pos);
     vec3 reflect_dir = reflect(-light_dir,normal);
     vec3 pos_dir = normalize(camera - pos);
@@ -109,13 +117,13 @@ void main() {
         pos += dir*d;
         dist+=d;
         steps+=1;
-        if(d<dist*1e-5){
+        if(d<dist*EPSILON){
             break;
         }
     }
     vec4 color = vec4(0.0,0.0,0.0,1.0);
     if(steps<max_iter){
-        color = phong(pos,0.1,0.7,1.0,10.0);
+        color = phong(pos,0.1,0.7,1.0,10.0,dist*EPSILON);
     }
     imageStore(imgOutput, ivec2(gl_GlobalInvocationID.xy), color);
 }

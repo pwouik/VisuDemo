@@ -98,6 +98,7 @@ private:
     float yaw;
     glm::vec3 pos;
     glm::vec3 light_pos;
+    glm::vec3 param1;
     float speed;
     GLuint compute_program;
     GLuint blit_program;

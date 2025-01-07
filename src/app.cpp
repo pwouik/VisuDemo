@@ -54,6 +54,7 @@ App::App(int w,int h)
 {
     pos = glm::vec3(0.0,0.0,0.0);
     light_pos = glm::vec3(0.0,0.0,0.0);
+    param1 = glm::vec3( -4.54f, -1.26f, 0.1f );
     width = w;
     height = h;
     speed = 1.0;
@@ -143,6 +144,10 @@ void App::draw_ui(){
         ImGui::Text("camera in %.2fx, %.2fy, %.2fz", pos.x, pos.y, pos.z);
         ImGui::Text("light in %.2fx, %.2fy, %.2fz . Set with L", light_pos.x, light_pos.y, light_pos.z);
         ImGui::Text("speed %.2e. Scroll to change", speed);
+        ImGui::SeparatorText("params");
+        ImGui::SliderFloat("param1.x", &param1.x, -5.0f, 5.0f);
+        ImGui::SliderFloat("param1.y", &param1.y, -5.0f, 5.0f);
+        ImGui::SliderFloat("param1.z", &param1.z, -5.0f, 5.0f);
     ImGui::End();
 }
 void App::run(){
@@ -197,6 +202,7 @@ void App::run(){
         glUniform2ui(glGetUniformLocation(compute_program, "screen_size"), width,height);
         glUniform3fv(glGetUniformLocation(compute_program, "camera"), 1, glm::value_ptr(pos));
         glUniform3fv(glGetUniformLocation(compute_program, "light_pos"), 1, glm::value_ptr(light_pos));
+        glUniform3fv(glGetUniformLocation(compute_program, "param1"), 1, glm::value_ptr(param1));
         glUniform1f(glGetUniformLocation(compute_program, "time"), glfwGetTime());
         glDispatchCompute((width-1)/32+1, (height-1)/32+1, 1);
 
