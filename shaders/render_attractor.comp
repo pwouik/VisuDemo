@@ -19,22 +19,22 @@ uniform float time;
 
 
 //tmp hardcode matrices here for now
-// mat4 matri0 = transpose(mat4(   0.5f, 0.0f,  0.0f, 0.0f,
-//                                 0.0f, 0.5f,  0.0f, 0.36f,
-//                                 0.0f, 0.0f,  0.0f, 0.0f,
-//                                 0.0f, 0.0f,  0.0f, 1.0f));
-// mat4 matri1 = transpose(mat4(   0.5f, 0.0f,  0.0f, -0.5f,
-//                                 0.0f, 0.5f,  0.0f, -0.5f,
-//                                 0.0f, 0.0f,  0.0f, 0.0f,
-//                                 0.0f, 0.0f,  0.0f, 1.0f));
-// mat4 matri2 = transpose(mat4(   0.5f, 0.0f,  0.0f, 0.5f,
-//                                 0.0f, 0.5f,  0.0f, -0.5f,
-//                                 0.0f, 0.0f,  0.0f, 0.0f,
-//                                 0.0f, 0.0f,  0.0f, 1.0f));
+mat4 matri0 = transpose(mat4(   0.5f, 0.0f,  0.0f, 0.0f,
+                                0.0f, 0.5f,  0.0f, 0.36f,
+                                0.0f, 0.0f,  0.0f, 0.0f,
+                                0.0f, 0.0f,  0.0f, 1.0f));
+mat4 matri1 = transpose(mat4(   0.5f, 0.0f,  0.0f, -0.5f,
+                                0.0f, 0.5f,  0.0f, -0.5f,
+                                0.0f, 0.0f,  0.0f, 0.0f,
+                                0.0f, 0.0f,  0.0f, 1.0f));
+mat4 matri2 = transpose(mat4(   0.5f, 0.0f,  0.0f, 0.5f,
+                                0.0f, 0.5f,  0.0f, -0.5f,
+                                0.0f, 0.0f,  0.0f, 0.0f,
+                                0.0f, 0.0f,  0.0f, 1.0f));
 
-mat4 matri0 = transpose(matrixArray[0]);
-mat4 matri1 = transpose(matrixArray[1]);
-mat4 matri2 = transpose(matrixArray[2]);
+// mat4 matri0 = transpose(matrixArray[0]);
+// mat4 matri1 = transpose(matrixArray[1]);
+// mat4 matri2 = transpose(matrixArray[2]);
 
 
 

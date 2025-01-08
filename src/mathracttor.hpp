@@ -158,6 +158,10 @@ namespace mtl{ //math utl or whatever I lacked inspiration for naming this names
     public:
         std::vector<AttractorMatrices> attractorsMatrices;
 
+        Attractor(){
+            std::cout << "c moi qui fcasse tout" << std::endl;
+        }
+
         void ui(){
             for(auto& am : attractorsMatrices){
                 am.ui();
