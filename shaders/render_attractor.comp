@@ -11,8 +11,8 @@ uniform int randInt_seed;
 uniform int matrixPerAttractor; //number of matrices in array
 uniform int immobileCount; //number of point that won't move
 
-uniform mat4 inv_proj;
-uniform mat4 inv_view;
+uniform mat4 proj;
+uniform mat4 view;
 uniform uvec2 screen_size;
 uniform vec3 camera;
 uniform vec3 light_pos;
@@ -59,12 +59,13 @@ const float PI = 3.14159265358979;
 //TODO optimisation : lower number of thread to process multiples point per thread ?
 
 void screenWriteCoord(vec4 pt){
-    vec4 camera_space = inv_view * pt;
+    vec4 camera_space = view * pt;
 
-    vec4 projected_point = inv_proj * camera_space;
+    vec4 projected_point = proj * camera_space;
     if (projected_point.w != 0.0) {
         projected_point.xyz /= projected_point.w; // Perspective divide
     }
+    if(projected_point.z>1.0){return;}
 
     vec2 screen_coord = (projected_point.xy + 1.0) * 0.5; // [-1,1] to [0,1]
     screen_coord *= vec2(screen_size); // Map to screen space (pixels)
