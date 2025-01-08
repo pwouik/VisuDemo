@@ -8,6 +8,8 @@
 #include <glad/gl.h>
 #include <cmath>
 #include <cstdio>
+#include <iostream>
+
 #include "imgui_util.hpp" 
 #define GLM_ENABLE_EXPERIMENTAL
 
@@ -16,6 +18,9 @@
 
 #define RAYMARCHING 0
 #define ATTRACTOR 1
+
+#define DEBUG(x) std::cout << x << std::endl;
+//#define DEBUG
 
 class App
 {

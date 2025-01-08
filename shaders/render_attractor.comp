@@ -19,33 +19,23 @@ uniform float time;
 
 
 //tmp hardcode matrices here for now
-mat4 matri0 = transpose(mat4(   0.5f, 0.0f,  0.0f, 0.0f,
-                                0.0f, 0.5f,  0.0f, 0.36f,
-                                0.0f, 0.0f,  0.0f, 0.0f,
-                                0.0f, 0.0f,  0.0f, 1.0f));
-mat4 matri1 = transpose(mat4(   0.5f, 0.0f,  0.0f, -0.5f,
-                                0.0f, 0.5f,  0.0f, -0.5f,
-                                0.0f, 0.0f,  0.0f, 0.0f,
-                                0.0f, 0.0f,  0.0f, 1.0f));
-mat4 matri2 = transpose(mat4(   0.5f, 0.0f,  0.0f, 0.5f,
-                                0.0f, 0.5f,  0.0f, -0.5f,
-                                0.0f, 0.0f,  0.0f, 0.0f,
-                                0.0f, 0.0f,  0.0f, 1.0f));
+// mat4 matri0 = transpose(mat4(   0.5f, 0.0f,  0.0f, 0.0f,
+//                                 0.0f, 0.5f,  0.0f, 0.36f,
+//                                 0.0f, 0.0f,  0.0f, 0.0f,
+//                                 0.0f, 0.0f,  0.0f, 1.0f));
+// mat4 matri1 = transpose(mat4(   0.5f, 0.0f,  0.0f, -0.5f,
+//                                 0.0f, 0.5f,  0.0f, -0.5f,
+//                                 0.0f, 0.0f,  0.0f, 0.0f,
+//                                 0.0f, 0.0f,  0.0f, 1.0f));
+// mat4 matri2 = transpose(mat4(   0.5f, 0.0f,  0.0f, 0.5f,
+//                                 0.0f, 0.5f,  0.0f, -0.5f,
+//                                 0.0f, 0.0f,  0.0f, 0.0f,
+//                                 0.0f, 0.0f,  0.0f, 1.0f));
 
-// mat4 matri0 = mat4( 0.995f, 0.0f,  0.0f, 0.0f,
-//                     0.0f, 1.0f,  0.0f, 0.0f,
-//                     0.0f, 0.0f,  1.0, 0.0f,
-//                     0.0f, 0.0f,  0.0f, 1.0f);
+mat4 matri0 = transpose(matrixArray[0]);
+mat4 matri1 = transpose(matrixArray[1]);
+mat4 matri2 = transpose(matrixArray[2]);
 
-// mat4 matri1 = mat4( 1.0f, 0.0f,  0.0f, 0.0f,
-//                     0.0f, 0.995f,  0.0f, 0.0f,
-//                     0.0f, 0.0f,  1.0f, 0.0f,
-//                     0.0f, 0.0f,  0.0f, 1.0f);
-
-// mat4 matri2 = mat4( 1.0f, 0.0f,  0.0f, 0.0f,
-//                     0.0f, 1.0f,  0.0f, 0.0f,
-//                     0.0f, 0.0f,  0.995f, 0.0f,
-//                     0.0f, 0.0f,  0.0f, 1.0f);
 
 
 	
@@ -83,12 +73,11 @@ void main() {
     vec4 pts[3];
 
     //update point coordinate with attractor (for now choose attractor with % index but later have custom weight)
-    if(curr_mat_count > 0) {
-        //points[idx] = matrixArray[idx%curr_mat_count] * point;
-        
-        uint rand = (idx%randInt_seed)%curr_mat_count;
-        //uint rand = idx%curr_mat_count;
+    if(curr_mat_count > 0) {        
+        //get a pseudo random number. This may requieres fix because of overhead (multiples points getting traped in the same loop) TODO
+        uint rand = (idx%randInt_seed)%curr_mat_count; 
 
+        //Assuming 3 attroctor funciton per attractor
         //compute all points to display
         pts[0] = matri0 * point;
         pts[1] = matri1 * point;

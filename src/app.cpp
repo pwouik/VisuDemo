@@ -6,6 +6,7 @@
 #include <glm/fwd.hpp>
 #include <glm/trigonometric.hpp>
 #include <glm/gtx/rotate_vector.hpp>
+
 #include <iostream>
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/matrix.hpp"
@@ -15,6 +16,10 @@
 
 // #include <thread> //this therad
 // #include <chrono> //sleep
+#include "mathracttor.hpp" //utility function for attractors
+
+
+
 #define BUFFER_OFFSET(offset) ((GLvoid*)(offset))
 
 using namespace std;
@@ -66,8 +71,7 @@ namespace atr{
     
     //glm::mat4 for attractors
     GLuint uboM4;
-    std::vector<glm::mat4> matrices;
-    int curr_mat_count = 0;
+
 
     void randArray(float* array, int size, float range){
         for(int i=0; i<size; i+=4){
@@ -112,7 +116,9 @@ namespace atr{
         glBufferData(GL_UNIFORM_BUFFER, 10 * sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW); // Allocate space for up to 10 matrices
         glBindBufferBase(GL_UNIFORM_BUFFER, 1, uboM4); // Binding point 0
         glBindBuffer(GL_UNIFORM_BUFFER, 0); // Unbind
-        matrices.reserve(10);
+
+        //reserve matrices to be pushed to UBO each frame
+        uvl::ubo_matrices.reserve(10);
     }
     void clean_data(){
         delete[] blackData;
@@ -126,33 +132,10 @@ namespace atr{
 
 }
 
-namespace preset{
-    void sierpinski(){
-        atr::curr_mat_count = 3;
-        atr::matrices.clear();
-        atr::matrices.emplace_back(glm::mat4(
-                0.5f, 0.0f,  0.0f, 0.0f,
-                0.0f, 0.5f,  0.0f, 0.36f,
-                0.0f, 0.0f,  0.0f, 0.0f,
-                0.0f, 0.0f,  0.0f, 1.0f
-        ));
-        atr::matrices.emplace_back(glm::mat4(
-                0.5f, 0.0f,  0.0f, -0.5f,
-                0.0f, 0.5f,  0.0f, -0.5f,
-                0.0f, 0.0f,  0.0f, 0.0f,
-                0.0f, 0.0f,  0.0f, 1.0f
-        ));
-        atr::matrices.emplace_back(glm::mat4(
-                0.5f, 0.0f,  0.0f, 0.5f,
-                0.0f, 0.5f,  0.0f, -0.5f,
-                0.0f, 0.0f,  0.0f, 0.0f,
-                0.0f, 0.0f,  0.0f, 1.0f
-        ));
-    }
-}
 
 App::App(int w,int h)
 {
+    DEBUG("aaa");
     pos = glm::vec3(0.0,0.0,0.0);
     light_pos = glm::vec3(0.0,0.0,0.0);
     param1 = glm::vec3( -4.54f, -1.26f, 0.1f );
@@ -160,12 +143,14 @@ App::App(int w,int h)
     height = h;
     speed = 1.0;
 
+    DEBUG("aaa1");
     glfwInit();
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+    DEBUG("aaa2");
     window = glfwCreateWindow(width, height, "[glad] GL with GLFW", nullptr, nullptr);
     glfwMakeContextCurrent(window);
 
@@ -176,10 +161,12 @@ App::App(int w,int h)
     glfwSetFramebufferSizeCallback(window, onResize);
 
     utl::initIMGUI(window);
+    DEBUG("aaa3");
 
     int version = gladLoadGL(glfwGetProcAddress);
     printf("GL %d.%d\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
     
+    DEBUG("aaa4");
     //compute_program for ray marching
     compute_program = glCreateProgram();
     GLint comp = loadshader("shaders/render.comp", GL_COMPUTE_SHADER);
@@ -290,14 +277,18 @@ void App::draw_ui_attractor(){
         if(ImGui::Button("reset cam")) pos = glm::vec3(0.0,0.0,-0.5);
         
         ImGui::SeparatorText("attractor preset");
-        if(ImGui::Button("Sierpinski")) preset::sierpinski();
+        if(ImGui::Button("Sierpinski")) uvl::set_sierpinski();
 
         ImGui::SeparatorText("Attractors");
-        ImGui::InputInt("nb", &atr::curr_mat_count);
-        utl::HelpMarker("The number of different random matrices. Live editing may fucked up everything");
-        utl::ShowMatrix4("mat0", atr::matrices[0]);
-        utl::ShowMatrix4("mat1", atr::matrices[1]);
-        utl::ShowMatrix4("mat2", atr::matrices[2]);
+            ImGui::SliderFloat("slider float", &uvl::lerpFactor, 0.0f, 1.0f, "lerp : %.3f");
+            ImGui::InputInt("nb", &uvl::matrixPerAttractor);
+            utl::HelpMarker("The number of different random matrices per attractor. Live editing may fucked up everything");
+
+        ImGui::SeparatorText("Attractor A");
+            uvl::A_tractor.ui();
+
+        ImGui::SeparatorText("Attractor B");
+            uvl::B_tractor.ui();
 
     ImGui::End();
 }
@@ -425,12 +416,13 @@ void App::run(){
             glUniform3fv(glGetUniformLocation(compute_program_attractor, "camera"), 1, glm::value_ptr(pos));
             glUniform3fv(glGetUniformLocation(compute_program_attractor, "light_pos"), 1, glm::value_ptr(light_pos));
             glUniform1f(glGetUniformLocation(compute_program_attractor, "time"), glfwGetTime());
-            glUniform1i(glGetUniformLocation(compute_program_attractor, "curr_mat_count"),atr::curr_mat_count);
+            glUniform1i(glGetUniformLocation(compute_program_attractor, "curr_mat_count"),uvl::matrixPerAttractor);
             glUniform1i(glGetUniformLocation(compute_program_attractor, "randInt_seed"),rand()%RAND_MAX);
             
-            //send attroctor data to compute shader
+            //send attractor data to compute shader
+            uvl::update_ubo_matrices();
             glBindBuffer(GL_UNIFORM_BUFFER, atr::uboM4);
-            glBufferSubData(GL_UNIFORM_BUFFER, 0, atr::matrices.size() * sizeof(glm::mat4), atr::matrices.data());
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, uvl::ubo_matrices.size() * sizeof(glm::mat4), uvl::ubo_matrices.data());
             glBindBuffer(GL_UNIFORM_BUFFER, 0);
             
             glDispatchCompute((NBPTS-1)/1024+1, 1, 1);

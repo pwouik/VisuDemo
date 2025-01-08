@@ -6,7 +6,9 @@
 
 
 int main(void) {
+    DEBUG("creating app ...\n");
     App app(800,800);
+    DEBUG("app created");
     app.run();
     return 0;
 }
