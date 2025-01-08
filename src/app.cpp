@@ -254,7 +254,7 @@ App::App(int w,int h)
     proj = glm::perspective(glm::radians(70.0f),(float)width/(float)height,0.1f,10000.0f);
     glUniformMatrix4fv(glGetUniformLocation(compute_program, "persp"),1, GL_FALSE, glm::value_ptr(proj));
 
-    prm::default();
+    prm::defaults();
 }
 
 void App::draw_ui(){

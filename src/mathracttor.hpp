@@ -28,7 +28,7 @@ namespace prm{ //param for random generation
     static float angle;
     static float translation;
 
-    void default(){
+    void defaults(){
         scale[0] = 0.2f; scale[1] = 1.2f;
         angle = 360;
         translation = 1.0f;
