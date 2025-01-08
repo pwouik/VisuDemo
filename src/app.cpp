@@ -17,8 +17,7 @@
 // #include <thread> //this therad
 // #include <chrono> //sleep
 
-//todo undo comment below
-//#include "mathracttor.hpp" //utility function for attractors
+#include "mathracttor.hpp" //utility function for attractors
 
 
 
@@ -120,7 +119,7 @@ namespace atr{
         glBindBuffer(GL_UNIFORM_BUFFER, 0); // Unbind
 
         //reserve matrices to be pushed to UBO each frame
-        //uvl::ubo_matrices.reserve(10); //todoICMR
+        uvl::ubo_matrices.reserve(10);
     }
     void clean_data(){
         delete[] blackData;
@@ -272,10 +271,7 @@ void App::draw_ui(){
     ImGui::End();
 }
 
-namespace uvl{//todoICMR
-    int matrixPerAttractor= 0;
-    float lerpFactor = 0.0f;
-}
+
 void App::draw_ui_attractor(){
     ImGui::Begin("attractir");
         ImGui::SeparatorText("debug");
@@ -283,8 +279,7 @@ void App::draw_ui_attractor(){
         if(ImGui::Button("reset cam")) pos = glm::vec3(0.0,0.0,-0.5);
         
         ImGui::SeparatorText("attractor preset");
-        if(ImGui::Button("Sierpinski")) uvl::matrixPerAttractor = 3;
-        //if(ImGui::Button("Sierpinski")) uvl::set_sierpinski();
+        if(ImGui::Button("Sierpinski")) uvl::set_sierpinski();
 
         ImGui::SeparatorText("Attractors");
             ImGui::SliderFloat("slider float", &uvl::lerpFactor, 0.0f, 1.0f, "lerp : %.3f");
@@ -292,10 +287,10 @@ void App::draw_ui_attractor(){
             utl::HelpMarker("The number of different random matrices per attractor. Live editing may fucked up everything");
 
         ImGui::SeparatorText("Attractor A");
-            //uvl::A_tractor.ui();
+            uvl::A_tractor.ui();
 
         ImGui::SeparatorText("Attractor B");
-            //uvl::B_tractor.ui();
+            uvl::B_tractor.ui();
 
     ImGui::End();
 }
@@ -423,14 +418,15 @@ void App::run(){
             glUniform3fv(glGetUniformLocation(compute_program_attractor, "camera"), 1, glm::value_ptr(pos));
             glUniform3fv(glGetUniformLocation(compute_program_attractor, "light_pos"), 1, glm::value_ptr(light_pos));
             glUniform1f(glGetUniformLocation(compute_program_attractor, "time"), glfwGetTime());
-            glUniform1i(glGetUniformLocation(compute_program_attractor, "curr_mat_count"),uvl::matrixPerAttractor);
+            glUniform1i(glGetUniformLocation(compute_program_attractor, "matrixPerAttractor"),uvl::matrixPerAttractor);
             glUniform1i(glGetUniformLocation(compute_program_attractor, "randInt_seed"),rand()%RAND_MAX);
             
             //send attractor data to compute shader
-            //uvl::update_ubo_matrices();
-            // glBindBuffer(GL_UNIFORM_BUFFER, atr::uboM4);
-            // glBufferSubData(GL_UNIFORM_BUFFER, 0, uvl::ubo_matrices.size() * sizeof(glm::mat4), uvl::ubo_matrices.data());
-            // glBindBuffer(GL_UNIFORM_BUFFER, 0);
+            //TODO HERE uncommnet
+            uvl::update_ubo_matrices();
+            glBindBuffer(GL_UNIFORM_BUFFER, atr::uboM4);
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, uvl::ubo_matrices.size() * sizeof(glm::mat4), uvl::ubo_matrices.data());
+            glBindBuffer(GL_UNIFORM_BUFFER, 0);
             
             glDispatchCompute((NBPTS-1)/1024+1, 1, 1);
 
