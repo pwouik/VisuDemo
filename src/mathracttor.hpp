@@ -172,6 +172,14 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
 
         Attractor() : count(0) {}
 
+        void setRandom(){
+             for (size_t i = 0; i < count; i++) {
+                if(FixedProcess* ptr = dynamic_cast<FixedProcess*>(generators[i])){
+                    ptr->setRandom();
+                }
+             }
+        }
+
         void ui() {
             for (size_t i = 0; i < count; i++) {
                 char buffer[32];  // Allocate a buffer for the formatted string
@@ -183,6 +191,8 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
                     ImGui::TreePop();
                 }
             }
+            if(ImGui::Button(UIDT("randomize", *this))) setRandom();
+            ui::HelpMarker("Apllyable only if fixed process for now");
         }
 
         void addGenerator(MatricesGenerator* generator) {
@@ -222,6 +232,7 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
 
 namespace uvl{ //utility values (also out of inspiration for naming namespace)
     int matrixPerAttractor = 0; //must match the size of Attractor
+    int immobileCount = 1;
     float lerpFactor = 0.0f;
     mtl::Attractor A_tractor;
     mtl::Attractor B_tractor;

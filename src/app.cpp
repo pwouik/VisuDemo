@@ -25,7 +25,7 @@
 
 using namespace std;
 
-#define NBPTS 1000000
+#define NBPTS 20000000
 
 
 std::string readShaderSource(const std::string& shaderFile)
@@ -306,6 +306,8 @@ void App::draw_ui_attractor(){
             ImGui::SliderFloat("slider float", &uvl::lerpFactor, 0.0f, 1.0f, "lerp : %.3f");
             ImGui::InputInt("nb", &uvl::matrixPerAttractor);
             utl::HelpMarker("The number of different random matrices per attractor. Live editing may fucked up everything");
+            ImGui::InputInt("immobile count", &uvl::immobileCount);
+            utl::HelpMarker("pseudo random reason or idk. given a random int between 0 and nb+immobile count point will move if random values is less than nb to corresponding attractionfunction[random] check .comp if unclear");
 
         if (ImGui::TreeNode("Attractor A")){
             uvl::A_tractor.ui();
@@ -443,6 +445,7 @@ while (!glfwWindowShouldClose(window)) {
             glUniform3fv(glGetUniformLocation(compute_program_attractor, "light_pos"), 1, glm::value_ptr(light_pos));
             glUniform1f(glGetUniformLocation(compute_program_attractor, "time"), glfwGetTime());
             glUniform1i(glGetUniformLocation(compute_program_attractor, "matrixPerAttractor"),uvl::matrixPerAttractor);
+            glUniform1i(glGetUniformLocation(compute_program_attractor, "immobileCount"),uvl::immobileCount);
             glUniform1i(glGetUniformLocation(compute_program_attractor, "randInt_seed"),rand()%RAND_MAX);
             
             //send attractor data to compute shader

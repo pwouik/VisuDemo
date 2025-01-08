@@ -7,8 +7,9 @@ layout(std430, binding = 3) buffer PointBuffer {          // SSBO binding point 
 layout(std140, binding = 1) uniform Matrices { // the list of mat4 attractors
     mat4 matrixArray[10];
 };
-uniform int matrixPerAttractor; //number of matrices in array
 uniform int randInt_seed;
+uniform int matrixPerAttractor; //number of matrices in array
+uniform int immobileCount; //number of point that won't move
 
 uniform mat4 inv_proj;
 uniform mat4 inv_view;
@@ -54,7 +55,7 @@ const uint max_iter = 256;
 const float EPSILON = 1e-4;
 const float PI = 3.14159265358979;
 
-#define NBPTS 1000000
+#define NBPTS 20000000
 //TODO optimisation : lower number of thread to process multiples point per thread ?
 
 void screenWriteCoord(vec4 pt){
@@ -85,7 +86,7 @@ void main() {
     //update point coordinate with attractor (for now choose attractor with % index but later have custom weight)
     if(matrixPerAttractor > 0) {        
         //get a pseudo random number. This may requieres fix because of overhead (multiples points getting traped in the same loop) TODO
-        uint rand = (idx%randInt_seed)%matrixPerAttractor; 
+        uint fake_rand = (idx%randInt_seed)%(matrixPerAttractor+immobileCount); 
 
         //Assuming 3 attroctor funciton per attractor
         //compute all points to display
@@ -94,9 +95,9 @@ void main() {
         }
 
         //pick only one 
-        if(rand == 0) points[idx] = pts[0];
-        if(rand == 1) points[idx] = pts[1];
-        if(rand == 2) points[idx] = pts[2];
+        if(fake_rand == 0) points[idx] = pts[0];
+        if(fake_rand == 1) points[idx] = pts[1];
+        if(fake_rand == 2) points[idx] = pts[2];
     }
     //optimization : draw multiple from one
     for(int i =0; i < matrixPerAttractor; i++){
