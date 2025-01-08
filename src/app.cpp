@@ -253,6 +253,8 @@ App::App(int w,int h)
 
     proj = glm::perspective(glm::radians(70.0f),(float)width/(float)height,0.1f,10000.0f);
     glUniformMatrix4fv(glGetUniformLocation(compute_program, "persp"),1, GL_FALSE, glm::value_ptr(proj));
+
+    prm::default();
 }
 
 void App::draw_ui(){
@@ -298,17 +300,24 @@ void App::draw_ui_attractor(){
         
         ImGui::SeparatorText("attractor preset");
         if(ImGui::Button("Sierpinski")) uvl::set_sierpinski();
+        if(ImGui::Button("fixed process")) uvl::set_fixedProcess();
 
         ImGui::SeparatorText("Attractors");
             ImGui::SliderFloat("slider float", &uvl::lerpFactor, 0.0f, 1.0f, "lerp : %.3f");
             ImGui::InputInt("nb", &uvl::matrixPerAttractor);
             utl::HelpMarker("The number of different random matrices per attractor. Live editing may fucked up everything");
 
-        ImGui::SeparatorText("Attractor A");
+        if (ImGui::TreeNode("Attractor A")){
             uvl::A_tractor.ui();
 
-        ImGui::SeparatorText("Attractor B");
+            ImGui::TreePop();
+        }
+        if (ImGui::TreeNode("Attractor B")){
             uvl::B_tractor.ui();
+
+            ImGui::TreePop();
+        }
+
 
     ImGui::End();
 }

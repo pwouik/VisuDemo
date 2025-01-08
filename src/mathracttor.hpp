@@ -7,6 +7,7 @@
 #include <imgui/imgui.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/random.hpp>
 #include <vector> //It may be possible to use array and template<int T>
 #include <string>
 
@@ -16,22 +17,55 @@
 //UI util
 #define SL ImGui::SameLine();
 #define CW ImGui::SetNextItemWidth(inputWidth);
-#define UID(val) (std::string("##Z") + std::to_string(reinterpret_cast<uintptr_t>(&val))).c_str()
+#define UID(val) (std::string("##") + std::to_string(reinterpret_cast<uintptr_t>(&val))).c_str()
+#define UIDT(txt, val) (std::string(txt) + std::string("##") + std::to_string(reinterpret_cast<uintptr_t>(&val))).c_str()
 //#define UID(val) "##tantpis" //TODO USE UID GENERATION ABOVE
+
+#define RNDF (float)rand()/RAND_MAX
+
+namespace prm{ //param for random generation
+    static float scale[2]; //min, max
+    static float angle;
+    static float translation;
+
+    void default(){
+        scale[0] = 0.2f; scale[1] = 1.2f;
+        angle = 360;
+        translation = 1.0f;
+    }
+
+}
 
 namespace ui{
     float inputWidth = 45.0f; //width for most input float
+
+    //duplicate with the one imgui_util.hpp ...
+    static void HelpMarker(const char* desc){
+        ImGui::SameLine();
+        ImGui::TextDisabled("(?)");
+        if (ImGui::BeginItemTooltip())
+        {
+            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+            ImGui::TextUnformatted(desc);
+            ImGui::PopTextWrapPos();
+            ImGui::EndTooltip();
+        }
+    }
 
     //editable field for float of float vector
     void valf(const char* desc, float& v, float minv = 0.0f, float maxv = 1.0f){
         ImGui::Text(desc);
         SL CW ImGui::InputFloat(UID(v), &v, minv, maxv, "%.2f");
     }
-    void valf(const char* desc, glm::vec3& v, float minv = 0.0f, float maxv = 1.0f){
+    // void valf(const char* desc, glm::vec3& v, float minv = 0.0f, float maxv = 1.0f){
+    //     ImGui::Text(desc);
+    //     SL CW ImGui::InputFloat(UID(v.x), &v.x, minv, maxv, "%.2f");
+    //     SL CW ImGui::InputFloat(UID(v.y), &v.y, minv, maxv, "%.2f");
+    //     SL CW ImGui::InputFloat(UID(v.z), &v.z, minv, maxv, "%.2f");
+    // }
+    void valf(const char* desc, glm::vec3& v, float minv = -1.0f, float maxv = 1.0f){
         ImGui::Text(desc);
-        SL CW ImGui::InputFloat(UID(v.x), &v.x, minv, maxv, "%.2f");
-        SL CW ImGui::InputFloat(UID(v.y), &v.y, minv, maxv, "%.2f");
-        SL CW ImGui::InputFloat(UID(v.z), &v.z, minv, maxv, "%.2f");
+        SL ImGui::DragFloat3(UID(v),&v.x, minv, maxv);
     }
     void valf(const char* desc, glm::mat4& mat, float minv = -1.0f, float maxv = 1.0f){
         ImGui::Text(desc);
@@ -50,8 +84,9 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
         glm::mat4 matrix;
 
     public:
-        virtual const glm::mat4& getMatrix() const = 0;
+        virtual const glm::mat4& getMatrix() = 0;
         virtual void ui() = 0;
+        virtual const char* getName() = 0;
         virtual ~MatricesGenerator() = default;
     };
 
@@ -63,18 +98,67 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
         void ui() override {
             ui::valf("raw matrix : ", matrix);
         }
-        const glm::mat4& getMatrix() const override {
+        const char* getName(){
+            return "Raw matrix";
+        }
+        const glm::mat4& getMatrix() override {
             return matrix; 
         }
 
     };
 
     class FixedProcess : public MatricesGenerator{
-        void ui(){
-            ui::valf("raw matrix : ", matrix);
+    public:
+        glm::vec3 scale_factors;
+        glm::vec3 rot_axis;
+        float rot_angle;
+        float Shxy, Shxz, Shyx, Shyz, Shzx, Shzy; //shearing
+        glm::vec3 translation_vector;
+
+        
+
+        void setRandom(){
+            scale_factors = glm::vec3(
+                RNDF*(prm::scale[1]-prm::scale[0])+prm::scale[0],
+                RNDF*(prm::scale[1]-prm::scale[0])+prm::scale[0],
+                RNDF*(prm::scale[1]-prm::scale[0])+prm::scale[0]
+            );
+            glm::vec3 randomVec = glm::ballRand(1.0f);
+            rot_axis = glm::normalize(randomVec);
+            rot_angle = RNDF * prm::angle;
+            //todo shearing
+            translation_vector = glm::vec3(
+                (RNDF*2-1)*prm::translation,
+                (RNDF*2-1)*prm::translation,
+                (RNDF*2-1)*prm::translation
+            );
+
         }
-        const glm::mat4& getMatrix() const override {
+
+        const char* getName(){
+            return "Fixed process matrix";
+        }
+        void ui(){
+            if(ImGui::Button(UIDT("randomize all", *this))) setRandom();
+
+            ui::valf("scale : ", scale_factors);
+            ui::valf("rot axis", rot_axis);
+            ui::valf("rota angle", rot_angle);
+            ui::valf("translation", translation_vector);
+
+        }
+
+        const glm::mat4& getMatrix() override {
+            matrix =
+                glm::scale(glm::mat4(1.0f), scale_factors) *
+                glm::rotate(glm::mat4(1.0f), glm::radians(rot_angle), rot_axis) *
+                //todo shearing
+                glm::translate(glm::mat4(1.0f), translation_vector);
             return matrix;
+        }
+
+        FixedProcess(){
+            setRandom();
         }
     };
 
@@ -90,8 +174,14 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
 
         void ui() {
             for (size_t i = 0; i < count; i++) {
-                ImGui::Text("Generator %d",i);
-                generators[i]->ui();
+                char buffer[32];  // Allocate a buffer for the formatted string
+                std::snprintf(buffer, sizeof(buffer), "function %zu", i);
+                if (ImGui::TreeNode(buffer)){
+                    ImGui::SeparatorText(generators[i]->getName());
+                    generators[i]->ui();
+
+                    ImGui::TreePop();
+                }
             }
         }
 
@@ -113,6 +203,7 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
             for(size_t i=0; i < count; i++){
                 delete generators[i];
             }
+            count = 0;
         }
         
     };
@@ -136,6 +227,13 @@ namespace uvl{ //utility values (also out of inspiration for naming namespace)
     mtl::Attractor B_tractor;
     std::vector<glm::mat4> ubo_matrices;
 
+    void reset(){
+        A_tractor.freeAll();
+        B_tractor.freeAll();
+        ubo_matrices.clear();
+        ubo_matrices.reserve(10);
+    }
+
     void update_ubo_matrices(){
         for(int i=0; i < matrixPerAttractor; i++){
             ubo_matrices[i] = (mtl::matrixLerp(A_tractor, B_tractor, i,  lerpFactor));
@@ -157,6 +255,7 @@ namespace uvl{ //utility values (also out of inspiration for naming namespace)
     }
 
     void set_sierpinski(){
+        reset();
         mtl::MatricesGenerator* mga1, *mga2, *mga3;
         mtl::MatricesGenerator* mgb1, *mgb2, *mgb3;
         {//Sierpinski and reverse Sierpinski attractor
@@ -190,6 +289,27 @@ namespace uvl{ //utility values (also out of inspiration for naming namespace)
                     0.0f, 0.5f,  0.0f, 0.5f,
                     0.0f, 0.0f,  0.0f, 0.0f,
                     0.0f, 0.0f,  0.0f, 1.0f)));
+        }
+        
+        A_tractor.addGenerator(mga1); A_tractor.addGenerator(mga2); A_tractor.addGenerator(mga3);
+        B_tractor.addGenerator(mgb1); B_tractor.addGenerator(mgb2); B_tractor.addGenerator(mgb3);
+
+        ubo_matrices.push_back(glm::mat4(1.0f));
+        ubo_matrices.push_back(glm::mat4(1.0f));
+        ubo_matrices.push_back(glm::mat4(1.0f));
+        matrixPerAttractor = 3;
+    }
+    void set_fixedProcess(){
+        reset();
+        mtl::MatricesGenerator* mga1, *mga2, *mga3;
+        mtl::MatricesGenerator* mgb1, *mgb2, *mgb3;
+        {//Sierpinski and reverse Sierpinski attractor
+            mga1 = new mtl::FixedProcess();
+            mga2 = new mtl::FixedProcess();
+            mga3 = new mtl::FixedProcess();
+            mgb1 = new mtl::FixedProcess();
+            mgb2 = new mtl::FixedProcess();
+            mgb3 = new mtl::FixedProcess();
         }
         
         A_tractor.addGenerator(mga1); A_tractor.addGenerator(mga2); A_tractor.addGenerator(mga3);

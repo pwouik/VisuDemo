@@ -45,9 +45,9 @@ uniform float time;
 //                                 0.0f, 0.0f,  0.6f, 0.3f,
 //                                 0.0f, 0.0f,  0.0f, 1.0f));
 
-mat4 matri0 = matrixArray[0];
-mat4 matri1 = matrixArray[1];
-mat4 matri2 = matrixArray[2];
+// mat4 matri0 = matrixArray[0];
+// mat4 matri1 = matrixArray[1];
+// mat4 matri2 = matrixArray[2];
 
 
 const uint max_iter = 256;
@@ -89,9 +89,9 @@ void main() {
 
         //Assuming 3 attroctor funciton per attractor
         //compute all points to display
-        pts[0] = matri0 * point;
-        pts[1] = matri1 * point;
-        pts[2] = matri2 * point;
+        for(int i =0; i < matrixPerAttractor; i++){
+            pts[i] = matrixArray[i] * point;
+        }
 
         //pick only one 
         if(rand == 0) points[idx] = pts[0];
@@ -99,7 +99,7 @@ void main() {
         if(rand == 2) points[idx] = pts[2];
     }
     //optimization : draw multiple from one
-    screenWriteCoord(pts[0]);
-    screenWriteCoord(pts[1]);
-    screenWriteCoord(pts[2]);
+    for(int i =0; i < matrixPerAttractor; i++){
+        screenWriteCoord(pts[i]);
+    }
 }
