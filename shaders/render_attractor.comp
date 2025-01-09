@@ -57,7 +57,7 @@ const float PI = 3.14159265358979;
 
 //magic values
 #define NBPTS 20000000
-#define MAX_FUNC_PER_ATTRACTOR 10
+#define MAX_FUNC_PER_ATTRACTOR 10 //magic value synced with matthracttor.hpp
 //TODO optimisation : lower number of thread to process multiples point per thread ?
 
 void screenWriteCoord(vec4 pt){

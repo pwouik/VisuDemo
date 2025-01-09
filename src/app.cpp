@@ -317,12 +317,12 @@ void App::draw_ui_attractor(){
             utl::HelpMarker("pseudo random reason or idk. given a random int between 0 and nb+immobile count point will move if random values is less than nb to corresponding attractionfunction[random] check .comp if unclear");
 
         if (ImGui::TreeNode("Attractor A")){
-            uvl::A_tractor.ui();
+            uvl::A_tractor.ui(uvl::matrixPerAttractor);
 
             ImGui::TreePop();
         }
         if (ImGui::TreeNode("Attractor B")){
-            uvl::B_tractor.ui();
+            uvl::B_tractor.ui(uvl::matrixPerAttractor);
 
             ImGui::TreePop();
         }

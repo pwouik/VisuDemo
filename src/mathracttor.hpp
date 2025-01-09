@@ -15,6 +15,9 @@
 
 #include "app.h"
 
+//magic value synced with render_attractor.comp
+#define MAX_FUNC_PER_ATTRACTOR 10
+
 //UI util
 #define SL ImGui::SameLine();
 #define CW ImGui::SetNextItemWidth(inputWidth);
@@ -96,35 +99,12 @@ namespace ui{
 } //end namespace UI
 
 namespace mtl{   //namespace matrices utiles or whatever idk how to name it
-    class MatricesGenerator {
-    protected:
+
+    //fixedProcess is a legacy name corresponding to previous architecture. We used to have an abstract class MatricesGenerator and fixedProcess inherited from it alongsite rawMatrix, and we planned to implement other subclass such as Conpound which would've take an arbitrary number or scale, rotation, translation and shear in any given order.
+    //However this just complexifies code for no reason, as a fixed process is enought for everything we could possibly want to do for now
+    class FixedProcess{
+    private:
         glm::mat4 matrix;
-
-    public:
-        virtual const glm::mat4& getMatrix() = 0;
-        virtual void ui() = 0;
-        virtual const char* getName() = 0;
-        virtual ~MatricesGenerator() = default;
-    };
-
-    class RawMatrix : public MatricesGenerator {
-    public:
-        RawMatrix(const glm::mat4& mat) {
-            matrix = mat;
-        }
-        void ui() override {
-            ui::valf("raw matrix : ", matrix);
-        }
-        const char* getName(){
-            return "Raw matrix";
-        }
-        const glm::mat4& getMatrix() override {
-            return matrix; 
-        }
-
-    };
-
-    class FixedProcess : public MatricesGenerator{
     public:
         glm::vec3 scale_factors;
         glm::vec3 rot_axis;
@@ -177,7 +157,7 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
 
         }
 
-        const glm::mat4& getMatrix() override {
+        const glm::mat4& getMatrix(){
             matrix =
                 glm::scale(glm::mat4(1.0f), scale_factors) *
                 glm::rotate(glm::mat4(1.0f), rot_angle, rot_axis) *
@@ -200,73 +180,57 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
 
     class Attractor{
     public:
-        MatricesGenerator* generators[10];
-        size_t count;
+        FixedProcess* attr_funcs[10];
 
-        Attractor() : count(0) {}
+        Attractor() {}
 
-        void setRandom(){
-             for (size_t i = 0; i < count; i++) {
-                if(FixedProcess* ptr = dynamic_cast<FixedProcess*>(generators[i])){
-                    ptr->setRandom();
-                }
+        void setRandom(size_t nb_func){
+             for (size_t i = 0; i < nb_func; i++) {
+                attr_funcs[i]->setRandom();
              }
         }
 
-        void ui() {
-            if(ImGui::Button(UIDT("randomize all", *this))) setRandom();
+        void ui(size_t nb_func) {
+            if(ImGui::Button(UIDT("randomize all", *this))) setRandom(nb_func);
             ui::HelpMarker("Apllyable only if fixed process for now");
-            for (size_t i = 0; i < count; i++) {
+            for (size_t i = 0; i < nb_func; i++) {
                 char buffer[32];  // Allocate a buffer for the formatted string
                 std::snprintf(buffer, sizeof(buffer), "function %zu", i);
                 if (ImGui::TreeNode(buffer)){
-                    //ImGui::SeparatorText(generators[i]->getName());
+                    //ImGui::SeparatorText(attr_funcs[i]->getName());
                     //todo pop tree in ui below
-                    generators[i]->ui();
+                    attr_funcs[i]->ui();
 
                     ImGui::TreePop();
                 }
             }
         }
 
-        void addGenerator(MatricesGenerator* generator) {
-            if (count >= 10) {
-                throw std::out_of_range("Cannot add more than 10 MatricesGenerator.");
-            }
-            generators[count++] = generator;
-        }
 
         const glm::mat4& getMatrix(size_t index) const {
-            if (index >= count) {
-                throw std::out_of_range("Index out of range.");
-            }
-            return generators[index]->getMatrix();
+            return attr_funcs[index]->getMatrix();
         }
 
         void freeAll(){
-            for(size_t i=0; i < count; i++){
-                delete generators[i];
+            for(size_t i=0; i < MAX_FUNC_PER_ATTRACTOR; i++){
+                delete attr_funcs[i];
             }
-            count = 0;
         }
         
     };
 
     //lerp - per matrix coefficient on 2 matrix genned by attractors A and B
     glm::mat4 matrixLerp(const Attractor& attractorA, const Attractor& attractorB, int index, float t) {
-        glm::mat4 matA = attractorA.generators[index]->getMatrix();
-        glm::mat4 matB = attractorB.generators[index]->getMatrix();
+        glm::mat4 matA = attractorA.attr_funcs[index]->getMatrix();
+        glm::mat4 matB = attractorB.attr_funcs[index]->getMatrix();
         return (1.0f - t) * matA + t * matB;
     }
 
     //fucked up if attractorfucntion aren't all fixed process. I plan on just deleting rawmatrix anyways
     glm::mat4 componentLerp(const Attractor& attractorA, const Attractor& attractorB, int index, float t) {
-        //get rid of the static cast later when only possible attractors are those using fixed process
-        FixedProcess* genA = dynamic_cast<FixedProcess*>(attractorA.generators[index]);
-        FixedProcess* genB = dynamic_cast<FixedProcess*>(attractorB.generators[index]);
+        FixedProcess* genA = attractorA.attr_funcs[index];
+        FixedProcess* genB = attractorB.attr_funcs[index];
 
-        if(!genA || !genB)
-            throw std::runtime_error("don't switch to per componenet lerp whith sierpinski preset");
         
         glm::vec3 l_scale_factors = (1.0-t)*genA->scale_factors + t * genB->scale_factors;
         glm::vec3 l_rot_axis = glm::normalize((1.0-t)*genA->rot_axis + t *genB->rot_axis);
@@ -327,12 +291,12 @@ namespace uvl{ //utility values (also out of inspiration for naming namespace)
         
         //debug todo remove
         // if(matrixPerAttractor == 0) return;
-        // ubo_matrices[0] = A_tractor.generators[0]->getMatrix();
-        // ubo_matrices[1] = A_tractor.generators[1]->getMatrix();
-        // ubo_matrices[2] = A_tractor.generators[2]->getMatrix();
+        // ubo_matrices[0] = A_tractor.attr_funcs[0]->getMatrix();
+        // ubo_matrices[1] = A_tractor.attr_funcs[1]->getMatrix();
+        // ubo_matrices[2] = A_tractor.attr_funcs[2]->getMatrix();
         
         //debug todo remove
-        // glm::mat4 mat = A_tractor.generators[0]->getMatrix();
+        // glm::mat4 mat = A_tractor.attr_funcs[0]->getMatrix();
         // std::cout << "\n\nfoo\n\n";
         // for (int row = 0; row < 4; ++row) {
         //     std::cout << "\t" << mat[row][0]<< "\t" << mat[row][1]<< "\t" << mat[row][2]<< "\t" << mat[row][3] << "\n";
@@ -341,62 +305,63 @@ namespace uvl{ //utility values (also out of inspiration for naming namespace)
     }
 
     void set_sierpinski(){
-        reset();
-        mtl::MatricesGenerator* mga1, *mga2, *mga3;
-        mtl::MatricesGenerator* mgb1, *mgb2, *mgb3;
-        {//Sierpinski and reverse Sierpinski attractor
-            mga1 = new mtl::RawMatrix(glm::transpose(glm::mat4(
-                    0.5f, 0.0f,  0.0f, 0.0f,
-                    0.0f, 0.5f,  0.0f, 0.36f,
-                    0.0f, 0.0f,  0.0f, 0.0f,
-                    0.0f, 0.0f,  0.0f, 1.0f)));
-            mga2 = new mtl::RawMatrix(glm::transpose(glm::mat4(
-                    0.5f, 0.0f,  0.0f, -0.5f,
-                    0.0f, 0.5f,  0.0f, -0.5f,
-                    0.0f, 0.0f,  0.0f, 0.0f,
-                    0.0f, 0.0f,  0.0f, 1.0f)));
-            mga3 = new mtl::RawMatrix(glm::transpose(glm::mat4(
-                    0.5f, 0.0f,  0.0f, 0.5f,
-                    0.0f, 0.5f,  0.0f, -0.5f,
-                    0.0f, 0.0f,  0.0f, 0.0f,
-                    0.0f, 0.0f,  0.0f, 1.0f)));
-            mgb1 = new mtl::RawMatrix(glm::transpose(glm::mat4(
-                    0.5f, 0.0f,  0.0f, 0.0f,
-                    0.0f, 0.5f,  0.0f, -0.36f,
-                    0.0f, 0.0f,  0.0f, 0.0f,
-                    0.0f, 0.0f,  0.0f, 1.0f)));
-            mgb2 = new mtl::RawMatrix(glm::transpose(glm::mat4(
-                    0.5f, 0.0f,  0.0f, 0.5f,
-                    0.0f, 0.5f,  0.0f, 0.5f,
-                    0.0f, 0.0f,  0.0f, 0.0f,
-                    0.0f, 0.0f,  0.0f, 1.0f)));
-            mgb3 = new mtl::RawMatrix(glm::transpose(glm::mat4(
-                    0.5f, 0.0f,  0.0f, -0.5f,
-                    0.0f, 0.5f,  0.0f, 0.5f,
-                    0.0f, 0.0f,  0.0f, 0.0f,
-                    0.0f, 0.0f,  0.0f, 1.0f)));
-        }
-        
-        A_tractor.addGenerator(mga1); A_tractor.addGenerator(mga2); A_tractor.addGenerator(mga3);
-        B_tractor.addGenerator(mgb1); B_tractor.addGenerator(mgb2); B_tractor.addGenerator(mgb3);
+        //todo!
 
-        ubo_matrices.push_back(glm::mat4(1.0f));
-        ubo_matrices.push_back(glm::mat4(1.0f));
-        ubo_matrices.push_back(glm::mat4(1.0f));
-        matrixPerAttractor = 3;
+        // reset();
+        // mtl::MatricesGenerator* mga1, *mga2, *mga3;
+        // mtl::MatricesGenerator* mgb1, *mgb2, *mgb3;
+        // {//Sierpinski and reverse Sierpinski attractor
+        //     mga1 = new mtl::RawMatrix(glm::transpose(glm::mat4(
+        //             0.5f, 0.0f,  0.0f, 0.0f,
+        //             0.0f, 0.5f,  0.0f, 0.36f,
+        //             0.0f, 0.0f,  0.0f, 0.0f,
+        //             0.0f, 0.0f,  0.0f, 1.0f)));
+        //     mga2 = new mtl::RawMatrix(glm::transpose(glm::mat4(
+        //             0.5f, 0.0f,  0.0f, -0.5f,
+        //             0.0f, 0.5f,  0.0f, -0.5f,
+        //             0.0f, 0.0f,  0.0f, 0.0f,
+        //             0.0f, 0.0f,  0.0f, 1.0f)));
+        //     mga3 = new mtl::RawMatrix(glm::transpose(glm::mat4(
+        //             0.5f, 0.0f,  0.0f, 0.5f,
+        //             0.0f, 0.5f,  0.0f, -0.5f,
+        //             0.0f, 0.0f,  0.0f, 0.0f,
+        //             0.0f, 0.0f,  0.0f, 1.0f)));
+        //     mgb1 = new mtl::RawMatrix(glm::transpose(glm::mat4(
+        //             0.5f, 0.0f,  0.0f, 0.0f,
+        //             0.0f, 0.5f,  0.0f, -0.36f,
+        //             0.0f, 0.0f,  0.0f, 0.0f,
+        //             0.0f, 0.0f,  0.0f, 1.0f)));
+        //     mgb2 = new mtl::RawMatrix(glm::transpose(glm::mat4(
+        //             0.5f, 0.0f,  0.0f, 0.5f,
+        //             0.0f, 0.5f,  0.0f, 0.5f,
+        //             0.0f, 0.0f,  0.0f, 0.0f,
+        //             0.0f, 0.0f,  0.0f, 1.0f)));
+        //     mgb3 = new mtl::RawMatrix(glm::transpose(glm::mat4(
+        //             0.5f, 0.0f,  0.0f, -0.5f,
+        //             0.0f, 0.5f,  0.0f, 0.5f,
+        //             0.0f, 0.0f,  0.0f, 0.0f,
+        //             0.0f, 0.0f,  0.0f, 1.0f)));
+        // }
+        
+        // A_tractor.addGenerator(mga1); A_tractor.addGenerator(mga2); A_tractor.addGenerator(mga3);
+        // B_tractor.addGenerator(mgb1); B_tractor.addGenerator(mgb2); B_tractor.addGenerator(mgb3);
+
+        // ubo_matrices.push_back(glm::mat4(1.0f));
+        // ubo_matrices.push_back(glm::mat4(1.0f));
+        // ubo_matrices.push_back(glm::mat4(1.0f));
+        // matrixPerAttractor = 3;
     }
     void set_fixedProcess(){
         DEBUG("starting assign");
         reset();
-        const int maxFuncCount = 10;
-        mtl::MatricesGenerator* mga[maxFuncCount];
-        mtl::MatricesGenerator* mgb[maxFuncCount];
+        mtl::FixedProcess* mga[MAX_FUNC_PER_ATTRACTOR];
+        mtl::FixedProcess* mgb[MAX_FUNC_PER_ATTRACTOR];
 
-        for(int i=0; i<maxFuncCount; i++){
+        for(int i=0; i<MAX_FUNC_PER_ATTRACTOR; i++){
             mga[i] = new mtl::FixedProcess();
             mgb[i] = new mtl::FixedProcess();
-            A_tractor.addGenerator(mga[i]);
-            B_tractor.addGenerator(mgb[i]);
+            A_tractor.attr_funcs[i] = mga[i];
+            B_tractor.attr_funcs[i] = mgb[i];
             ubo_matrices.push_back(glm::mat4(1.0f));
         }
         
