@@ -4,7 +4,7 @@
 layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 
 // Uniforms for accessing data from the main shader
-layout(rgba32f, binding = 0) uniform image2D imgOutput; // Output image to write results
+layout(rgba32f, binding = 0) uniform image2D target; // Output image to write results
 uniform mat4 inv_proj;                                  // Inverted projection matrix
 uniform mat4 inv_view;                                  // Inverted view matrix
 uniform uvec2 screen_size;                              // Screen size (width and height)
@@ -188,5 +188,5 @@ void main() {
         }
     }
     vec4 color =  phong(pos,camera, exp(-float(steps)*exp(-occlusion)),dist*EPSILON);
-    imageStore(imgOutput, ivec2(gl_GlobalInvocationID.xy), color);
+    imageStore(target, ivec2(gl_GlobalInvocationID.xy), color);
 }

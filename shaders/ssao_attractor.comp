@@ -1,0 +1,16 @@
+#version 460 core
+layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+layout(rgba32f, binding = 0) uniform image2D target;
+layout(r32i, binding = 1) uniform iimage2D depth;
+uniform mat4 inv_proj;
+
+uniform uvec2 screen_size;
+
+void main() {
+    // Check if the current thread is within the bounds of the screen
+    if (gl_GlobalInvocationID.x>=screen_size.x || gl_GlobalInvocationID.y>=screen_size.y)
+        return;
+    vec4 unprojetcted_depth = inv_proj * vec4(gl_GlobalInvocationID.xy,float(imageLoad(depth, ivec2(gl_GlobalInvocationID.xy)).r)/(1<<31),1);
+    float d =unprojetcted_depth.z+1.5;
+    imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(d,1-d,0,1));
+}

@@ -1,5 +1,7 @@
 #include "app.h"
 #include <GLFW/glfw3.h>
+#include <climits>
+#include <cstddef>
 #include <cstdlib>
 #include <fstream>
 #include <glm/ext/matrix_transform.hpp>
@@ -62,6 +64,22 @@ GLuint loadshader(const char* file,GLuint type)
     }
     return shader;
 }
+
+void linkProgram(GLuint program){
+    GLint linked;
+    glGetProgramiv(program, GL_LINK_STATUS, &linked);
+    if (!linked) {
+        printf("Shader program failed to link:\n");
+        GLint logSize;
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logSize);
+        char* logMsg = new char[logSize];
+        glGetProgramInfoLog(program, logSize, nullptr, logMsg);
+        printf("%s\n", logMsg);
+        delete[] logMsg;
+        exit(EXIT_FAILURE);
+    }
+}
+
 
 namespace gbl{
     bool paused = false;
@@ -182,18 +200,7 @@ App::App(int w,int h)
     GLint comp = loadshader("shaders/render.comp", GL_COMPUTE_SHADER);
     glAttachShader(compute_program, comp);
     glLinkProgram(compute_program);
-    GLint linked;
-    glGetProgramiv(compute_program, GL_LINK_STATUS, &linked);
-    if (!linked) {
-        printf("Shader program failed to link:\n");
-        GLint logSize;
-        glGetProgramiv(compute_program, GL_INFO_LOG_LENGTH, &logSize);
-        char* logMsg = new char[logSize];
-        glGetProgramInfoLog(compute_program, logSize, nullptr, logMsg);
-        printf("%s\n", logMsg);
-        delete[] logMsg;
-        exit(EXIT_FAILURE);
-    }
+    linkProgram(compute_program);
     glUseProgram(compute_program);
 
     glGenTextures(1, &texture);
@@ -209,23 +216,25 @@ App::App(int w,int h)
     glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
 
+    glGenTextures(1, &depth_texture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, depth_texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, w, h, 0, GL_RED_INTEGER, 
+                GL_INT, nullptr);
+
+    glBindImageTexture(1, depth_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32I);
     //compute_program for attractor
     compute_program_attractor = glCreateProgram();
     GLint comp_attractor = loadshader("shaders/render_attractor.comp", GL_COMPUTE_SHADER);
     glAttachShader(compute_program_attractor, comp_attractor);
     glLinkProgram(compute_program_attractor);
-    GLint linked_attractor; //probably useless to redeclare
-    glGetProgramiv(compute_program_attractor, GL_LINK_STATUS, &linked_attractor);
-    if (!linked_attractor) {
-        printf("Shader program failed to link:\n");
-        GLint logSize;
-        glGetProgramiv(compute_program_attractor, GL_INFO_LOG_LENGTH, &logSize);
-        char* logMsg = new char[logSize];
-        glGetProgramInfoLog(compute_program_attractor, logSize, nullptr, logMsg);
-        printf("%s\n", logMsg);
-        delete[] logMsg;
-        exit(EXIT_FAILURE);
-    }
+    linkProgram(compute_program_attractor);
+
+    ssao_attractor = glCreateProgram();
+    GLint ssao_shader = loadshader("shaders/ssao_attractor.comp", GL_COMPUTE_SHADER);
+    glAttachShader(ssao_attractor, ssao_shader);
+    glLinkProgram(ssao_attractor);
+    linkProgram(ssao_attractor);
 
 
     blit_program = glCreateProgram();
@@ -234,18 +243,7 @@ App::App(int w,int h)
     glAttachShader(blit_program, vert);
     glAttachShader(blit_program, frag);
     glLinkProgram(blit_program);
-
-    glGetProgramiv(blit_program, GL_LINK_STATUS, &linked);
-    if (!linked) {
-        printf("Shader program failed to link:\n");
-        GLint logSize;
-        glGetProgramiv(blit_program, GL_INFO_LOG_LENGTH, &logSize);
-        char* logMsg = new char[logSize];
-        glGetProgramInfoLog(blit_program, logSize, nullptr, logMsg);
-        printf("%s\n", logMsg);
-        delete[] logMsg;
-        exit(EXIT_FAILURE);
-    }
+    linkProgram(blit_program);
 
     glGenVertexArrays(1, &dummy_vao);
     glBindVertexArray(dummy_vao);
@@ -431,7 +429,6 @@ while (!glfwWindowShouldClose(window)) {
             draw_ui();
 
             glUseProgram(compute_program);
-            glActiveTexture(GL_TEXTURE0);
 
             glUniformMatrix4fv(glGetUniformLocation(compute_program, "inv_view"),1, GL_FALSE, glm::value_ptr(total_transform));
             glUniformMatrix4fv(glGetUniformLocation(compute_program, "inv_proj"),1, GL_FALSE, glm::value_ptr(glm::inverse(proj)));
@@ -456,6 +453,7 @@ while (!glfwWindowShouldClose(window)) {
 
             glUseProgram(blit_program);
             glBindVertexArray(dummy_vao);
+            glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, texture);
             glDrawArrays(GL_TRIANGLES,0,3);
 
@@ -471,8 +469,9 @@ while (!glfwWindowShouldClose(window)) {
             //if(inv_camera_view!=old_view)
                 atr::clearTexture(width, height, texture); //balck background for texture
             old_view=inv_camera_view;
+            int depth_clear = INT_MIN;
+            glClearTexImage(depth_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
             glUseProgram(compute_program_attractor);
-            glActiveTexture(GL_TEXTURE0);
 
             glUniformMatrix4fv(glGetUniformLocation(compute_program_attractor, "view"),1, GL_FALSE, glm::value_ptr(glm::inverse(inv_camera_view)));
             glUniformMatrix4fv(glGetUniformLocation(compute_program_attractor, "proj"),1, GL_FALSE, glm::value_ptr(proj));
@@ -494,6 +493,14 @@ while (!glfwWindowShouldClose(window)) {
             glDispatchCompute((NBPTS-1)/1024+1, 1, 1);
 
             // make sure writing to image has finished before read
+            glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+
+            glUseProgram(ssao_attractor);
+            glUniform2ui(glGetUniformLocation(ssao_attractor, "screen_size"), width,height);
+            glUniformMatrix4fv(glGetUniformLocation(ssao_attractor, "inv_proj"),1, GL_FALSE, glm::value_ptr(glm::inverse(proj)));
+            glDispatchCompute((width-1)/32+1, (height-1)/32+1, 1);
+
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
             glClear(GL_COLOR_BUFFER_BIT);

@@ -137,8 +137,10 @@ public:
     float speed;
     GLuint compute_program;
     GLuint compute_program_attractor;
+    GLuint ssao_attractor;
     GLuint blit_program;
     GLuint texture;
+    GLuint depth_texture;
     GLuint dummy_vbo;
     GLuint dummy_vao;
     glm::mat4 proj;
