@@ -368,9 +368,47 @@ namespace preset{
             b_funcs[2]->scale_factors = glm::vec3(0.5f,0.5f,0.0f);
             b_funcs[2]->translation_vector = glm::vec3(0.5f,0.5f,0.0f);
         }
+    }
+    void sierpintagon(){
+        uvl::matrixPerAttractor = 5;
+        allIdentity();
+        mtl::FixedProcess** a_funcs = uvl::A_tractor.attr_funcs;
+        //mtl::FixedProcess** b_funcs = uvl::B_tractor.attr_funcs;
+        {//attractor A functions
+            a_funcs[0]->scale_factors = glm::vec3(0.5f,0.5f,0.0f);
+            a_funcs[0]->translation_vector = glm::vec3(0.5f,0.0f,0.0f);
 
+            a_funcs[1]->scale_factors = glm::vec3(0.5f,0.5f,0.0f);
+            a_funcs[1]->translation_vector = glm::vec3(0.15f,0.48f,0.0f);
 
+            a_funcs[2]->scale_factors = glm::vec3(0.5f,0.5f,0.0f);
+            a_funcs[2]->translation_vector = glm::vec3(-0.4f,0.29f,0.0f);
+            
+            a_funcs[3]->scale_factors = glm::vec3(0.5f,0.5f,0.0f);
+            a_funcs[3]->translation_vector = glm::vec3(-0.4f,-0.29f,0.0f);
 
+            a_funcs[4]->scale_factors = glm::vec3(0.5f,0.5f,0.0f);
+            a_funcs[4]->translation_vector = glm::vec3(0.15f,-0.48f,0.0f);
+        }
+    }
+    int nb_cote = 5;
+    void sierpolygon(){
+        uvl::matrixPerAttractor = nb_cote;
+        allIdentity();
+        mtl::FixedProcess** a_funcs = uvl::A_tractor.attr_funcs;
+        //mtl::FixedProcess** b_funcs = uvl::B_tractor.attr_funcs;
+
+        float radius = 0.5f;
+        float angle_incr = 2 * PI / (float)nb_cote;
+
+        float cx, cy;
+        for(int i=0; i < nb_cote; i++){
+            cx = radius * cos((float)i*angle_incr);
+            cy = radius * sin((float)i*angle_incr);
+
+            a_funcs[i]->scale_factors = glm::vec3(0.5f,0.5f,0.0f);
+            a_funcs[i]->translation_vector = glm::vec3(cx,cy,0.0f);
+        }
     }
 }
 
