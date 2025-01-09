@@ -260,8 +260,8 @@ App::App(int w,int h)
 void App::draw_ui(){
     ImGui::Begin("Base info");
         ImGui::SeparatorText("current rendering");
-            const char* items_cb1[] = { "Raymarching", "Attractor"}; //MUST MATCH DEFINE IN app.h !
-            if(ImGui::Combo("combo", (int*)&curr_mode, items_cb1, IM_ARRAYSIZE(items_cb1))){
+            const char* items_cb1[] = { "Raymarching", "Attractor"}; //MUST MATCH ENUM IN app.h !
+            if(ImGui::Combo("Display type", (int*)&curr_mode, items_cb1, IM_ARRAYSIZE(items_cb1))){
                 gbl::paused = true;
                 if(curr_mode == Attractor){
                     atr::init_data(width, height);
@@ -271,6 +271,7 @@ void App::draw_ui(){
                 }
                 gbl::paused = false;
             }
+            
         ImGui::SeparatorText("generic debug info");
         ImGui::Text("camera in %.2fx, %.2fy, %.2fz", pos.x, pos.y, pos.z);
         ImGui::Text("light in %.2fx, %.2fy, %.2fz . Set with L", light_pos.x, light_pos.y, light_pos.z);
@@ -303,6 +304,9 @@ void App::draw_ui_attractor(){
         if(ImGui::Button("fixed process")) uvl::set_fixedProcess();
 
         ImGui::SeparatorText("random ranges");
+            const char* items_cb2[] = { "per matrix", "per component"}; //MUST MATCH ENUM IN app.h !
+            if(ImGui::Combo("lerping mode", (int*)&lerpmode, items_cb2, IM_ARRAYSIZE(items_cb2))){
+            }
             ui::param_settings();
 
         ImGui::SeparatorText("Attractors");
@@ -455,7 +459,7 @@ while (!glfwWindowShouldClose(window)) {
             
             //send attractor data to compute shader
             //TODO HERE uncommnet
-            uvl::update_ubo_matrices();
+            uvl::update_ubo_matrices(lerpmode);
             glBindBuffer(GL_UNIFORM_BUFFER, atr::uboM4);
             glBufferSubData(GL_UNIFORM_BUFFER, 0, uvl::ubo_matrices.size() * sizeof(glm::mat4), uvl::ubo_matrices.data());
             glBindBuffer(GL_UNIFORM_BUFFER, 0);

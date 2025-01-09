@@ -12,7 +12,8 @@
 #include <string>
 
 #include <iostream> //TODO REMOVE
-// 
+
+#include "app.h"
 
 //UI util
 #define SL ImGui::SameLine();
@@ -256,6 +257,34 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
         glm::mat4 matB = attractorB.generators[index]->getMatrix();
         return (1.0f - t) * matA + t * matB;
     }
+
+    //fucked up if attractorfucntion aren't all fixed process. I plan on just deleting rawmatrix anyways
+    glm::mat4 componentLerp(const Attractor& attractorA, const Attractor& attractorB, int index, float t) {
+        //get rid of the static cast later when only possible attractors are those using fixed process
+        FixedProcess* genA = dynamic_cast<FixedProcess*>(attractorA.generators[index]);
+        FixedProcess* genB = dynamic_cast<FixedProcess*>(attractorB.generators[index]);
+
+        if(!genA || !genB)
+            throw std::runtime_error("don't switch to per componenet lerp whith sierpinski preset");
+        
+        glm::vec3 l_scale_factors = (1.0-t)*genA->scale_factors + t * genB->scale_factors;
+        glm::vec3 l_rot_axis = glm::normalize((1.0-t)*genA->rot_axis + t *genB->rot_axis);
+        float l_rot_angle = (1.0-t)*genA->rot_angle + t * genB->rot_angle;
+        glm::vec3 l_Sh_xy_xz_yx = (1.0-t)*genA->Sh_xy_xz_yx + t * genB->Sh_xy_xz_yx;
+        glm::vec3 l_Sh_yz_zx_zy = (1.0-t)*genA->Sh_yz_zx_zy + t * genB->Sh_yz_zx_zy;
+        glm::vec3 l_translation_vector = (1.0-t)*genA->translation_vector + t * genB->translation_vector;
+
+        glm::mat4 matrix =
+            glm::scale(glm::mat4(1.0f), l_scale_factors) *
+            glm::rotate(glm::mat4(1.0f), l_rot_angle, l_rot_axis) *
+            glm::transpose(glm::mat4(
+                1.0f, l_Sh_xy_xz_yx.x,  l_Sh_xy_xz_yx.y, 0.0f,  //     1.0f, Shxy,  Shxz, 0.0f,
+                l_Sh_xy_xz_yx.z, 1.0f,  l_Sh_yz_zx_zy.x, 0.0f,  //     Shyx, 1.0f,  Shyz, 0.0f,
+                l_Sh_yz_zx_zy.y, l_Sh_yz_zx_zy.z,  1.0f, 0.0f,  //     Shzx, Shzy,  1.0f, 0.0f,
+                0.0f, 0.0f,  0.0f, 1.0f)) *                 //     0.0f, 0.0f,  0.0f, 1.0f))
+            glm::translate(glm::mat4(1.0f), l_translation_vector);
+        return matrix;
+    }
     //todo lerp by component for fixed process
 
 } // namespace mtl
@@ -277,9 +306,22 @@ namespace uvl{ //utility values (also out of inspiration for naming namespace)
         ubo_matrices.reserve(10);
     }
 
-    void update_ubo_matrices(){
-        for(int i=0; i < matrixPerAttractor; i++){
-            ubo_matrices[i] = (mtl::matrixLerp(A_tractor, B_tractor, i,  lerpFactor));
+    void update_ubo_matrices(LerpMode mode){
+        switch (mode)
+        {
+        case lerp_Matrix:
+            for(int i=0; i < matrixPerAttractor; i++){
+                ubo_matrices[i] = (mtl::matrixLerp(A_tractor, B_tractor, i,  lerpFactor));
+            }
+            break;
+        case lerp_PerComponent:    
+            for(int i=0; i < matrixPerAttractor; i++){
+                ubo_matrices[i] = (mtl::componentLerp(A_tractor, B_tractor, i,  lerpFactor));
+            }
+            break;     
+        default:
+            throw std::runtime_error("Unhandled lerping mode");
+            break;
         }
         
         //debug todo remove

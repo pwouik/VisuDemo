@@ -20,6 +20,11 @@ enum Mode{
     Attractor
 };
 
+enum LerpMode{
+    lerp_Matrix,
+    lerp_PerComponent
+};
+
 #define DEBUG(x) std::cout << x << std::endl;
 //#define DEBUG
 
@@ -139,5 +144,6 @@ public:
     glm::mat4 old_view;
 
     Mode curr_mode = Raymarching;
+    LerpMode lerpmode = lerp_Matrix;
 
 };
