@@ -104,6 +104,7 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
     //However this just complexifies code for no reason, as a fixed process is enought for everything we could possibly want to do for now
     class FixedProcess{
     private:
+        bool overwriteMatrix = false;
         glm::mat4 matrix;
     public:
         glm::vec3 scale_factors;
@@ -113,7 +114,17 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
         glm::vec3 Sh_yz_zx_zy;
         glm::vec3 translation_vector;
 
-        
+        void updt_matrix(){
+            matrix =
+                    glm::scale(glm::mat4(1.0f), scale_factors) *
+                    glm::rotate(glm::mat4(1.0f), rot_angle, rot_axis) *
+                    glm::transpose(glm::mat4(
+                        1.0f, Sh_xy_xz_yx.x,  Sh_xy_xz_yx.y, 0.0f,  //     1.0f, Shxy,  Shxz, 0.0f,
+                        Sh_xy_xz_yx.z, 1.0f,  Sh_yz_zx_zy.x, 0.0f,  //     Shyx, 1.0f,  Shyz, 0.0f,
+                        Sh_yz_zx_zy.y, Sh_yz_zx_zy.z,  1.0f, 0.0f,  //     Shzx, Shzy,  1.0f, 0.0f,
+                        0.0f, 0.0f,  0.0f, 1.0f)) *                 //     0.0f, 0.0f,  0.0f, 1.0f))
+                    glm::translate(glm::mat4(1.0f), translation_vector);
+        }
         void setIdentity(){
             scale_factors = glm::vec3(1.0f);
             rot_axis = glm::vec3(1.0f,0.0f,0.0f);
@@ -121,6 +132,7 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
             Sh_xy_xz_yx = glm::vec3(0.0f);
             Sh_yz_zx_zy = glm::vec3(0.0f);
             translation_vector = glm::vec3(0.0f);
+            updt_matrix();
         }
         void setRandom(){
             scale_factors = glm::vec3(
@@ -146,34 +158,35 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
                 (RNDF*2-1)*prm::translation,
                 (RNDF*2-1)*prm::translation
             );
-
+            
+            updt_matrix();
         }
 
         const char* getName(){
             return "Fixed process matrix";
         }
         void ui(){
+            ImGui::Checkbox(UIDT("overwrite matrix", *this), &overwriteMatrix);
             if(ImGui::Button(UIDT("randomize func", *this))) setRandom();
             SL if(ImGui::Button(UIDT("set identity", *this))) setIdentity();
-            ui::valf("scale : ", scale_factors);
-            ui::valf("rot axis", rot_axis);
-            ui::valf("rota angle", rot_angle, 0.005f, -PI, PI);
-            ui::valf("shear xy xz yx", Sh_xy_xz_yx);
-            ui::valf("shear yz_zx_zy", Sh_yz_zx_zy);
-            ui::valf("translation", translation_vector);
+            if(!overwriteMatrix){
+                ui::valf("scale : ", scale_factors);
+                ui::valf("rot axis", rot_axis);
+                ui::valf("rota angle", rot_angle, 0.005f, -PI, PI);
+                ui::valf("shear xy xz yx", Sh_xy_xz_yx);
+                ui::valf("shear yz_zx_zy", Sh_yz_zx_zy);
+                ui::valf("translation", translation_vector);
+            }
+            else{
+                ui::valf("raw matrix : ", matrix);
+            }
 
         }
 
         const glm::mat4& getMatrix(){
-            matrix =
-                glm::scale(glm::mat4(1.0f), scale_factors) *
-                glm::rotate(glm::mat4(1.0f), rot_angle, rot_axis) *
-                glm::transpose(glm::mat4(
-                    1.0f, Sh_xy_xz_yx.x,  Sh_xy_xz_yx.y, 0.0f,  //     1.0f, Shxy,  Shxz, 0.0f,
-                    Sh_xy_xz_yx.z, 1.0f,  Sh_yz_zx_zy.x, 0.0f,  //     Shyx, 1.0f,  Shyz, 0.0f,
-                    Sh_yz_zx_zy.y, Sh_yz_zx_zy.z,  1.0f, 0.0f,  //     Shzx, Shzy,  1.0f, 0.0f,
-                    0.0f, 0.0f,  0.0f, 1.0f)) *                 //     0.0f, 0.0f,  0.0f, 1.0f))
-                glm::translate(glm::mat4(1.0f), translation_vector);
+            if(!overwriteMatrix)
+                updt_matrix();
+            
             return matrix;
         }
 
@@ -214,7 +227,7 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
         }
 
 
-        const glm::mat4& getMatrix(size_t index) const {
+        const glm::mat4& getMatrix(size_t index) const {            
             return attr_funcs[index]->getMatrix();
         }
 
