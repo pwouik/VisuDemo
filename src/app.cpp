@@ -136,7 +136,6 @@ namespace atr{
 
 App::App(int w,int h)
 {
-    DEBUG("aaa");
     pos = glm::vec3(0.0,0.0,0.0);
     light_pos = glm::vec3(0.0,0.0,0.0);
     param1 = glm::vec3( -3.0f, 1.0f, 0.55f );
@@ -153,14 +152,12 @@ App::App(int w,int h)
     width = w;
     height = h;
 
-    DEBUG("aaa1");
     glfwInit();
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    DEBUG("aaa2");
     window = glfwCreateWindow(width, height, "[glad] GL with GLFW", nullptr, nullptr);
     glfwMakeContextCurrent(window);
 
@@ -171,12 +168,11 @@ App::App(int w,int h)
     glfwSetFramebufferSizeCallback(window, onResize);
 
     utl::initIMGUI(window);
-    DEBUG("aaa3");
+    DEBUG("ImGui initialized");
 
     int version = gladLoadGL(glfwGetProcAddress);
     printf("GL %d.%d\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
     
-    DEBUG("aaa4");
     //compute_program for ray marching
     compute_program = glCreateProgram();
     GLint comp = loadshader("shaders/render.comp", GL_COMPUTE_SHADER);
