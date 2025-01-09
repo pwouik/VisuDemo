@@ -97,7 +97,7 @@ void main() {
     //update point coordinate with attractor (for now choose attractor with % index but later have custom weight)
     if(matrixPerAttractor > 0) {        
         //get a pseudo random number. This may requieres fix because of overhead (multiples points getting traped in the same loop) TODO
-        uint fake_rand = hash(idx)%(matrixPerAttractor+immobileCount); 
+        uint fake_rand = hash(idx^randInt_seed)%(matrixPerAttractor+immobileCount); 
 
         //Assuming 3 attroctor funciton per attractor
         //compute all points to display
