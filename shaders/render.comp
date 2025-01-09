@@ -130,7 +130,7 @@ float de(vec3 position) {
   float combinedScaleFactor = pow(scaleFactor, -round(fractalIterations));
   transformedPos *= combinedScaleFactor;
   float minDist = sdBox(transformedPos,vec3(combinedScaleFactor*8))-combinedScaleFactor;
-  return -minDist;
+  return minDist;
 }
 vec3 estimateNormal(vec3 p,float e) {
     return normalize(vec3(
