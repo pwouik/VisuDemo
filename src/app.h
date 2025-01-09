@@ -15,9 +15,13 @@
 
 #define PI 3.14159265358979323f
 
+enum Mode{
+    Raymarching,
+    Attractor
+};
 
-#define RAYMARCHING 0
-#define ATTRACTOR 1
+#define DEBUG(x) std::cout << x << std::endl;
+//#define DEBUG
 
 #define DEBUG(x) std::cout << x << std::endl;
 //#define DEBUG
@@ -37,13 +41,16 @@ public:
     // virtual in case you want to override it in child class
     void onKey(int key, int scancode, int actions, int mods)
     {
+        if(key == GLFW_KEY_M && actions == GLFW_PRESS)
+            mouse_lock=!mouse_lock;
     }
     // virtual in case you want to override it in child class
     void onMouse(double xpos, double ypos)
     {
-        if(lockcam) return;
-        pitch = -(ypos*180.0/height-90.0);
-        yaw = -(xpos*2.0*360.0/width);
+        if(!mouse_lock){
+            pitch = -(ypos*180.0/height-90.0);
+            yaw = -(xpos*2.0*360.0/width);
+        }
     }
     void onScroll(double xoffset, double yoffset)
     {
@@ -109,6 +116,17 @@ public:
     glm::vec3 pos;
     glm::vec3 light_pos;
     glm::vec3 param1;
+    glm::vec3 param2;
+    float k_a;
+    float k_d;
+    float k_s;
+    float alpha;
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
+    float occlusion;
+    glm::vec3 fractal_position{0.0f, 0.0f, 0.0f};
+    glm::vec3 fractal_rotation{0.0f, 0.0f, 0.0f};
     float speed;
     GLuint compute_program;
     GLuint compute_program_attractor;
@@ -117,10 +135,9 @@ public:
     GLuint dummy_vbo;
     GLuint dummy_vao;
     glm::mat4 proj;
-    glm::mat4 view;
+    bool mouse_lock = false;
     glm::mat4 old_view;
 
-    int curr_mode = RAYMARCHING;
-    bool lockcam = false; //don't process on mouse of true
+    Mode curr_mode = Raymarching;
 
 };
