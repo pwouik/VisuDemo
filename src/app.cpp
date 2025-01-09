@@ -120,9 +120,13 @@ namespace atr{
 
         //reserve matrices to be pushed to UBO each frame
         uvl::ubo_matrices.reserve(10);
+        uvl::fixedProcessInit();
     }
     void clean_data(){
         delete[] blackData;
+        uvl::A_tractor.freeAll();
+        uvl::B_tractor.freeAll();
+
         //todo unbind ssbo
     }
 
@@ -295,9 +299,8 @@ void App::draw_ui_attractor(){
         if(ImGui::Button("pref Speed")) speed = 0.025f;
         if(ImGui::Button("reset cam")) pos = glm::vec3(0.0,0.0,-0.5);
         
-        ImGui::SeparatorText("attractor preset");
-        if(ImGui::Button("Sierpinski")) uvl::set_sierpinski();
-        if(ImGui::Button("fixed process")) uvl::set_fixedProcess();
+        ImGui::SeparatorText("Cool preset");
+        if(ImGui::Button("Sierpinski")) preset::sierpinski();
 
         ImGui::SeparatorText("random ranges");
             const char* items_cb2[] = { "per matrix", "per component"}; //MUST MATCH ENUM IN app.h !

@@ -114,7 +114,14 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
         glm::vec3 translation_vector;
 
         
-
+        void setIdentity(){
+            scale_factors = glm::vec3(1.0f);
+            rot_axis = glm::vec3(1.0f,0.0f,0.0f);
+            rot_angle = 0.0f;
+            Sh_xy_xz_yx = glm::vec3(0.0f);
+            Sh_yz_zx_zy = glm::vec3(0.0f);
+            translation_vector = glm::vec3(0.0f);
+        }
         void setRandom(){
             scale_factors = glm::vec3(
                 RNDF*(prm::scale[1]-prm::scale[0])+prm::scale[0],
@@ -147,7 +154,7 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
         }
         void ui(){
             if(ImGui::Button(UIDT("randomize func", *this))) setRandom();
-
+            SL if(ImGui::Button(UIDT("set identity", *this))) setIdentity();
             ui::valf("scale : ", scale_factors);
             ui::valf("rot axis", rot_axis);
             ui::valf("rota angle", rot_angle, 0.005f, -PI, PI);
@@ -304,55 +311,8 @@ namespace uvl{ //utility values (also out of inspiration for naming namespace)
     
     }
 
-    void set_sierpinski(){
-        //todo!
-
-        // reset();
-        // mtl::MatricesGenerator* mga1, *mga2, *mga3;
-        // mtl::MatricesGenerator* mgb1, *mgb2, *mgb3;
-        // {//Sierpinski and reverse Sierpinski attractor
-        //     mga1 = new mtl::RawMatrix(glm::transpose(glm::mat4(
-        //             0.5f, 0.0f,  0.0f, 0.0f,
-        //             0.0f, 0.5f,  0.0f, 0.36f,
-        //             0.0f, 0.0f,  0.0f, 0.0f,
-        //             0.0f, 0.0f,  0.0f, 1.0f)));
-        //     mga2 = new mtl::RawMatrix(glm::transpose(glm::mat4(
-        //             0.5f, 0.0f,  0.0f, -0.5f,
-        //             0.0f, 0.5f,  0.0f, -0.5f,
-        //             0.0f, 0.0f,  0.0f, 0.0f,
-        //             0.0f, 0.0f,  0.0f, 1.0f)));
-        //     mga3 = new mtl::RawMatrix(glm::transpose(glm::mat4(
-        //             0.5f, 0.0f,  0.0f, 0.5f,
-        //             0.0f, 0.5f,  0.0f, -0.5f,
-        //             0.0f, 0.0f,  0.0f, 0.0f,
-        //             0.0f, 0.0f,  0.0f, 1.0f)));
-        //     mgb1 = new mtl::RawMatrix(glm::transpose(glm::mat4(
-        //             0.5f, 0.0f,  0.0f, 0.0f,
-        //             0.0f, 0.5f,  0.0f, -0.36f,
-        //             0.0f, 0.0f,  0.0f, 0.0f,
-        //             0.0f, 0.0f,  0.0f, 1.0f)));
-        //     mgb2 = new mtl::RawMatrix(glm::transpose(glm::mat4(
-        //             0.5f, 0.0f,  0.0f, 0.5f,
-        //             0.0f, 0.5f,  0.0f, 0.5f,
-        //             0.0f, 0.0f,  0.0f, 0.0f,
-        //             0.0f, 0.0f,  0.0f, 1.0f)));
-        //     mgb3 = new mtl::RawMatrix(glm::transpose(glm::mat4(
-        //             0.5f, 0.0f,  0.0f, -0.5f,
-        //             0.0f, 0.5f,  0.0f, 0.5f,
-        //             0.0f, 0.0f,  0.0f, 0.0f,
-        //             0.0f, 0.0f,  0.0f, 1.0f)));
-        // }
-        
-        // A_tractor.addGenerator(mga1); A_tractor.addGenerator(mga2); A_tractor.addGenerator(mga3);
-        // B_tractor.addGenerator(mgb1); B_tractor.addGenerator(mgb2); B_tractor.addGenerator(mgb3);
-
-        // ubo_matrices.push_back(glm::mat4(1.0f));
-        // ubo_matrices.push_back(glm::mat4(1.0f));
-        // ubo_matrices.push_back(glm::mat4(1.0f));
-        // matrixPerAttractor = 3;
-    }
-    void set_fixedProcess(){
-        DEBUG("starting assign");
+    void fixedProcessInit(){
+        DEBUG("starting Attractor assingment ...");
         reset();
         mtl::FixedProcess* mga[MAX_FUNC_PER_ATTRACTOR];
         mtl::FixedProcess* mgb[MAX_FUNC_PER_ATTRACTOR];
@@ -374,4 +334,43 @@ namespace uvl{ //utility values (also out of inspiration for naming namespace)
 
 } //end namespace uvl
 
+
+namespace preset{
+    inline void allIdentity(){
+        for(int i=0; i<MAX_FUNC_PER_ATTRACTOR; i++){
+            uvl::A_tractor.attr_funcs[i]->setIdentity();
+            uvl::B_tractor.attr_funcs[i]->setIdentity();
+        }
+    }
+
+    void sierpinski(){
+        uvl::matrixPerAttractor = 3;
+        allIdentity();
+        mtl::FixedProcess** a_funcs = uvl::A_tractor.attr_funcs;
+        mtl::FixedProcess** b_funcs = uvl::B_tractor.attr_funcs;
+        {//attractor A functions
+            a_funcs[0]->scale_factors = glm::vec3(0.5f,0.5f,0.0f);
+            a_funcs[0]->translation_vector = glm::vec3(0.0f,0.36f,0.0f);
+
+            a_funcs[1]->scale_factors = glm::vec3(0.5f,0.5f,0.0f);
+            a_funcs[1]->translation_vector = glm::vec3(0.5f,-0.5f,0.0f);
+
+            a_funcs[2]->scale_factors = glm::vec3(0.5f,0.5f,0.0f);
+            a_funcs[2]->translation_vector = glm::vec3(-0.5f,-0.5f,0.0f);
+        }
+        {//attractor B functions
+            b_funcs[0]->scale_factors = glm::vec3(0.5f,0.5f,0.0f);
+            b_funcs[0]->translation_vector = glm::vec3(0.0f,-0.36f,0.0f);
+            
+            b_funcs[1]->scale_factors = glm::vec3(0.5f,0.5f,0.0f);
+            b_funcs[1]->translation_vector = glm::vec3(-0.5f,0.5f,0.0f);
+            
+            b_funcs[2]->scale_factors = glm::vec3(0.5f,0.5f,0.0f);
+            b_funcs[2]->translation_vector = glm::vec3(0.5f,0.5f,0.0f);
+        }
+
+
+
+    }
+}
 
