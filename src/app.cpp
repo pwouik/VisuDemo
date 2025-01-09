@@ -418,7 +418,8 @@ void App::run(){
 
             glClearColor(0.0f, 0.0f, 0.1f, 1.0f);
 
-            atr::clearTexture(width, height, texture); //balck background for texture
+            if(view!=old_view)atr::clearTexture(width, height, texture); //balck background for texture
+            old_view=view;
             glUseProgram(compute_program_attractor);
             glActiveTexture(GL_TEXTURE0);
 

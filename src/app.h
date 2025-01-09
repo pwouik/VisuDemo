@@ -118,6 +118,7 @@ public:
     GLuint dummy_vao;
     glm::mat4 proj;
     glm::mat4 view;
+    glm::mat4 old_view;
 
     int curr_mode = RAYMARCHING;
     bool lockcam = false; //don't process on mouse of true
