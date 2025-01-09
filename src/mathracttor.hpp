@@ -214,6 +214,7 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
         }
 
         void ui() {
+            if(ImGui::Button(UIDT("randomize all", *this))) setRandom();
             for (size_t i = 0; i < count; i++) {
                 char buffer[32];  // Allocate a buffer for the formatted string
                 std::snprintf(buffer, sizeof(buffer), "function %zu", i);
@@ -224,7 +225,6 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
                     ImGui::TreePop();
                 }
             }
-            if(ImGui::Button(UIDT("randomize all", *this))) setRandom();
             ui::HelpMarker("Apllyable only if fixed process for now");
         }
 
