@@ -133,6 +133,7 @@ public:
     GLuint dummy_vao;
     glm::mat4 proj;
     bool mouse_lock = false;
+    glm::mat4 old_view;
 
     Mode curr_mode = Raymarching;
 

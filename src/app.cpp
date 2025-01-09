@@ -434,11 +434,12 @@ while (!glfwWindowShouldClose(window)) {
 
             glClearColor(0.0f, 0.0f, 0.1f, 1.0f);
 
-            atr::clearTexture(width, height, texture); //balck background for texture
+            if(inv_camera_view!=old_view)atr::clearTexture(width, height, texture); //balck background for texture
+            old_view=inv_camera_view;
             glUseProgram(compute_program_attractor);
             glActiveTexture(GL_TEXTURE0);
 
-            glUniformMatrix4fv(glGetUniformLocation(compute_program_attractor, "view"),1, GL_FALSE, glm::value_ptr(view));
+            glUniformMatrix4fv(glGetUniformLocation(compute_program_attractor, "view"),1, GL_FALSE, glm::value_ptr(glm::inverse(inv_camera_view)));
             glUniformMatrix4fv(glGetUniformLocation(compute_program_attractor, "proj"),1, GL_FALSE, glm::value_ptr(proj));
             glUniform2ui(glGetUniformLocation(compute_program_attractor, "screen_size"), width,height);
             glUniform3fv(glGetUniformLocation(compute_program_attractor, "camera"), 1, glm::value_ptr(pos));
