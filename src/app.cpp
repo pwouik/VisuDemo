@@ -304,6 +304,7 @@ void App::draw_ui_attractor(){
         if(ImGui::Button("Sierpintagon")) preset::sierpintagon();
         if(ImGui::Button("Sierpolygon")) preset::sierpolygon(); 
         SL ImGui::SetNextItemWidth(60); ImGui::DragInt("side", &preset::nb_cote, 1, 3, 10, "%d", ImGuiSliderFlags_AlwaysClamp);
+        if(ImGui::Button("Barnsley Fern")) preset::barsnley_fern(); 
 
         ImGui::SeparatorText("random ranges");
             const char* items_cb2[] = { "per matrix", "per component"}; //MUST MATCH ENUM IN app.h !

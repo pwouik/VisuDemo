@@ -75,13 +75,14 @@ namespace ui{
         SL ImGui::DragFloat3(UID(v),&v.x, 0.005f, minv, maxv);
     }
     
-    void valf(const char* desc, glm::mat4& mat, float minv = -1.0f, float maxv = 1.0f){
+    void valf(const char* desc, glm::mat4& mat, float speed = 0.005f, float minv = -1.0f, float maxv = 1.0f){
         ImGui::Text(desc);
         for (int row = 0; row < 4; ++row) {
-               CW ImGui::InputFloat(UID(mat[0][row]), &mat[0][row], minv, maxv,"%.2f");
-            SL CW ImGui::InputFloat(UID(mat[1][row]), &mat[1][row], minv, maxv, "%.2f");
-            SL CW ImGui::InputFloat(UID(mat[2][row]), &mat[2][row], minv, maxv, "%.2f");
-            SL CW ImGui::InputFloat(UID(mat[3][row]), &mat[3][row], minv, maxv, "%.2f");
+            //we cannot use dragfloat4 because it would be column first or else it would add some messing with tranpose
+               CW ImGui::DragFloat(UID(mat[0][row]), &mat[0][row], speed, minv, maxv, "%.2f");
+            SL CW ImGui::DragFloat(UID(mat[1][row]), &mat[1][row], speed, minv, maxv, "%.2f");
+            SL CW ImGui::DragFloat(UID(mat[2][row]), &mat[2][row], speed, minv, maxv, "%.2f");
+            SL CW ImGui::DragFloat(UID(mat[3][row]), &mat[3][row], speed, minv, maxv, "%.2f");
         }
     }
 
@@ -103,10 +104,10 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
     //fixedProcess is a legacy name corresponding to previous architecture. We used to have an abstract class MatricesGenerator and fixedProcess inherited from it alongsite rawMatrix, and we planned to implement other subclass such as Conpound which would've take an arbitrary number or scale, rotation, translation and shear in any given order.
     //However this just complexifies code for no reason, as a fixed process is enought for everything we could possibly want to do for now
     class FixedProcess{
-    private:
-        bool overwriteMatrix = false;
-        glm::mat4 matrix;
     public:
+        glm::mat4 matrix;
+        bool overwriteMatrix = false;
+
         glm::vec3 scale_factors;
         glm::vec3 rot_axis;
         float rot_angle;
@@ -422,6 +423,43 @@ namespace preset{
             a_funcs[i]->scale_factors = glm::vec3(0.5f,0.5f,0.0f);
             a_funcs[i]->translation_vector = glm::vec3(cx,cy,0.0f);
         }
+    }
+
+    void barsnley_fern(){
+        uvl::matrixPerAttractor = nb_cote;
+        allIdentity();
+        mtl::FixedProcess** a_funcs = uvl::A_tractor.attr_funcs;
+        uvl::matrixPerAttractor = 4;
+        {
+            a_funcs[0]->overwriteMatrix = true;
+            a_funcs[0]->matrix = glm::transpose(glm::mat4(
+                        0.0f, 0.0f,  0.0f, 0.0f,
+                        0.0f, 0.16f,  0.0f, 0.0f,
+                        0.0f, 0.0f,  0.0f, 0.0f,
+                        0.0f, 0.0f,  0.0f, 1.0f));
+
+            a_funcs[1]->overwriteMatrix = true;
+            a_funcs[1]->matrix = glm::transpose(glm::mat4(
+                        0.85f, 0.04f,  0.0f, 0.0f,
+                        -0.04f, 0.85f,  0.0f, 1.6f,
+                        0.0f, 0.0f,  0.0f, 0.0f,
+                        0.0f, 0.0f,  0.0f, 1.0f));
+            
+            a_funcs[2]->overwriteMatrix = true;
+            a_funcs[2]->matrix = glm::transpose(glm::mat4(
+                        0.2f, -0.26f,  0.0f, 0.0f,
+                        0.23f, 0.22f,  0.0f, 1.6f,
+                        0.0f, 0.0f,  0.0f, 0.0f,
+                        0.0f, 0.0f,  0.0f, 1.0f));
+
+            a_funcs[3]->overwriteMatrix = true;
+            a_funcs[3]->matrix = glm::transpose(glm::mat4(
+                        -0.15f, 0.28f,  0.0f, 0.0f,
+                        0.26f, 0.24f,  0.0f, 0.44f,
+                        0.0f, 0.0f,  0.0f, 0.0f,
+                        0.0f, 0.0f,  0.0f, 1.0f));
+        }
+
     }
 }
 
