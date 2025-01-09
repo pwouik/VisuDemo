@@ -55,7 +55,9 @@ const uint max_iter = 256;
 const float EPSILON = 1e-4;
 const float PI = 3.14159265358979;
 
+//magic values
 #define NBPTS 20000000
+#define MAX_FUNC_PER_ATTRACTOR 10
 //TODO optimisation : lower number of thread to process multiples point per thread ?
 
 void screenWriteCoord(vec4 pt){
@@ -92,23 +94,29 @@ void main() {
     if(idx >= NBPTS) return;
 
     vec4 point = points[idx];
-    vec4 pts[3];
+    vec4 pts[MAX_FUNC_PER_ATTRACTOR];
 
     //update point coordinate with attractor (for now choose attractor with % index but later have custom weight)
     if(matrixPerAttractor > 0) {        
         //get a pseudo random number. This may requieres fix because of overhead (multiples points getting traped in the same loop) TODO
         uint fake_rand = hash(idx^randInt_seed)%(matrixPerAttractor+immobileCount); 
 
-        //Assuming 3 attroctor funciton per attractor
+        //Assuming 10 attroctor funciton per attractor
         //compute all points to display
         for(int i =0; i < matrixPerAttractor; i++){
             pts[i] = matrixArray[i] * point;
         }
 
         //pick only one 
-        if(fake_rand == 0) points[idx] = pts[0];
-        if(fake_rand == 1) points[idx] = pts[1];
-        if(fake_rand == 2) points[idx] = pts[2];
+        for(int i =0; i < matrixPerAttractor; i++){
+            if(fake_rand == i){
+                points[idx] = pts[i];
+                break; //idk break really optimized in glsml
+            }
+        }
+        // if(fake_rand == 0) points[idx] = pts[0];
+        // if(fake_rand == 1) points[idx] = pts[1];
+        // if(fake_rand == 2) points[idx] = pts[2];
     }
     //optimization : draw multiple from one
     for(int i =0; i < matrixPerAttractor; i++){

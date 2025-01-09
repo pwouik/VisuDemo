@@ -311,8 +311,8 @@ void App::draw_ui_attractor(){
 
         ImGui::SeparatorText("Attractors");
             ImGui::SliderFloat("slider float", &uvl::lerpFactor, 0.0f, 1.0f, "lerp : %.3f");
-            ImGui::InputInt("nb", &uvl::matrixPerAttractor);
-            utl::HelpMarker("The number of different random matrices per attractor. Live editing may fuck up everything");
+            ImGui::SliderInt("nb functions", &uvl::matrixPerAttractor, 3, 10);
+            utl::HelpMarker("The number of different random matrices per attractor. going above ten will crash the program");
             ImGui::InputInt("immobile count", &uvl::immobileCount);
             utl::HelpMarker("pseudo random reason or idk. given a random int between 0 and nb+immobile count point will move if random values is less than nb to corresponding attractionfunction[random] check .comp if unclear");
 
@@ -461,7 +461,7 @@ while (!glfwWindowShouldClose(window)) {
             //TODO HERE uncommnet
             uvl::update_ubo_matrices(lerpmode);
             glBindBuffer(GL_UNIFORM_BUFFER, atr::uboM4);
-            glBufferSubData(GL_UNIFORM_BUFFER, 0, uvl::ubo_matrices.size() * sizeof(glm::mat4), uvl::ubo_matrices.data());
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, uvl::matrixPerAttractor * sizeof(glm::mat4), uvl::ubo_matrices.data());
             glBindBuffer(GL_UNIFORM_BUFFER, 0);
             
             glDispatchCompute((NBPTS-1)/1024+1, 1, 1);

@@ -200,7 +200,7 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
 
     class Attractor{
     public:
-        MatricesGenerator* generators[8];
+        MatricesGenerator* generators[10];
         size_t count;
 
         Attractor() : count(0) {}
@@ -215,22 +215,23 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
 
         void ui() {
             if(ImGui::Button(UIDT("randomize all", *this))) setRandom();
+            ui::HelpMarker("Apllyable only if fixed process for now");
             for (size_t i = 0; i < count; i++) {
                 char buffer[32];  // Allocate a buffer for the formatted string
                 std::snprintf(buffer, sizeof(buffer), "function %zu", i);
                 if (ImGui::TreeNode(buffer)){
-                    ImGui::SeparatorText(generators[i]->getName());
+                    //ImGui::SeparatorText(generators[i]->getName());
+                    //todo pop tree in ui below
                     generators[i]->ui();
 
                     ImGui::TreePop();
                 }
             }
-            ui::HelpMarker("Apllyable only if fixed process for now");
         }
 
         void addGenerator(MatricesGenerator* generator) {
-            if (count >= 8) {
-                throw std::out_of_range("Cannot add more than 6 MatricesGenerator.");
+            if (count >= 10) {
+                throw std::out_of_range("Cannot add more than 10 MatricesGenerator.");
             }
             generators[count++] = generator;
         }
@@ -292,7 +293,7 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
 
 
 namespace uvl{ //utility values (also out of inspiration for naming namespace)
-    int matrixPerAttractor = 0; //must match the size of Attractor
+    int matrixPerAttractor = 0;
     int immobileCount = 1;
     float lerpFactor = 0.0f;
     mtl::Attractor A_tractor;
@@ -385,25 +386,23 @@ namespace uvl{ //utility values (also out of inspiration for naming namespace)
         matrixPerAttractor = 3;
     }
     void set_fixedProcess(){
+        DEBUG("starting assign");
         reset();
-        mtl::MatricesGenerator* mga1, *mga2, *mga3;
-        mtl::MatricesGenerator* mgb1, *mgb2, *mgb3;
-        {//Sierpinski and reverse Sierpinski attractor
-            mga1 = new mtl::FixedProcess();
-            mga2 = new mtl::FixedProcess();
-            mga3 = new mtl::FixedProcess();
-            mgb1 = new mtl::FixedProcess();
-            mgb2 = new mtl::FixedProcess();
-            mgb3 = new mtl::FixedProcess();
+        const int maxFuncCount = 10;
+        mtl::MatricesGenerator* mga[maxFuncCount];
+        mtl::MatricesGenerator* mgb[maxFuncCount];
+
+        for(int i=0; i<maxFuncCount; i++){
+            mga[i] = new mtl::FixedProcess();
+            mgb[i] = new mtl::FixedProcess();
+            A_tractor.addGenerator(mga[i]);
+            B_tractor.addGenerator(mgb[i]);
+            ubo_matrices.push_back(glm::mat4(1.0f));
         }
         
-        A_tractor.addGenerator(mga1); A_tractor.addGenerator(mga2); A_tractor.addGenerator(mga3);
-        B_tractor.addGenerator(mgb1); B_tractor.addGenerator(mgb2); B_tractor.addGenerator(mgb3);
+        matrixPerAttractor = 3; //can be any value between 3 or 10
 
-        ubo_matrices.push_back(glm::mat4(1.0f));
-        ubo_matrices.push_back(glm::mat4(1.0f));
-        ubo_matrices.push_back(glm::mat4(1.0f));
-        matrixPerAttractor = 3;
+        DEBUG("done");
     }
 
     
