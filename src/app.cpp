@@ -145,7 +145,7 @@ App::App(int w,int h)
     ambient = glm::vec3(1.0,0.6,0.9);
     diffuse = glm::vec3(1.0,0.6,0.0);
     specular = glm::vec3(1.0,1.0,1.0);
-    k_a = 0.32;
+    k_a = 0.32f;
     k_d = 1.0;
     k_s = 1.0;
     alpha = 3.0;
@@ -437,7 +437,8 @@ while (!glfwWindowShouldClose(window)) {
 
             glClearColor(0.0f, 0.0f, 0.1f, 1.0f);
 
-            if(inv_camera_view!=old_view)atr::clearTexture(width, height, texture); //balck background for texture
+            //if(inv_camera_view!=old_view)
+                atr::clearTexture(width, height, texture); //balck background for texture
             old_view=inv_camera_view;
             glUseProgram(compute_program_attractor);
             glActiveTexture(GL_TEXTURE0);
