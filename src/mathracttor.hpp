@@ -19,19 +19,21 @@
 #define CW ImGui::SetNextItemWidth(inputWidth);
 #define UID(val) (std::string("##") + std::to_string(reinterpret_cast<uintptr_t>(&val))).c_str()
 #define UIDT(txt, val) (std::string(txt) + std::string("##") + std::to_string(reinterpret_cast<uintptr_t>(&val))).c_str()
-//#define UID(val) "##tantpis" //TODO USE UID GENERATION ABOVE
+//#define UID(val) "##tantpis" // UID GENERATION ABOVE
 
 #define RNDF (float)rand()/RAND_MAX
 
 namespace prm{ //param for random generation
     static float scale[2]; //min, max
-    static float angle;
+    static int angle;
+    static float shearing;
     static float translation;
 
     void defaults(){
-        scale[0] = 0.2f; scale[1] = 1.2f;
-        angle = 360;
-        translation = 1.0f;
+        scale[0] = 0.3f; scale[1] = 1.0f;
+        angle = 180;
+        shearing = 0.2f;
+        translation = 0.8f;
     }
 
 }
@@ -53,10 +55,11 @@ namespace ui{
     }
 
     //editable field for float of float vector
-    void valf(const char* desc, float& v, float minv = 0.0f, float maxv = 1.0f){
+    void valf(const char* desc, float& v, float speed = 0.005f, float minv = 0.0f, float maxv = 1.0f){
         ImGui::Text(desc);
-        SL CW ImGui::InputFloat(UID(v), &v, minv, maxv, "%.2f");
+        SL CW ImGui::DragFloat(UID(v), &v, speed, minv, maxv, "%.2f");
     }
+
     // void valf(const char* desc, glm::vec3& v, float minv = 0.0f, float maxv = 1.0f){
     //     ImGui::Text(desc);
     //     SL CW ImGui::InputFloat(UID(v.x), &v.x, minv, maxv, "%.2f");
@@ -65,8 +68,9 @@ namespace ui{
     // }
     void valf(const char* desc, glm::vec3& v, float minv = -1.0f, float maxv = 1.0f){
         ImGui::Text(desc);
-        SL ImGui::DragFloat3(UID(v),&v.x, minv, maxv);
+        SL ImGui::DragFloat3(UID(v),&v.x, 0.005f, minv, maxv);
     }
+    
     void valf(const char* desc, glm::mat4& mat, float minv = -1.0f, float maxv = 1.0f){
         ImGui::Text(desc);
         for (int row = 0; row < 4; ++row) {
@@ -74,6 +78,18 @@ namespace ui{
             SL CW ImGui::InputFloat(UID(mat[1][row]), &mat[1][row], minv, maxv, "%.2f");
             SL CW ImGui::InputFloat(UID(mat[2][row]), &mat[2][row], minv, maxv, "%.2f");
             SL CW ImGui::InputFloat(UID(mat[3][row]), &mat[3][row], minv, maxv, "%.2f");
+        }
+    }
+
+    void param_settings(){
+        if(ImGui::TreeNode("random range")){
+            HelpMarker("The lower / upper born at range random parameter will be generated");
+            ImGui::DragFloat2("max scaling",prm::scale, 0.005f, 0.2f, 1.5f, "%.3f");
+            ImGui::DragInt("max rotation", &prm::angle, 1, 0, 180, "%d");
+            ImGui::DragFloat("max shearing", &prm::shearing, 0.005f, 0.0f, 2.0f, "%.2f");
+            ImGui::DragFloat("max translate", &prm::translation, 0.005f, 0.0f, 2.0f, "%.2f");
+
+            ImGui::TreePop();
         }
     }
 } //end namespace UI
@@ -112,7 +128,8 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
         glm::vec3 scale_factors;
         glm::vec3 rot_axis;
         float rot_angle;
-        float Shxy, Shxz, Shyx, Shyz, Shzx, Shzy; //shearing
+        glm::vec3 Sh_xy_xz_yx;
+        glm::vec3 Sh_yz_zx_zy;
         glm::vec3 translation_vector;
 
         
@@ -125,8 +142,17 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
             );
             glm::vec3 randomVec = glm::ballRand(1.0f);
             rot_axis = glm::normalize(randomVec);
-            rot_angle = RNDF * prm::angle;
-            //todo shearing
+            rot_angle = glm::radians((RNDF*2-1) * (float) prm::angle);
+            Sh_xy_xz_yx = glm::vec3(
+                (RNDF*2-1)*prm::shearing,
+                (RNDF*2-1)*prm::shearing,
+                (RNDF*2-1)*prm::shearing
+            );
+            Sh_yz_zx_zy = glm::vec3(
+                (RNDF*2-1)*prm::shearing,
+                (RNDF*2-1)*prm::shearing,
+                (RNDF*2-1)*prm::shearing
+            );
             translation_vector = glm::vec3(
                 (RNDF*2-1)*prm::translation,
                 (RNDF*2-1)*prm::translation,
@@ -139,11 +165,13 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
             return "Fixed process matrix";
         }
         void ui(){
-            if(ImGui::Button(UIDT("randomize all", *this))) setRandom();
+            if(ImGui::Button(UIDT("randomize func", *this))) setRandom();
 
             ui::valf("scale : ", scale_factors);
             ui::valf("rot axis", rot_axis);
-            ui::valf("rota angle", rot_angle);
+            ui::valf("rota angle", rot_angle, 0.005f, -PI, PI);
+            ui::valf("shear xy xz yx", Sh_xy_xz_yx);
+            ui::valf("shear yz_zx_zy", Sh_yz_zx_zy);
             ui::valf("translation", translation_vector);
 
         }
@@ -151,8 +179,12 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
         const glm::mat4& getMatrix() override {
             matrix =
                 glm::scale(glm::mat4(1.0f), scale_factors) *
-                glm::rotate(glm::mat4(1.0f), glm::radians(rot_angle), rot_axis) *
-                //todo shearing
+                glm::rotate(glm::mat4(1.0f), rot_angle, rot_axis) *
+                glm::transpose(glm::mat4(
+                    1.0f, Sh_xy_xz_yx.x,  Sh_xy_xz_yx.y, 0.0f,  //     1.0f, Shxy,  Shxz, 0.0f,
+                    Sh_xy_xz_yx.z, 1.0f,  Sh_yz_zx_zy.x, 0.0f,  //     Shyx, 1.0f,  Shyz, 0.0f,
+                    Sh_yz_zx_zy.y, Sh_yz_zx_zy.z,  1.0f, 0.0f,  //     Shzx, Shzy,  1.0f, 0.0f,
+                    0.0f, 0.0f,  0.0f, 1.0f)) *                 //     0.0f, 0.0f,  0.0f, 1.0f))
                 glm::translate(glm::mat4(1.0f), translation_vector);
             return matrix;
         }
@@ -191,7 +223,7 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
                     ImGui::TreePop();
                 }
             }
-            if(ImGui::Button(UIDT("randomize", *this))) setRandom();
+            if(ImGui::Button(UIDT("randomize all", *this))) setRandom();
             ui::HelpMarker("Apllyable only if fixed process for now");
         }
 

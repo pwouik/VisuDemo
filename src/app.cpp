@@ -284,6 +284,9 @@ void App::draw_ui_attractor(){
         if(ImGui::Button("Sierpinski")) uvl::set_sierpinski();
         if(ImGui::Button("fixed process")) uvl::set_fixedProcess();
 
+        ImGui::SeparatorText("random ranges");
+            ui::param_settings();
+
         ImGui::SeparatorText("Attractors");
             ImGui::SliderFloat("slider float", &uvl::lerpFactor, 0.0f, 1.0f, "lerp : %.3f");
             ImGui::InputInt("nb", &uvl::matrixPerAttractor);
@@ -418,7 +421,8 @@ void App::run(){
 
             glClearColor(0.0f, 0.0f, 0.1f, 1.0f);
 
-            if(view!=old_view)atr::clearTexture(width, height, texture); //balck background for texture
+            //if(view!=old_view) //when doing test on UI we need update but we are still
+                atr::clearTexture(width, height, texture); //balck background for texture
             old_view=view;
             glUseProgram(compute_program_attractor);
             glActiveTexture(GL_TEXTURE0);
