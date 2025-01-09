@@ -109,7 +109,7 @@ namespace atr{
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo_pts);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
 
-        delete data; //points memory only needed on GPU
+        delete[] data; //points memory only needed on GPU
 
         //attractors (a max of 10 matrices stored as UBO)
         glGenBuffers(1, &uboM4);
@@ -305,7 +305,7 @@ void App::draw_ui_attractor(){
         ImGui::SeparatorText("Attractors");
             ImGui::SliderFloat("slider float", &uvl::lerpFactor, 0.0f, 1.0f, "lerp : %.3f");
             ImGui::InputInt("nb", &uvl::matrixPerAttractor);
-            utl::HelpMarker("The number of different random matrices per attractor. Live editing may fucked up everything");
+            utl::HelpMarker("The number of different random matrices per attractor. Live editing may fuck up everything");
             ImGui::InputInt("immobile count", &uvl::immobileCount);
             utl::HelpMarker("pseudo random reason or idk. given a random int between 0 and nb+immobile count point will move if random values is less than nb to corresponding attractionfunction[random] check .comp if unclear");
 

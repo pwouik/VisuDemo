@@ -76,7 +76,17 @@ void screenWriteCoord(vec4 pt){
     //who needs a clipping plane or a z buffer ? 
     imageStore(imgOutput, ivec2(screen_coord), color);
 }
-
+uint hash(uint x)
+{
+    x ^= x >> 17;
+    x *= 0xed5ad4bbU;
+    x ^= x >> 11;
+    x *= 0xac4c1b51U;
+    x ^= x >> 15;
+    x *= 0x31848babU;
+    x ^= x >> 14;
+    return x;
+}
 void main() {
     uint idx = gl_GlobalInvocationID.x;
     if(idx >= NBPTS) return;
@@ -87,7 +97,7 @@ void main() {
     //update point coordinate with attractor (for now choose attractor with % index but later have custom weight)
     if(matrixPerAttractor > 0) {        
         //get a pseudo random number. This may requieres fix because of overhead (multiples points getting traped in the same loop) TODO
-        uint fake_rand = (idx%randInt_seed)%(matrixPerAttractor+immobileCount); 
+        uint fake_rand = hash(idx)%(matrixPerAttractor+immobileCount); 
 
         //Assuming 3 attroctor funciton per attractor
         //compute all points to display
