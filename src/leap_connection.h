@@ -4,9 +4,6 @@
 #include <LeapC.h>
 #include <mutex>
 #include <thread>
-#include <bits/basic_string.h>
-#include <bits/char_traits.h>
-#include <bits/stringfwd.h>
 
 using connection_callback = std::function<void()>;
 using device_callback = std::function<void(const LEAP_DEVICE_INFO& device)>;

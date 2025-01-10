@@ -31,7 +31,7 @@ void leap_connection_class::start_service()
 {
     if (is_service_running) return;
     is_service_running = true;
-    polling_thread = std::thread{service_message_loop};
+    polling_thread = std::thread{[this]{this->service_message_loop();}};
 }
 
 void leap_connection_class::terminate_service()

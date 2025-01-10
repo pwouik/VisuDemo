@@ -28,9 +28,7 @@ if(MSVC)
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-add_executable(VisuDemo ${cpp_source_files} ${c_source_files} ${IMGUI_source_files}
-        src/leap_connection.cpp
-        src/leap_connection.h)
+add_executable(VisuDemo ${cpp_source_files} ${c_source_files} ${IMGUI_source_files})
 set_property(TARGET VisuDemo PROPERTY CXX_STANDARD 11)
 target_compile_options(VisuDemo PRIVATE -Wall)
 
