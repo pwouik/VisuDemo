@@ -18,17 +18,6 @@ using tracking_mode_callback = std::function<void(const LEAP_TRACKING_MODE_EVENT
 
 class leap_connection_class
 {
-    connection_callback on_connection;
-    connection_callback on_connection_lost;
-    device_callback on_device_found;
-    device_lost_callback on_device_lost;
-    device_failure_callback on_device_failure;
-    policy_callback on_policy;
-    tracking_callback on_frame;
-    image_callback on_image;
-    imu_callback on_imu;
-    tracking_mode_callback on_tracking_mode;
-
     std::thread polling_thread;
     std::mutex data_lock;
 
@@ -56,22 +45,22 @@ class leap_connection_class
     void set_device(LEAP_DEVICE_INFO& device_info);
 
 public:
+    connection_callback on_connection;
+    connection_callback on_connection_lost;
+    device_callback on_device_found;
+    device_lost_callback on_device_lost;
+    device_failure_callback on_device_failure;
+    policy_callback on_policy;
+    tracking_callback on_frame;
+    image_callback on_image;
+    imu_callback on_imu;
+    tracking_mode_callback on_tracking_mode;
+    
     explicit leap_connection_class(uint64_t set = 0, uint64_t clear = 0);
     explicit leap_connection_class(const LEAP_ALLOCATOR& allocator, uint64_t set = 0, uint64_t clear = 0);
     ~leap_connection_class();
     void start_service();
     void terminate_service();
-
-    void set_on_connection(const connection_callback& on_connection);
-    void set_on_connection_lost(const connection_callback& on_connection_lost);
-    void set_on_device_found(const device_callback& on_device_found);
-    void set_on_device_lost(const device_lost_callback& on_device_lost);
-    void set_on_device_failure(const device_failure_callback& on_device_failure);
-    void set_on_policy(const policy_callback& on_policy);
-    void set_on_frame(const tracking_callback& on_frame);
-    void set_on_image(const image_callback& on_image);
-    void set_on_imu(const imu_callback& on_imu);
-    void set_on_tracking_mode(const tracking_mode_callback& on_tracking_mode);
 };
 
 

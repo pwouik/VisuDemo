@@ -7,6 +7,7 @@
 
 int main(void) {
     App app(1600,900);
+    app.setupLeapMotion();
     app.run();
     return 0;
 }

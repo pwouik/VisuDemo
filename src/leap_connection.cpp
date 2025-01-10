@@ -6,18 +6,18 @@
 leap_connection_class::leap_connection_class(const uint64_t set, const uint64_t clear)
 {
     auto res = LeapCreateConnection(nullptr, &leap_connection);
-    if (res != eLeapRS_Success) throw std::exception{};
+    if (res != eLeapRS_Success) std::cout << "Error: " << result_string(res) << ".\n";
     res = LeapOpenConnection(leap_connection);
-    if (res != eLeapRS_Success) throw std::exception{};
+    if (res != eLeapRS_Success) std::cout << "Error: " << result_string(res) << ".\n";
     res = LeapSetPolicyFlags(leap_connection, set, clear);
-    if (res != eLeapRS_Success) throw std::exception{};
+    if (res != eLeapRS_Success) std::cout << "Error: " << result_string(res) << ".\n";
 }
 
 leap_connection_class::leap_connection_class(const LEAP_ALLOCATOR& allocator, const uint64_t set,
                                              const uint64_t clear): leap_connection_class(set, clear)
 {
     const auto res = LeapSetAllocator(leap_connection, &allocator);
-    if (res != eLeapRS_Success) throw std::exception{};
+    if (res != eLeapRS_Success) std::cout << "Error: " << result_string(res) << ".\n";
 }
 
 leap_connection_class::~leap_connection_class()
@@ -41,56 +41,6 @@ void leap_connection_class::terminate_service()
     polling_thread.join();
 }
 
-void leap_connection_class::set_on_connection(const connection_callback& on_connection_)
-{
-    leap_connection_class::on_connection = on_connection_;
-}
-
-void leap_connection_class::set_on_connection_lost(const connection_callback& on_connection_lost_)
-{
-    leap_connection_class::on_connection_lost = on_connection_lost_;
-}
-
-void leap_connection_class::set_on_device_found(const device_callback& on_device_found_)
-{
-    leap_connection_class::on_device_found = on_device_found_;
-}
-
-void leap_connection_class::set_on_device_lost(const device_lost_callback& on_device_lost_)
-{
-    leap_connection_class::on_device_lost = on_device_lost_;
-}
-
-void leap_connection_class::set_on_device_failure(const device_failure_callback& on_device_failure_)
-{
-    leap_connection_class::on_device_failure = on_device_failure_;
-}
-
-void leap_connection_class::set_on_policy(const policy_callback& on_policy_)
-{
-    leap_connection_class::on_policy = on_policy_;
-}
-
-void leap_connection_class::set_on_frame(const tracking_callback& on_frame_)
-{
-    leap_connection_class::on_frame = on_frame_;
-}
-
-void leap_connection_class::set_on_image(const image_callback& on_image_)
-{
-    leap_connection_class::on_image = on_image_;
-}
-
-void leap_connection_class::set_on_imu(const imu_callback& on_imu_)
-{
-    leap_connection_class::on_imu = on_imu_;
-}
-
-void leap_connection_class::set_on_tracking_mode(const tracking_mode_callback& on_tracking_mode_)
-{
-    leap_connection_class::on_tracking_mode = on_tracking_mode_;
-}
-
 void leap_connection_class::service_message_loop()
 {
     LEAP_CONNECTION_MESSAGE connection_message;
@@ -101,6 +51,7 @@ void leap_connection_class::service_message_loop()
         if (result != eLeapRS_Success)
         {
             std::cout << "LeapC PollConnection call was " << result_string(result) << ".\n";
+            continue;
         }
         switch (connection_message.type)
         {

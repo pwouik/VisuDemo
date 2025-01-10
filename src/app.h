@@ -9,6 +9,7 @@
 #include <cmath>
 #include <cstdio>
 #include "imgui_util.hpp" 
+#include "leap_connection.h"
 #define GLM_ENABLE_EXPERIMENTAL
 
 #define PI 3.14159265358979323f
@@ -24,11 +25,13 @@ public:
     App(int w,int h);
 	~App()
 	{
-
+        if (leap_connection) leap_connection.reset();
         utl::shutdownIMGUI();
         glfwTerminate();
 	}
     void run();
+
+    void setupLeapMotion();
 
     // virtual in case you want to override it in child class
     void onKey(int key, int scancode, int actions, int mods)
@@ -130,4 +133,5 @@ private:
 
     Mode curr_mode = Raymarching;
 
+    std::unique_ptr<leap_connection_class> leap_connection;
 };

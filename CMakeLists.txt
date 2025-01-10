@@ -66,9 +66,32 @@ find_package(LeapSDK
         REQUIRED
         PATHS
         "${ULTRALEAP_PATH_ROOT}")
+if (NOT LeapSDK_FOUND)
+    message("aaaaaaaaaaaa")
+endif ()
 
 
 include_directories(${OPENGL_INCLUDE_DIR})
 target_include_directories(VisuDemo PRIVATE "${CMAKE_SOURCE_DIR}/include")
 target_link_libraries(VisuDemo ${OPENGL_gl_LIBRARY} glfw glm::glm-header-only LeapSDK::LeapC)
 
+get_target_property(
+        LEAPC_IMPORTED_CONFIG
+        LeapSDK::LeapC
+        IMPORTED_CONFIGURATIONS
+)
+
+get_target_property(
+        LEAPC_SHARED_LIB_PATH
+        LeapSDK::LeapC
+        IMPORTED_LOCATION_${LEAPC_IMPORTED_CONFIG}
+)
+
+add_custom_command(
+        TARGET
+        VisuDemo
+        POST_BUILD
+        COMMAND
+        ${CMAKE_COMMAND} -E copy
+        ${LEAPC_SHARED_LIB_PATH}
+        $<TARGET_FILE_DIR:VisuDemo>)
