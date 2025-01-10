@@ -19,37 +19,6 @@ uniform vec3 light_pos;
 uniform float time;
 
 
-//tmp hardcode matrices here for now
-// mat4 matri0 = transpose(mat4(   0.5f, 0.0f,  0.0f, 0.0f,
-//                                 0.0f, 0.5f,  0.0f, 0.36f,
-//                                 0.0f, 0.0f,  0.0f, 0.0f,
-//                                 0.0f, 0.0f,  0.0f, 1.0f));
-// mat4 matri1 = transpose(mat4(   0.5f, 0.0f,  0.0f, -0.5f,
-//                                 0.0f, 0.5f,  0.0f, -0.5f,
-//                                 0.0f, 0.0f,  0.0f, 0.0f,
-//                                 0.0f, 0.0f,  0.0f, 1.0f));
-// mat4 matri2 = transpose(mat4(   0.5f, 0.0f,  0.0f, 0.5f,
-//                                 0.0f, 0.5f,  0.0f, -0.5f,
-//                                 0.0f, 0.0f,  0.0f, 0.0f,
-//                                 0.0f, 0.0f,  0.0f, 1.0f));
-
-// mat4 matri0 = transpose(mat4(   0.5f, 0.2f,  0.0f, 0.0f,
-//                                 0.0f, 0.7f,  0.0f, 0.36f,
-//                                 0.0f, 0.0f,  0.0f, -0.2f,
-//                                 0.0f, 0.0f,  0.4f, 1.0f));
-// mat4 matri1 = transpose(mat4(   0.7f, 0.0f,  0.0f, -0.5f,
-//                                 0.0f, 0.5f,  0.0f, -0.5f,
-//                                 0.2f, 0.0f,  0.2f, 0.0f,
-//                                 0.0f, 0.0f,  0.0f, 1.0f));
-// mat4 matri2 = transpose(mat4(   0.5f, 0.0f,  0.0f, 0.5f,
-//                                 0.0f, 0.5f,  0.0f, 0.5f,
-//                                 0.0f, 0.0f,  0.6f, 0.3f,
-//                                 0.0f, 0.0f,  0.0f, 1.0f));
-
-// mat4 matri0 = matrixArray[0];
-// mat4 matri1 = matrixArray[1];
-// mat4 matri2 = matrixArray[2];
-
 
 const uint max_iter = 256;
 const float EPSILON = 1e-4;
@@ -59,6 +28,21 @@ const float PI = 3.14159265358979;
 #define NBPTS 20000000
 #define MAX_FUNC_PER_ATTRACTOR 10 //magic value synced with matthracttor.hpp
 //TODO optimisation : lower number of thread to process multiples point per thread ?
+
+//test coloring
+// vec4 colors[10] = vec4[10](
+//     vec4(1.0, 0.0, 0.0, 1.0), // Red
+//     vec4(0.0, 1.0, 0.0, 1.0), // Green
+//     vec4(0.0, 0.0, 1.0, 1.0), // Blue
+//     vec4(0.0, 1.0, 1.0, 1.0), // Green + Blue (Cyan)
+//     vec4(1.0, 0.0, 1.0, 1.0), // Red + Blue (Magenta)
+//     vec4(1.0, 1.0, 0.0, 1.0), // Red + Green (Yellow)
+//     vec4(0.5, 0.5, 0.5, 1.0), // Gray
+//     vec4(0.5, 0.0, 0.5, 1.0), // Purple
+//     vec4(0.5, 0.5, 0.0, 1.0), // Olive
+//     vec4(1.0, 1.0, 1.0, 1.0)  // White
+// );
+vec4 color;
 
 void screenWriteCoord(vec4 pt){
     vec4 camera_space = view * pt;
@@ -73,7 +57,7 @@ void screenWriteCoord(vec4 pt){
     screen_coord *= vec2(screen_size); // Map to screen space (pixels)
 
     //default color for now
-    vec4 color = vec4(1.0, 0.5, 0.5, 1.0); 
+    //vec4 color = vec4(1.0, 0.5, 0.5, 1.0); 
 
     //who needs a clipping plane or a z buffer ? 
     imageStore(imgOutput, ivec2(screen_coord), color);
@@ -98,27 +82,26 @@ void main() {
 
     //update point coordinate with attractor (for now choose attractor with % index but later have custom weight)
     if(matrixPerAttractor > 0) {        
-        //get a pseudo random number. This may requieres fix because of overhead (multiples points getting traped in the same loop) TODO
+        //get a unique seed per thread. 
+        //TODO there may be hash collisions !
         uint fake_rand = hash(idx^randInt_seed)%(matrixPerAttractor+immobileCount); 
 
-        //Assuming 10 attroctor funciton per attractor
-        //compute all points to display
+        //compute all points to display. Note that 3<matrixPerAttractor<MAX_FUNC_PER_ATTRACTOR = 10
         for(int i =0; i < matrixPerAttractor; i++){
             pts[i] = matrixArray[i] * point;
         }
 
-        //pick only one 
+        //jump to a random position or stay still (depending on immobile count)
         for(int i =0; i < matrixPerAttractor; i++){
             if(fake_rand == i){
                 points[idx] = pts[i];
-                break; //idk break really optimized in glsml
+                color = vec4(0.3,0.9,0.3,1)*(0.3+0.7*distance(pts[i], point));
+                break; //idk if break really optimized in glsml
             }
         }
-        // if(fake_rand == 0) points[idx] = pts[0];
-        // if(fake_rand == 1) points[idx] = pts[1];
-        // if(fake_rand == 2) points[idx] = pts[2];
+
     }
-    //optimization : draw multiple from one
+    //draw all atteignable point.
     for(int i =0; i < matrixPerAttractor; i++){
         screenWriteCoord(pts[i]);
     }
