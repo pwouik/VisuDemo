@@ -14,6 +14,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 
 #define PI 3.14159265358979323f
+#define FPS_UPDATE_DELAY 1
 
 enum Mode{
     Raymarching,
@@ -90,6 +91,7 @@ public:
 
     void draw_ui();
     void draw_ui_attractor();
+    void updateFps();
 
 public:
     GLFWwindow* window;
@@ -145,5 +147,9 @@ public:
 
     Mode curr_mode = Raymarching;
     LerpMode lerpmode = lerp_Matrix;
+
+    int frameAcc = 0;
+    float prevFpsUpdate = 0 ;
+    float currentFPS;
 
 };

@@ -59,7 +59,6 @@ void screenWriteCoord(vec4 pt){
     //default color for now
     //vec4 color = vec4(1.0, 0.5, 0.5, 1.0); 
 
-    //who needs a clipping plane or a z buffer ? 
     imageStore(imgOutput, ivec2(screen_coord), color);
 }
 uint hash(uint x)

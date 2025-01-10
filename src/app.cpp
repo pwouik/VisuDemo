@@ -257,9 +257,21 @@ App::App(int w,int h)
     prm::defaults();
 }
 
+void App::updateFps(){
+    frameAcc++;
+    double timeCurr  = glfwGetTime();
+    float elapsedTime = timeCurr-prevFpsUpdate;
+    if(elapsedTime>FPS_UPDATE_DELAY){
+        currentFPS = (float)frameAcc / elapsedTime ;
+        frameAcc = 0;
+        prevFpsUpdate = timeCurr;
+    }
+}
+
 void App::draw_ui(){
     ImGui::Begin("Base info");
         ImGui::SeparatorText("current rendering");
+            ImGui::Text("FPS : %.2f", currentFPS);
             const char* items_cb1[] = { "Raymarching", "Attractor"}; //MUST MATCH ENUM IN app.h !
             if(ImGui::Combo("Display type", (int*)&curr_mode, items_cb1, IM_ARRAYSIZE(items_cb1))){
                 gbl::paused = true;
@@ -338,6 +350,7 @@ void App::run(){
 while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         if(gbl::paused) continue;
+        updateFps();
         
         if(glfwGetKey(window, GLFW_KEY_W)==GLFW_PRESS){
             pos+= glm::rotateY(glm::vec3(0.0,0.0,-1.0),yaw * PI / 180.0f) * speed;
