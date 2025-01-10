@@ -18,8 +18,8 @@ used to be displayed by concurent writting of pixels on a texture
 
 ### Shading
 
-SSAO
+poor man HBAO
 
 ## Leap Motion Integration
 
-acheiving world piece
+acheiving world peace
