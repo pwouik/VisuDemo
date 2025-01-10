@@ -56,7 +56,7 @@ void screenWriteCoord(vec4 pt){
     vec2 screen_coord = (projected_point.xy + 1.0) * 0.5; // [-1,1] to [0,1]
     screen_coord *= vec2(screen_size); // Map to screen space (pixels)
 
-    imageStore(depth, ivec2(screen_coord), ivec4(int(projected_point.z*(1<<31))));
+    imageAtomicMax(depth, ivec2(screen_coord), int(projected_point.z*(1<<31)));
 }
 uint hash(uint x)
 {

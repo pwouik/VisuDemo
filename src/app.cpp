@@ -170,7 +170,7 @@ App::App(int w,int h)
     k_d = 1.0;
     k_s = 1.0;
     alpha = 3.0;
-    speed = 1.0;
+    speed = 0.02;
     width = w;
     height = h;
 
@@ -464,13 +464,12 @@ while (!glfwWindowShouldClose(window)) {
             draw_ui();
             draw_ui_attractor();
 
-            glClearColor(0.0f, 0.0f, 0.1f, 1.0f);
-
-            //if(inv_camera_view!=old_view)
-                atr::clearTexture(width, height, texture); //balck background for texture
+            if(inv_camera_view!=old_view)
+            {
+                int depth_clear = INT_MIN;
+                glClearTexImage(depth_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
+            }
             old_view=inv_camera_view;
-            int depth_clear = INT_MIN;
-            glClearTexImage(depth_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
             glUseProgram(compute_program_attractor);
 
             glUniformMatrix4fv(glGetUniformLocation(compute_program_attractor, "view"),1, GL_FALSE, glm::value_ptr(glm::inverse(inv_camera_view)));
