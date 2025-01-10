@@ -7,6 +7,7 @@
 
 int main(void) {
     App app(1600,900);
+    app.setupLeapMotion();
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
     app.run();
     return 0;
