@@ -99,13 +99,7 @@ namespace ui{
     }
 } //end namespace UI
 
-namespace ani{
-    bool idle = false;
-    float spin_Period = 6.0f; //time in second to make a full circle
-    float height_and_distance[2] = {0.3f, 3.0f};
-    float lerp_period = 6.0f; //time between 2 seed change
-    float lerp_stiffness = 2.0f; //parmeter k of the function used for lerping curve. Function is (1/(1+exp(-k(2x-1))) - mv) * 1/(1-2mv) where mv =  1+(1+exp(k))
-}
+
 
 namespace mtl{   //namespace matrices utiles or whatever idk how to name it
 
@@ -471,3 +465,37 @@ namespace preset{
     }
 }
 
+namespace ani{
+    bool idle = false;
+    int iter = 0; //the number of iteration over the animation (counted in lerp)
+
+    float spin_Period = 12.0f; //time in second to make a full circle
+    float height_and_distance[2] = {0.0f, 2.3f};
+    float lerp_period = 5.0f; //time between 2 seed change
+    float lerp_stiffness = 2.0f; //parmeter k of the function used for lerping curve. Function is (1/(1+exp(-k(2x-1))) - mv) * 1/(1-2mv) where mv =  1+(1+exp(k))
+
+    inline float smooth_curve(float v){
+        float k = lerp_stiffness;
+        float mv = 1.0f/(1+exp(k));
+        return (1.0f/(1+exp(-k*(2*v-1)) ) - mv) * (1.0f/(1-2*mv));
+    }
+
+    glm::mat4 getIdleView(float time){
+        float angle = 2*PI*time / spin_Period;
+        float intpart;
+        uvl::lerpFactor = smooth_curve(modf(time/lerp_period, &intpart));
+        uvl::lerpFactor = iter%2 ? uvl::lerpFactor : 1.0f - uvl::lerpFactor;
+        if(intpart > (float)iter){ //a little messy but modf takes a pointer to float so ....
+            iter = intpart;
+            if(iter%2) uvl::B_tractor.setRandom(uvl::matrixPerAttractor);
+            else uvl::A_tractor.setRandom(uvl::matrixPerAttractor);
+        }
+
+        glm::vec3 eye = glm::vec3(
+            height_and_distance[1] * cos(angle),
+            height_and_distance[0],
+            height_and_distance[1] * sin(angle)
+        );
+        return glm::lookAt(eye,glm::vec3(0.0f),glm::vec3(0.0f,1.0f,0.0f));
+    }
+}

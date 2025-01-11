@@ -227,8 +227,7 @@ App::App(int w,int h)
     //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //either this or the next line is required for me to not get a white screen
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0); 
-    
-    //Ikd what thos eline are supposed to do
+    //Ikd what those are are supposed to do
     //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); //doesnt appear to do anyting
     //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);  //doesn't appear to do anythin
 
@@ -474,11 +473,18 @@ while (!glfwWindowShouldClose(window)) {
             draw_ui();
             draw_ui_attractor();
 
-            //if(inv_camera_view!=old_view)
-            {
+            
+            if(inv_camera_view!=old_view){
                 int depth_clear = INT_MIN;
                 glClearTexImage(depth_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
             }
+
+            //overwrite camera view if idling
+            if(ani::idle){
+                //some optimizing could be done about inversing multiples times camera view
+                inv_camera_view = glm::inverse(ani::getIdleView((float)glfwGetTime()));
+            }
+            
             old_view=inv_camera_view;
             glUseProgram(compute_program_attractor);
 
