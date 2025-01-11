@@ -469,9 +469,9 @@ namespace ani{
     bool idle = false;
     int iter = 0; //the number of iteration over the animation (counted in lerp)
 
-    float spin_Period = 12.0f; //time in second to make a full circle
+    float spin_Period = 6.0f; //time in second to make a full circle
     float height_and_distance[2] = {0.0f, 2.3f};
-    float lerp_period = 5.0f; //time between 2 seed change
+    float lerp_period = 4.0f; //time between 2 seed change
     float lerp_stiffness = 2.0f; //parmeter k of the function used for lerping curve. Function is (1/(1+exp(-k(2x-1))) - mv) * 1/(1-2mv) where mv =  1+(1+exp(k))
 
     inline float smooth_curve(float v){
