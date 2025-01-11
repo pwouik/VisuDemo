@@ -170,7 +170,7 @@ App::App(int w,int h)
     k_d = 1.0;
     k_s = 1.0;
     alpha = 3.0;
-    speed = 0.02;
+    speed = 0.02f;
     width = w;
     height = h;
 
@@ -219,8 +219,18 @@ App::App(int w,int h)
     glGenTextures(1, &depth_texture);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, depth_texture);
+
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, w, h, 0, GL_RED_INTEGER, 
                 GL_INT, nullptr);
+
+    //required for some reason on my computer
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //either this or the next line is required for me to not get a white screen
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+    
+    //Ikd what thos eline are supposed to do
+    //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0); 
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); //doesnt appear to do anyting
+    //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);  //doesn't appear to do anythin
 
     glBindImageTexture(1, depth_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32I);
     //compute_program for attractor
@@ -464,7 +474,7 @@ while (!glfwWindowShouldClose(window)) {
             draw_ui();
             draw_ui_attractor();
 
-            if(inv_camera_view!=old_view)
+            //if(inv_camera_view!=old_view)
             {
                 int depth_clear = INT_MIN;
                 glClearTexImage(depth_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
