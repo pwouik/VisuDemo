@@ -484,12 +484,12 @@ namespace ani{
         float angle = 2*PI*time / spin_Period;
         float intpart;
         uvl::lerpFactor = smooth_curve(modf(time/lerp_period, &intpart));
-        uvl::lerpFactor = iter%2 ? uvl::lerpFactor : 1.0f - uvl::lerpFactor;
         if(intpart > (float)iter){ //a little messy but modf takes a pointer to float so ....
             iter = intpart;
             if(iter%2) uvl::B_tractor.setRandom(uvl::matrixPerAttractor);
             else uvl::A_tractor.setRandom(uvl::matrixPerAttractor);
         }
+        uvl::lerpFactor = iter%2 ? uvl::lerpFactor : 1.0f - uvl::lerpFactor;
 
         glm::vec3 eye = glm::vec3(
             height_and_distance[1] * cos(angle),
