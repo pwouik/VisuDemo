@@ -9,8 +9,8 @@ uniform mat4 inv_proj;                                  // Inverted projection m
 uniform mat4 inv_view;                                  // Inverted view matrix
 uniform uvec2 screen_size;                              // Screen size (width and height)
 uniform vec3 light_pos;                                 // Light position
-uniform vec3 param1;                                    // Additional parameter for some fractals (e.g., shift)                            // Light position
-uniform vec3 param2;     
+uniform vec3 param1;                                    // Additional parameter for some fractals (e.g., shift)
+uniform vec3 param2;
 uniform float k_a;
 uniform vec3 ambient;
 uniform float k_d;
@@ -61,8 +61,7 @@ const float PI = 3.14159265358979;  // Pi constant
 
 #define CSize vec3(1., 1.7, 1.)
 
-// Function to estimate the distance for the Mandelbox fractal
-float de1(vec3 p)
+float de4(vec3 p)
 {
     p = p.xzy; // Swizzle the x, y, and z components
     float scale = 1.1;
@@ -83,8 +82,8 @@ float de1(vec3 p)
     rxy = max(rxy, (n) / 8.);   // Adjust distance based on z component
     return (rxy) / abs(scale);  // Return the normalized distance estimate
 }
+
 float de3( vec3 p ) {
-  //The Sponge
   float scale = 1.88f;
   float angle1 = 1.52f;
   float angle2 = 4.91f;
@@ -112,7 +111,7 @@ float de3( vec3 p ) {
 float de(vec3 position) {  
   vec3 transformedPos = position;
   float scaleFactor = 2.0;
-  float fractalIterations = 20.0;
+  float fractalIterations = 16.0;
   vec3 angles = param1;
   for (float i = 0.0; i < fractalIterations; i++) {
      transformedPos *= scaleFactor;

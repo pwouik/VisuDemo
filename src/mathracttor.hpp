@@ -483,7 +483,7 @@ namespace ani{
     glm::mat4 getIdleView(float time){
         float angle = 2*PI*time / spin_Period;
         float intpart;
-        uvl::lerpFactor = smooth_curve(modf(time/lerp_period, &intpart));
+        uvl::lerpFactor = smooth_curve(std::modf(time/lerp_period, &intpart));
         if(intpart > (float)iter){ //a little messy but modf takes a pointer to float so ....
             iter = intpart;
             if(iter%2) uvl::B_tractor.setRandom(uvl::matrixPerAttractor);
