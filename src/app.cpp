@@ -315,6 +315,9 @@ void App::draw_ui(){
 void App::draw_ui_attractor(){
     ImGui::Begin("attractir");
         ImGui::SeparatorText("debug");
+            ImGui::SliderInt("Point Per Kernel", &uvl::pointPerKernel,1,32); 
+                ui::HelpMarker("the number of points updated per kerel"
+                    "play arround to find if if changeds optimization");
             if(ImGui::Button("pref Speed")) speed = 0.025f;
             if(ImGui::Button("reset cam")) pos = glm::vec3(0.0,0.0,-0.5);
             ImGui::Checkbox("Idle animation", &ani::idle);
@@ -497,6 +500,7 @@ while (!glfwWindowShouldClose(window)) {
             glUniform1i(glGetUniformLocation(compute_program_attractor, "matrixPerAttractor"),uvl::matrixPerAttractor);
             glUniform1i(glGetUniformLocation(compute_program_attractor, "immobileCount"),uvl::immobileCount);
             glUniform1i(glGetUniformLocation(compute_program_attractor, "randInt_seed"),rand()%RAND_MAX);
+            glUniform1i(glGetUniformLocation(compute_program_attractor, "pointPerKernel"),uvl::pointPerKernel);
             
             //send attractor data to compute shader
             //TODO HERE uncommnet
@@ -505,7 +509,7 @@ while (!glfwWindowShouldClose(window)) {
             glBufferSubData(GL_UNIFORM_BUFFER, 0, uvl::matrixPerAttractor * sizeof(glm::mat4), uvl::ubo_matrices.data());
             glBindBuffer(GL_UNIFORM_BUFFER, 0);
             
-            glDispatchCompute((NBPTS-1)/1024+1, 1, 1);
+            glDispatchCompute((NBPTS-1)/(1024*uvl::pointPerKernel)+1, 1, 1);
 
             // make sure writing to image has finished before read
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);

@@ -8,6 +8,8 @@ layout(std140, binding = 1) uniform Matrices { // the list of mat4 attractors
     mat4 matrixArray[10];
 };
 uniform int randInt_seed;
+
+uniform int pointPerKernel;
 uniform int matrixPerAttractor; //number of matrices in array
 uniform int immobileCount; //number of point that won't move
 
@@ -57,34 +59,36 @@ uint hash(uint x)
     return x;
 }
 void main() {
-    uint idx = gl_GlobalInvocationID.x;
-    if(idx >= NBPTS) return;
+    for(int pid =0; pid < pointPerKernel; pid++){
+        uint idx = pid + pointPerKernel * gl_GlobalInvocationID.x;
+        if(idx >= NBPTS) return;
 
-    vec4 point = points[idx];
-    vec4 pts[MAX_FUNC_PER_ATTRACTOR];
+        vec4 point = points[idx];
+        vec4 pts[MAX_FUNC_PER_ATTRACTOR];
 
-    //update point coordinate with attractor (for now choose attractor with % index but later have custom weight)
-    if(matrixPerAttractor > 0) {        
-        //get a unique seed per thread. 
-        //TODO there may be hash collisions !
-        uint fake_rand = hash(idx^randInt_seed)%(matrixPerAttractor+immobileCount); 
+        //update point coordinate with attractor (for now choose attractor with % index but later have custom weight)
+        if(matrixPerAttractor > 0) {        
+            //get a unique seed per thread. 
+            //TODO there may be hash collisions !
+            uint fake_rand = hash(idx^randInt_seed)%(matrixPerAttractor+immobileCount); 
 
-        //compute all points to display. Note that 3<matrixPerAttractor<MAX_FUNC_PER_ATTRACTOR = 10
-        for(int i =0; i < matrixPerAttractor; i++){
-            pts[i] = matrixArray[i] * point;
-        }
-
-        //jump to a random position or stay still (depending on immobile count)
-        for(int i =0; i < matrixPerAttractor; i++){
-            if(fake_rand == i){
-                points[idx] = pts[i];
-                break; //idk if break really optimized in glsl
+            //compute all points to display. Note that 3<matrixPerAttractor<MAX_FUNC_PER_ATTRACTOR = 10
+            for(int i =0; i < matrixPerAttractor; i++){
+                pts[i] = matrixArray[i] * point;
             }
-        }
 
-    }
-    //draw all atteignable point.
-    for(int i =0; i < matrixPerAttractor; i++){
-        screenWriteCoord(pts[i]);
+            //jump to a random position or stay still (depending on immobile count)
+            for(int i =0; i < matrixPerAttractor; i++){
+                if(fake_rand == i){
+                    points[idx] = pts[i];
+                    break; //idk if break really optimized in glsl
+                }
+            }
+
+        }
+        //draw all atteignable point.
+        for(int i =0; i < matrixPerAttractor; i++){
+            screenWriteCoord(pts[i]);
+        }
     }
 }
