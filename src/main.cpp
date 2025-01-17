@@ -6,9 +6,8 @@
 
 
 int main(void) {
-    DEBUG("creating app ...\n");
-    App app(800,800);
-    DEBUG("app created");
+    App app(1600,900);
+    app.setupLeapMotion();
     app.run();
     return 0;
 }
