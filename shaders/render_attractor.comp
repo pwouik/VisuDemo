@@ -42,8 +42,10 @@ void screenWriteCoord(vec4 pt){
     vec2 screen_coord = (projected_point.xy + 1.0) * 0.5; // [-1,1] to [0,1]
     screen_coord *= vec2(screen_size); // Map to screen space (pixels) 
     int d = int(projected_point.z*(1<<31));
-    if(imageLoad(depth, ivec2(screen_coord)).r<d)
+    if(imageLoad(depth, ivec2(screen_coord)).r<d){
         imageStore(depth, ivec2(screen_coord), ivec4(d));
+        //write other meta data like distFromLastJump
+    }
 }
 uint hash(uint x)
 {
@@ -56,7 +58,8 @@ uint hash(uint x)
     x ^= x >> 14;
     return x;
 }
-void main() {
+//version with 1 generation
+void main_desac() {
     uint idx = gl_GlobalInvocationID.x;
     if(idx >= NBPTS) return;
 
@@ -66,7 +69,6 @@ void main() {
     //update point coordinate with attractor (for now choose attractor with % index but later have custom weight)
     if(matrixPerAttractor > 0) {        
         //get a unique seed per thread. 
-        //TODO there may be hash collisions !
         uint fake_rand = hash(idx^randInt_seed)%(matrixPerAttractor+immobileCount); 
 
         //compute all points to display. Note that 3<matrixPerAttractor<MAX_FUNC_PER_ATTRACTOR = 10
@@ -86,5 +88,42 @@ void main() {
     //draw all atteignable point.
     for(int i =0; i < matrixPerAttractor; i++){
         screenWriteCoord(pts[i]);
+    }
+}
+
+//version with 2 generation
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    if(idx >= NBPTS) return;
+
+    vec4 point = points[idx];
+    vec4 pts_gen1[MAX_FUNC_PER_ATTRACTOR];
+    vec4 pts_gen2[MAX_FUNC_PER_ATTRACTOR*MAX_FUNC_PER_ATTRACTOR];
+
+    //update point coordinate with attractor (for now choose attractor with % index but later have custom weight)
+    if(matrixPerAttractor > 0) {        
+        //get a unique seed per thread. 
+        uint fake_rand = hash(idx^randInt_seed)%(matrixPerAttractor*matrixPerAttractor+immobileCount); 
+
+        //compute all points to display. Note that 3<matrixPerAttractor<MAX_FUNC_PER_ATTRACTOR = 10
+        for(int i =0; i < matrixPerAttractor; i++){
+            pts_gen1[i] = matrixArray[i] * point;
+            for(int k=0; k<matrixPerAttractor; k++){
+                pts_gen2[i*matrixPerAttractor+k] = matrixArray[k] * pts_gen1[i];
+            }
+        }
+
+        //jump to a random position or stay still (depending on immobile count)
+        for(int i =0; i < matrixPerAttractor*matrixPerAttractor; i++){
+            if(fake_rand == i){
+                points[idx] = pts_gen2[i];
+                break; //idk if break really optimized in glsl
+            }
+        }
+
+    }
+    //draw all atteignable point.
+    for(int i =0; i < matrixPerAttractor*matrixPerAttractor; i++){
+        screenWriteCoord(pts_gen2[i]);
     }
 }
