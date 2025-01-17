@@ -31,7 +31,7 @@ float sdBox( vec3 p, vec3 b )
 
 #define fold45(p)(p.y>p.x)?p.yx:p
 
-float de2(vec3 p){
+float de5(vec3 p){
     float scale = 2.1, off0 = .8, off1 = .3, off2 = .83;
     vec3 off =vec3(2., .2, .1); // Offset vector
     float s=1.0;
@@ -139,8 +139,30 @@ vec3 estimateNormal(vec3 p,float e) {
     ));
 }
 
+vec3 fract_color(vec3 position) {  
+  vec3 transformedPos = position;
+  float scaleFactor = 2.0;
+  float fractalIterations = 16.0;
+  vec3 angles = param1;
+  vec3 color = vec3(1.0); 
+  for (float i = 0.0; i < fractalIterations; i++) {
+     transformedPos *= scaleFactor;
+     transformedPos = abs(transformedPos) - param2;
+     color -= cos(transformedPos)/fractalIterations;
+     transformedPos.xy *= mat2(
+        cos(angles.x), -sin(angles.x), sin(angles.x), cos(angles.x)
+     );
+     transformedPos.yz *= mat2(
+        cos(angles.y), -sin(angles.y), sin(angles.y), cos(angles.y)
+     );
+     transformedPos.xz *= mat2(
+        cos(angles.z), -sin(angles.z), sin(angles.z), cos(angles.z)
+     );
+  }
+  return color;
+}
 // Phong lighting model for calculating color
-vec4 phong(vec3 pos,vec3 camera, float ao, float e) {
+vec4 phong(vec3 pos,vec3 camera,vec3 color, float ao, float e) {
     
     vec3 normal = estimateNormal(pos, e);           // Estimate the normal vector at the point
     if (dot(normal, pos - camera) > 0.0) {
@@ -155,9 +177,10 @@ vec4 phong(vec3 pos,vec3 camera, float ao, float e) {
     float coeff_specular = pow(max(dot(pos_dir, reflect_dir), 0.0), exp(alpha)) * k_s * (sign(dot(light_dir, normal))*0.5+0.5);
     // Combine ambient, diffuse, and specular components to get the final color
     return vec4(ambient * k_a + ao * (
-                 diffuse * coeff_diffuse *k_d +
+                 color * coeff_diffuse *k_d +
                  specular * coeff_specular * k_s), 1.0);
 }
+
 
 void main() {
     // Check if the current thread is within the bounds of the screen
@@ -186,6 +209,6 @@ void main() {
             break;
         }
     }
-    vec4 color =  phong(pos,camera, exp(-float(steps)*exp(-occlusion)),dist*EPSILON);
+    vec4 color =  phong(pos,camera,fract_color(pos), exp(-float(steps)*exp(-occlusion)),dist*EPSILON);
     imageStore(target, ivec2(gl_GlobalInvocationID.xy), color);
 }
