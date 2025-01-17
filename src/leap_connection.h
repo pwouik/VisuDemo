@@ -60,6 +60,7 @@ public:
     explicit leap_connection_class(const LEAP_ALLOCATOR& allocator, uint64_t set = 0, uint64_t clear = 0);
     ~leap_connection_class();
     void start_service();
+    void start_playback(const std::string& filename);
     void terminate_service();
 };
 
