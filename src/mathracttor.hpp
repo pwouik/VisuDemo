@@ -281,7 +281,6 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
 
 namespace uvl{ //utility values (also out of inspiration for naming namespace)
     int matrixPerAttractor = 0;
-    int immobileCount = 1;
     float lerpFactor = 0.0f;
     mtl::Attractor A_tractor;
     mtl::Attractor B_tractor;
