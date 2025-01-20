@@ -313,52 +313,63 @@ void App::draw_ui(){
 
 
 void App::draw_ui_attractor(){
-    ImGui::Begin("attractir");
-        ImGui::SeparatorText("debug");
-            if(ImGui::Button("pref Speed")) speed = 0.025f;
-            if(ImGui::Button("reset cam")) pos = glm::vec3(0.0,0.0,-0.5);
+    ImGui::Begin("attractor");
+        if(ImGui::CollapsingHeader("Debug & all", ImGuiTreeNodeFlags_DefaultOpen )){
+            const char* items_cb2[] = { "per matrix", "per component"}; //MUST MATCH ENUM IN app.h !
+            if(ImGui::Combo("lerping mode", (int*)&lerpmode, items_cb2, IM_ARRAYSIZE(items_cb2))){
+            }
+            ImGui::SliderFloat("##lerpfactor", &uvl::lerpFactor, 0.0f, 1.0f, "lerp : %.3f");
+            
+            ImGui::Checkbox("no clear", &ani::no_clear);
+                ui::HelpMarker("Do not clear previous frame if view didn't changed");
             ImGui::Checkbox("Idle animation", &ani::idle);
-            ui::HelpMarker("camera enter an idle spinning animation if checked");
-            ImGui::DragFloat("Spin period", &ani::spin_Period, 0.01f, 3.0f,10.0f,"%.2f");
-            ImGui::DragFloat("Lerp period", &ani::lerp_period, 0.01f, 3.0f,10.0f,"%.2f");
-            ImGui::DragFloat2("heigh & distance", ani::height_and_distance, 0.01f,-3.0f,3.0f,"%.2f");
-            ImGui::DragFloat("Lerp stiffness", &ani::lerp_stiffness, 0.01f, 0.5f,20.0f,"%.2f");
-            ui::HelpMarker("The stifness of the smoothing curve"
-                "The function is a sigmoid mapranged to range 0-1, ie :"
-                "(1/(1+exp(-k(2x-1))) - mv) * 1/(1-2mv)"
-                "where mv is the value at 0,  1+(1+exp(k))");
+                ui::HelpMarker("camera enter an idle spinning animation if checked");
 
+            if(ImGui::TreeNode("Idle params")){
+                ImGui::DragFloat("Spin period", &ani::spin_Period, 0.01f, 3.0f,10.0f,"%.2f");
+                ImGui::DragFloat("Lerp period", &ani::lerp_period, 0.01f, 3.0f,10.0f,"%.2f");
+                ImGui::DragFloat2("heigh & distance", ani::height_and_distance, 0.01f,-3.0f,3.0f,"%.2f");
+                ImGui::DragFloat("Lerp stiffness", &ani::lerp_stiffness, 0.01f, 0.5f,20.0f,"%.2f");
+                ui::HelpMarker("The stifness of the smoothing curve"
+                    "The function is a sigmoid mapranged to range 0-1, ie :"
+                    "(1/(1+exp(-k(2x-1))) - mv) * 1/(1-2mv)"
+                    "where mv is the value at 0,  1+(1+exp(k))");
+                ImGui::TreePop();
+            }
+            ui::param_settings();
 
-        ImGui::SeparatorText("Cool preset");
+            if(ImGui::TreeNode("Other Utils")){
+                if(ImGui::Button("pref Speed")) speed = 0.025f;
+                if(ImGui::Button("reset cam")) pos = glm::vec3(0.0,0.0,-0.5);
+
+                ImGui::TreePop();
+            }
+        }
+
+        if(ImGui::CollapsingHeader("Cool preset")){
             if(ImGui::Button("Sierpinski")) preset::sierpinski();
             if(ImGui::Button("Sierpintagon")) preset::sierpintagon();
             if(ImGui::Button("Sierpolygon")) preset::sierpolygon(); 
             SL ImGui::SetNextItemWidth(60); ImGui::DragInt("side", &preset::nb_cote, 1, 3, 10, "%d", ImGuiSliderFlags_AlwaysClamp);
             if(ImGui::Button("Barnsley Fern")) preset::barsnley_fern(); 
+        }
 
-        ImGui::SeparatorText("random ranges");
-            const char* items_cb2[] = { "per matrix", "per component"}; //MUST MATCH ENUM IN app.h !
-            if(ImGui::Combo("lerping mode", (int*)&lerpmode, items_cb2, IM_ARRAYSIZE(items_cb2))){
-            }
-            ui::param_settings();
 
-        ImGui::SeparatorText("Attractors");
-            ImGui::SliderFloat("slider float", &uvl::lerpFactor, 0.0f, 1.0f, "lerp : %.3f");
+        if(ImGui::CollapsingHeader("Attractors", ImGuiTreeNodeFlags_DefaultOpen )){
             ImGui::SliderInt("nb functions", &uvl::matrixPerAttractor, 3, 10);
-            utl::HelpMarker("The number of different random matrices per attractor. going above ten will crash the program");
-            utl::HelpMarker("pseudo random reason or idk. given a random int between 0 and nb+immobile count point will move if random values is less than nb to corresponding attractionfunction[random] check .comp if unclear");
+                utl::HelpMarker("The number of different random matrices per attractor. going above ten will crash the program");
+            
+            if (ImGui::TreeNode("Attractor A")){
+                uvl::A_tractor.ui(uvl::matrixPerAttractor);
 
-        if (ImGui::TreeNode("Attractor A")){
-            uvl::A_tractor.ui(uvl::matrixPerAttractor);
+                ImGui::TreePop();
+            }
+            if (ImGui::TreeNode("Attractor B")){
+                uvl::B_tractor.ui(uvl::matrixPerAttractor);
 
-            ImGui::TreePop();
+                ImGui::TreePop();
+            }
         }
-        if (ImGui::TreeNode("Attractor B")){
-            uvl::B_tractor.ui(uvl::matrixPerAttractor);
-
-            ImGui::TreePop();
-        }
-
 
     ImGui::End();
 }
@@ -473,7 +484,7 @@ while (!glfwWindowShouldClose(window)) {
             draw_ui_attractor();
 
             
-            if(inv_camera_view!=old_view){
+            if(!ani::no_clear || inv_camera_view!=old_view){
                 int depth_clear = INT_MIN;
                 glClearTexImage(depth_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
             }
