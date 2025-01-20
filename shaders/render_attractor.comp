@@ -9,7 +9,6 @@ layout(std140, binding = 1) uniform Matrices { // the list of mat4 attractors
 };
 uniform int randInt_seed;
 uniform int matrixPerAttractor; //number of matrices in array
-uniform int immobileCount; //number of point that won't move
 
 uniform mat4 proj;
 uniform mat4 view;
@@ -25,7 +24,7 @@ const float EPSILON = 1e-4;
 const float PI = 3.14159265358979;
 
 //magic values
-#define NBPTS 20000000
+#define NBPTS 5000000
 #define MAX_FUNC_PER_ATTRACTOR 10 //magic value synced with matthracttor.hpp
 //TODO optimisation : lower number of thread to process multiples point per thread ?
 
@@ -59,7 +58,7 @@ uint hash(uint x)
     return x;
 }
 //version with 1 generation
-void main_desac() {
+void main() {
     uint idx = gl_GlobalInvocationID.x;
     if(idx >= NBPTS) return;
 
@@ -69,7 +68,7 @@ void main_desac() {
     //update point coordinate with attractor (for now choose attractor with % index but later have custom weight)
     if(matrixPerAttractor > 0) {        
         //get a unique seed per thread. 
-        uint fake_rand = hash(idx^randInt_seed)%(matrixPerAttractor+immobileCount); 
+        uint fake_rand = hash(idx^randInt_seed)%(matrixPerAttractor); 
 
         //compute all points to display. Note that 3<matrixPerAttractor<MAX_FUNC_PER_ATTRACTOR = 10
         for(int i =0; i < matrixPerAttractor; i++){
@@ -92,7 +91,7 @@ void main_desac() {
 }
 
 //version with 2 generation
-void main() {
+void main_desac() {
     uint idx = gl_GlobalInvocationID.x;
     if(idx >= NBPTS) return;
 
@@ -103,7 +102,7 @@ void main() {
     //update point coordinate with attractor (for now choose attractor with % index but later have custom weight)
     if(matrixPerAttractor > 0) {        
         //get a unique seed per thread. 
-        uint fake_rand = hash(idx^randInt_seed)%(matrixPerAttractor*matrixPerAttractor+immobileCount); 
+        uint fake_rand = hash(idx^randInt_seed)%(matrixPerAttractor*matrixPerAttractor); 
 
         //compute all points to display. Note that 3<matrixPerAttractor<MAX_FUNC_PER_ATTRACTOR = 10
         for(int i =0; i < matrixPerAttractor; i++){
