@@ -1,21 +1,21 @@
 #version 460 core
 layout (local_size_x = 1024, local_size_y = 1, local_size_z = 1) in;
 layout(r32i, binding = 1) uniform iimage2D depth;
-layout(std430, binding = 3) buffer PointBuffer {          // SSBO binding point 3
+layout(std430, binding = 3) buffer PointBuffer {          // SSBO points
     vec4 points[];
 };
 layout(std140, binding = 1) uniform Matrices { // the list of mat4 attractors
     mat4 matrixArray[10];
 };
-uniform int randInt_seed;
+uniform int randInt_seed;   //a random value per frame (between 0 and RAND_MAX, WARNING RAND_MAX depends on compiler !)
 uniform int matrixPerAttractor; //number of matrices in array
 
 uniform mat4 proj;
 uniform mat4 view;
 uniform uvec2 screen_size;
 uniform vec3 camera;
-uniform vec3 light_pos;
-uniform float time;
+uniform vec3 light_pos; //not used currently
+uniform float time; //not used currently
 
 
 
@@ -26,7 +26,15 @@ const float PI = 3.14159265358979;
 //magic values
 #define NBPTS 5000000
 #define MAX_FUNC_PER_ATTRACTOR 10 //magic value synced with matthracttor.hpp
-//TODO optimisation : lower number of thread to process multiples point per thread ?
+//TODO Changed MAX_FUNC_PER_ATTRACTOR to 3 or 5 to lower useless memory usage
+
+
+/*
+Wether we should use main v1 or v2 is hightly debatable and seems to depends on GPU !
+- on CY-PC, main 2 seems better (-30% perf for 4 times more point)
+- on my RTX980 main 2 divide perf by 8 for some reasons
+
+*/
 
 
 void screenWriteCoord(vec4 pt){
@@ -57,7 +65,7 @@ uint hash(uint x)
     x ^= x >> 14;
     return x;
 }
-//version with 1 generation
+//MAIN VERSION 1 : draw 1 generation (all reachable point from current pos)
 void main() {
     uint idx = gl_GlobalInvocationID.x;
     if(idx >= NBPTS) return;
@@ -65,7 +73,7 @@ void main() {
     vec4 point = points[idx];
     vec4 pts[MAX_FUNC_PER_ATTRACTOR];
 
-    //update point coordinate with attractor (for now choose attractor with % index but later have custom weight)
+    //update point coordinate with attractor
     if(matrixPerAttractor > 0) {        
         //get a unique seed per thread. 
         uint fake_rand = hash(idx^randInt_seed)%(matrixPerAttractor); 
@@ -75,7 +83,7 @@ void main() {
             pts[i] = matrixArray[i] * point;
         }
 
-        //jump to a random position or stay still (depending on immobile count)
+        //jump to a random position
         for(int i =0; i < matrixPerAttractor; i++){
             if(fake_rand == i){
                 points[idx] = pts[i];
@@ -84,13 +92,13 @@ void main() {
         }
 
     }
-    //draw all atteignable point.
+    //draw all points
     for(int i =0; i < matrixPerAttractor; i++){
         screenWriteCoord(pts[i]);
     }
 }
 
-//version with 2 generation
+//MAIN BERSION 2 : draw 2 generation (all points reachable point from the first generation)
 void main_desac() {
     uint idx = gl_GlobalInvocationID.x;
     if(idx >= NBPTS) return;
@@ -99,7 +107,7 @@ void main_desac() {
     vec4 pts_gen1[MAX_FUNC_PER_ATTRACTOR];
     vec4 pts_gen2[MAX_FUNC_PER_ATTRACTOR*MAX_FUNC_PER_ATTRACTOR];
 
-    //update point coordinate with attractor (for now choose attractor with % index but later have custom weight)
+    //update point coordinate with attractor
     if(matrixPerAttractor > 0) {        
         //get a unique seed per thread. 
         uint fake_rand = hash(idx^randInt_seed)%(matrixPerAttractor*matrixPerAttractor); 
@@ -112,7 +120,7 @@ void main_desac() {
             }
         }
 
-        //jump to a random position or stay still (depending on immobile count)
+        //jump to a random position
         for(int i =0; i < matrixPerAttractor*matrixPerAttractor; i++){
             if(fake_rand == i){
                 points[idx] = pts_gen2[i];
@@ -121,7 +129,10 @@ void main_desac() {
         }
 
     }
-    //draw all atteignable point.
+    //draw all reachable points form gen1 & gen2.
+    for(int i =0; i < matrixPerAttractor; i++){
+        screenWriteCoord(pts_gen1[i]);
+    }
     for(int i =0; i < matrixPerAttractor*matrixPerAttractor; i++){
         screenWriteCoord(pts_gen2[i]);
     }
