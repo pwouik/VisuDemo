@@ -215,23 +215,33 @@ App::App(int w,int h)
 
     glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
-
+    //depth texture (texture1, binding 1)
     glGenTextures(1, &depth_texture);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, depth_texture);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, w, h, 0, GL_RED_INTEGER, 
-                GL_INT, nullptr);
-
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, w, h, 0, GL_RED_INTEGER, GL_INT, nullptr);
     //required for some reason on my computer
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //either this or the next line is required for me to not get a white screen
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0); 
-    //Ikd what those are are supposed to do
+    /*Ikd what those are are supposed to do
+    
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //either this or both line above is required for me to not get a white screen
     //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); //doesnt appear to do anyting
     //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);  //doesn't appear to do anythin
+    */
+    glBindImageTexture(1, depth_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32I); //bind to channel 1
 
-    glBindImageTexture(1, depth_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32I);
+    //distance from last jump texture (texture 2, binding4)
+    glGenTextures(1, &jumpdist_texture);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, jumpdist_texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, w, h, 0, GL_RED_INTEGER, GL_INT, nullptr); 
+    //required for some reason on my computer
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0); 
+    glBindImageTexture(4, jumpdist_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32I); //bind to channel 4
+
+
     //compute_program for attractor
     compute_program_attractor = glCreateProgram();
     GLint comp_attractor = loadshader("shaders/render_attractor.comp", GL_COMPUTE_SHADER);
@@ -487,6 +497,7 @@ while (!glfwWindowShouldClose(window)) {
             if(!ani::no_clear || inv_camera_view!=old_view){
                 int depth_clear = INT_MIN;
                 glClearTexImage(depth_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
+                glClearTexImage(jumpdist_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
             }
 
             //overwrite camera view if idling

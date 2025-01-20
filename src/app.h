@@ -139,6 +139,7 @@ public:
     GLuint blit_program;
     GLuint texture;
     GLuint depth_texture;
+    GLuint jumpdist_texture;
     GLuint dummy_vbo;
     GLuint dummy_vao;
     glm::mat4 proj;
