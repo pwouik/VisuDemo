@@ -27,7 +27,7 @@
 
 using namespace std;
 
-#define NBPTS 5000000
+#define NBPTS 20000000
 
 
 std::string readShaderSource(const std::string& shaderFile)
@@ -326,9 +326,8 @@ void App::draw_ui_attractor(){
     ImGui::Begin("attractor");
         if(ImGui::CollapsingHeader("Debug & all", ImGuiTreeNodeFlags_DefaultOpen )){
             const char* items_cb2[] = { "per matrix", "per component"}; //MUST MATCH ENUM IN app.h !
-            if(ImGui::Combo("lerping mode", (int*)&lerpmode, items_cb2, IM_ARRAYSIZE(items_cb2))){
-            }
             ImGui::SliderFloat("##lerpfactor", &uvl::lerpFactor, 0.0f, 1.0f, "lerp : %.3f");
+            if(ImGui::Combo("lerping mode", (int*)&lerpmode, items_cb2, IM_ARRAYSIZE(items_cb2))){}
             
             ImGui::Checkbox("no clear", &ani::no_clear);
                 ui::HelpMarker("Do not clear previous frame if view didn't changed");
@@ -347,6 +346,16 @@ void App::draw_ui_attractor(){
                 ImGui::TreePop();
             }
             ui::param_settings();
+
+            if(ImGui::TreeNode("Colors Settings")){
+                ImGui::Text("temporary, must be hardcoded when it'll look nice");
+                ImGui::DragFloat("from min",&clr::JD_FR_MIN, 0.005f, 0.0f, 2.0f, "%.2f");
+                ImGui::DragFloat("from max",&clr::JD_FR_MAX, 0.005f, 0.0f, 2.0f, "%.2f");
+                ImGui::DragFloat("to min",&clr::JD_TO_MIN, 0.005f, 0.0f, 2.0f, "%.2f");
+                ImGui::DragFloat("to max",&clr::JD_TO_MAX, 0.005f, 0.0f, 2.0f, "%.2f");
+
+                ImGui::TreePop();
+            }
 
             if(ImGui::TreeNode("Other Utils")){
                 if(ImGui::Button("pref Speed")) speed = 0.025f;
@@ -534,6 +543,10 @@ while (!glfwWindowShouldClose(window)) {
             glUseProgram(ssao_attractor);
             glUniform2ui(glGetUniformLocation(ssao_attractor, "screen_size"), width,height);
             glUniformMatrix4fv(glGetUniformLocation(ssao_attractor, "inv_proj"),1, GL_FALSE, glm::value_ptr(glm::inverse(proj)));
+            glUniform1f(glGetUniformLocation(ssao_attractor, "JD_FR_MIN"), clr::JD_FR_MIN);
+            glUniform1f(glGetUniformLocation(ssao_attractor, "JD_FR_MAX"), clr::JD_FR_MAX);
+            glUniform1f(glGetUniformLocation(ssao_attractor, "JD_TO_MIN"), clr::JD_TO_MIN);
+            glUniform1f(glGetUniformLocation(ssao_attractor, "JD_TO_MAX"), clr::JD_TO_MAX);
             glDispatchCompute((width-1)/32+1, (height-1)/32+1, 1);
 
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);

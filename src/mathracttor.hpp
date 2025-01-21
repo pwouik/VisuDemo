@@ -499,3 +499,11 @@ namespace ani{
         return glm::lookAt(eye,glm::vec3(0.0f),glm::vec3(0.0f,1.0f,0.0f));
     }
 }
+
+//coloring. made for debugging purposes, should be removed and hardcoded whne nice values are found
+namespace clr{
+    float JD_FR_MIN = 0.3f;
+    float JD_FR_MAX = 1.0f;
+    float JD_TO_MIN = 0.2f;
+    float JD_TO_MAX = 0.8f;
+}

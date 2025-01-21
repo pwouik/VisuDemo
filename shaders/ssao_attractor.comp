@@ -5,13 +5,31 @@ layout(r32i, binding = 1) uniform iimage2D depth;
 layout(r32f, binding = 4) uniform image2D jumpdist; //texture that store jump distances
 uniform mat4 inv_proj;
 uniform uvec2 screen_size;
+
 #define PI 3.14159265358
 mat2 inv_proj_small;
 
 
+//map range for jumpdistance
+// #define JD_FR_MIN 0
+// #define JD_FR_MAX 1
+// #define JD_TO_MIN 0
+// #define JD_TO_MAX 1
+
+//remove and replace by above when nice value found
+uniform float JD_FR_MIN;
+uniform float JD_FR_MAX;
+uniform float JD_TO_MIN;
+uniform float JD_TO_MAX;
+
 float sampleDepth(ivec2 pos){
     vec2 prod  = inv_proj_small * vec2(float(imageLoad(depth,pos).r)/(1<<31),1);
     return prod.x / prod.y * inv_proj[0].x * screen_size.x/2;
+}
+
+float sampleJumpDist(ivec2 pos){
+    float jd = imageLoad(jumpdist, pos).r;
+    return (jd-JD_FR_MIN)/(JD_FR_MAX-JD_FR_MIN) * (JD_TO_MAX-JD_TO_MIN) + JD_TO_MIN;
 }
 
 
@@ -31,9 +49,8 @@ void main() {
     float dpy = sampleDepth(ivec2(gl_GlobalInvocationID.xy)+ivec2(0,1));
     float c = 1-(atan(dnx-d)+atan(dpx-d)+atan(dny-d)+atan(dpy-d))/(PI*2);
     
-    float dj =  imageLoad(jumpdist, ivec2(gl_GlobalInvocationID.xy)).r; //todo maprange math
-    imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(c,dj,c,1));
-    //imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(dj,dj,dj,1));
+    float dj =  sampleJumpDist(ivec2(gl_GlobalInvocationID.xy));
+    imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(c,(c+dj)/2,dj,1));
 
     //debug
     //imageStore(jumpdist, ivec2(gl_GlobalInvocationID.xy), ivec4(200));
