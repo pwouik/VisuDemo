@@ -398,7 +398,7 @@ void App::draw_ui_attractor(){
                 ImGui::SliderFloat("k_d##attractor", &clr::k_d, 0.0f, 1.0f);
                 ImGui::ColorEdit3("diffuse##attractor", glm::value_ptr(clr::col_diffuse));
                 ImGui::SliderFloat("k_s##attractor", &clr::k_s, 0.0f, 1.0f);
-                ImGui::SliderFloat("alpha##attractor", &clr::alpha, 0.1f, 5.0f);
+                ImGui::SliderFloat("alpha##attractor", &clr::alpha, 0.1f, 20.0f);
                 ImGui::ColorEdit3("specular##attractor", glm::value_ptr(clr::col_specular));
 
                 ImGui::TreePop();
