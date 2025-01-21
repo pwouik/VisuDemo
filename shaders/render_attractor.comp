@@ -25,7 +25,7 @@ const float EPSILON = 1e-4;
 const float PI = 3.14159265358979;
 
 //magic values
-#define NBPTS 5000000 //20 000 000 points in memory, but can do math for a smaller number
+#define NBPTS 20000000 //20 000 000 points in memory, but can do math for a smaller number
 #define MAX_FUNC_PER_ATTRACTOR 10 //magic value synced with matthracttor.hpp
 //TODO Changed MAX_FUNC_PER_ATTRACTOR to 3 or 5 to lower useless memory usage
 
