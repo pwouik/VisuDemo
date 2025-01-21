@@ -471,8 +471,8 @@ namespace ani{
 
     float spin_Period = 30.0f; //time in second to make a full circle
     float height_and_distance[2] = {0.0f, 2.3f};
-    float lerp_period = 4.0f; //time between 2 seed change
-    float lerp_stiffness = 2.0f; //parmeter k of the function used for lerping curve. Function is (1/(1+exp(-k(2x-1))) - mv) * 1/(1-2mv) where mv =  1+(1+exp(k))
+    float lerp_period = 6.0f; //time between 2 seed change
+    float lerp_stiffness = 3.5f; //parmeter k of the function used for lerping curve. Function is (1/(1+exp(-k(2x-1))) - mv) * 1/(1-2mv) where mv =  1+(1+exp(k))
 
     inline float smooth_curve(float v){
         float k = lerp_stiffness;
@@ -512,7 +512,7 @@ namespace clr{
     float k_a = 0.2f;
     float k_d = 1.0f;
     float k_s = 1.0f;
-    float alpha = 0.5f;
+    float alpha = 10.0f;
     glm::vec3 col_ambient = glm::vec3(0.0,0.0,1.0);
     glm::vec3 col_diffuse = glm::vec3(1.0,1.0,0.0);
     glm::vec3 col_specular = glm::vec3(1.0,0.0,0.0);

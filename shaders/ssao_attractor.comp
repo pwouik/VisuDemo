@@ -15,7 +15,7 @@ uniform float JD_TO_MIN;
 uniform float JD_TO_MAX;
 
 
-float d, dnx, dny, dpx, dpy; //distance 
+//float d, dnx, dny, dpx, dpy; //distance 
 vec3 wco, wconx, wcony, wcopx, wcopy; // world coordinate
 vec3 ssnormal; //normals
 
@@ -76,12 +76,12 @@ void computeNormals(){
 }
 
 vec3 phong() {
-    vec3 light = vec3(0,10,0);
-    //vec3 light = camera; //can't do that because camera position there seem to be 2 different coordinate system in 3d space
+    //vec3 light = vec3(0,10,0);
+    vec3 light = camera;
 
     vec3 lightDir = normalize(light - wco);
     vec3 viewDir = normalize(camera-wco);
-    vec3 reflectDir = reflect(-lightDir, ssnormal);
+    vec3 reflectDir = reflect(lightDir, ssnormal);
     
     // Ambient component
     vec3 ambient = k_a * col_ambient;
@@ -105,27 +105,38 @@ void main() {
 
     inv_proj_small = mat2(inv_proj[2].zw,inv_proj[3].zw);
 
-    d = sampleDepth(ivec2(gl_GlobalInvocationID.xy));
+    float d = sampleDepth(ivec2(gl_GlobalInvocationID.xy));
     if(d<-99999){//early break for background
         imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(0,0,0,1));
         return;
     }
 
-    dnx = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(1,0));
-    dpx = sampleDepth(ivec2(gl_GlobalInvocationID.xy)+ivec2(1,0));
-    dny = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(0,1));
-    dpy = sampleDepth(ivec2(gl_GlobalInvocationID.xy)+ivec2(0,1));
-
-    float c = 1-(atan(dnx-d)+atan(dpx-d)+atan(dny-d)+atan(dpy-d))/(PI*2);
+    //to remove, not need anymore
+    // dnx = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(1,0));
+    // dpx = sampleDepth(ivec2(gl_GlobalInvocationID.xy)+ivec2(1,0));
+    // dny = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(0,1));
+    // dpy = sampleDepth(ivec2(gl_GlobalInvocationID.xy)+ivec2(0,1));
+    //float c = 1-(atan(dnx-d)+atan(dpx-d)+atan(dny-d)+atan(dpy-d))/(PI*2);
     
     float dj =  sampleJumpDist(ivec2(gl_GlobalInvocationID.xy));
     //imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(c,(c+dj)/2,dj,1));
 
-    //debug
     computeNormals();
-    //imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(abs(ssnormal.zyx),1)); //display normals
-    imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(phong().xyz,1));
+    
+    //display normals
+    //imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(abs(ssnormal.zyx),1)); 
 
-    //todo prise en compte de la jump distance pour faire un gradient sur la base color ?
+    //Phong
+    imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(phong().xyz,1)); 
+
+    //prise en compte de la jump distance pour faire un gradient sur la base color ?
+    //imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(dj*phong().xyz,1)); 
+    
+    //debuging coordinate space matching ?
+    //when moving mouse the result changes proving a mistake somewhere in computation
+    // if(camera.x < wco.x)
+    //     imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(1,0,0,1));
+    // else
+    //     imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(0,0,1,1)); 
 
 }
