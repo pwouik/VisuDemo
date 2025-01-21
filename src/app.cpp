@@ -350,16 +350,6 @@ void App::draw_ui_attractor(){
             }
             ui::param_settings();
 
-            if(ImGui::TreeNode("Colors Settings")){
-                ImGui::Text("temporary, must be hardcoded when it'll look nice");
-                ImGui::DragFloat("from min",&clr::JD_FR_MIN, 0.005f, 0.0f, 2.0f, "%.2f");
-                ImGui::DragFloat("from max",&clr::JD_FR_MAX, 0.005f, 0.0f, 2.0f, "%.2f");
-                ImGui::DragFloat("to min",&clr::JD_TO_MIN, 0.005f, 0.0f, 2.0f, "%.2f");
-                ImGui::DragFloat("to max",&clr::JD_TO_MAX, 0.005f, 0.0f, 2.0f, "%.2f");
-
-                ImGui::TreePop();
-            }
-
             if(ImGui::TreeNode("Other Utils")){
                 if(ImGui::Button("pref Speed")) speed = 0.025f;
                 if(ImGui::Button("reset cam")) pos = glm::vec3(0.0,0.0,-0.5);
@@ -377,7 +367,7 @@ void App::draw_ui_attractor(){
         }
 
 
-        if(ImGui::CollapsingHeader("Attractors", ImGuiTreeNodeFlags_DefaultOpen )){
+        if(ImGui::CollapsingHeader("Attractors")){
             ImGui::SliderInt("nb functions", &uvl::matrixPerAttractor, 3, 10);
                 utl::HelpMarker("The number of different random matrices per attractor. going above ten will crash the program");
             
@@ -388,6 +378,28 @@ void App::draw_ui_attractor(){
             }
             if (ImGui::TreeNode("Attractor B")){
                 uvl::B_tractor.ui(uvl::matrixPerAttractor);
+
+                ImGui::TreePop();
+            }
+        }
+        if(ImGui::CollapsingHeader("Coloring", ImGuiTreeNodeFlags_DefaultOpen )){
+            ImGui::Text("temporary, must be hardcoded when it'll look nice");
+            if(ImGui::TreeNode("Jump Distance MapRange")){
+                ImGui::DragFloat("from min",&clr::JD_FR_MIN, 0.005f, 0.0f, 2.0f, "%.2f");
+                ImGui::DragFloat("from max",&clr::JD_FR_MAX, 0.005f, 0.0f, 2.0f, "%.2f");
+                ImGui::DragFloat("to min",&clr::JD_TO_MIN, 0.005f, 0.0f, 2.0f, "%.2f");
+                ImGui::DragFloat("to max",&clr::JD_TO_MAX, 0.005f, 0.0f, 2.0f, "%.2f");
+
+                ImGui::TreePop();
+            }
+            if(ImGui::TreeNode("Phong parameters")){
+                ImGui::SliderFloat("k_a##attractor", &clr::k_a, 0.0f, 2.0f);
+                ImGui::ColorEdit3("ambient##attractor", glm::value_ptr(clr::col_ambient));
+                ImGui::SliderFloat("k_d##attractor", &clr::k_d, 0.0f, 2.0f);
+                ImGui::ColorEdit3("diffuse##attractor", glm::value_ptr(clr::col_diffuse));
+                ImGui::SliderFloat("k_s##attractor", &clr::k_s, 0.0f, 2.0f);
+                ImGui::SliderFloat("alpha##attractor", &clr::alpha, 1.0f, 5.0f);
+                ImGui::ColorEdit3("specular##attractor", glm::value_ptr(clr::col_specular));
 
                 ImGui::TreePop();
             }
@@ -546,10 +558,18 @@ while (!glfwWindowShouldClose(window)) {
             glUseProgram(ssao_attractor);
             glUniform2ui(glGetUniformLocation(ssao_attractor, "screen_size"), width,height);
             glUniformMatrix4fv(glGetUniformLocation(ssao_attractor, "inv_proj"),1, GL_FALSE, glm::value_ptr(glm::inverse(proj)));
+            glUniform3fv(glGetUniformLocation(ssao_attractor, "camera"), 1, glm::value_ptr(pos)); //here todo
             glUniform1f(glGetUniformLocation(ssao_attractor, "JD_FR_MIN"), clr::JD_FR_MIN);
             glUniform1f(glGetUniformLocation(ssao_attractor, "JD_FR_MAX"), clr::JD_FR_MAX);
             glUniform1f(glGetUniformLocation(ssao_attractor, "JD_TO_MIN"), clr::JD_TO_MIN);
             glUniform1f(glGetUniformLocation(ssao_attractor, "JD_TO_MAX"), clr::JD_TO_MAX);
+            glUniform1f(glGetUniformLocation(ssao_attractor, "k_a"), clr::k_a);
+            glUniform3fv(glGetUniformLocation(ssao_attractor, "col_ambient"), 1, glm::value_ptr(clr::col_ambient));
+            glUniform1f(glGetUniformLocation(ssao_attractor, "k_d"), clr::k_d);
+            glUniform3fv(glGetUniformLocation(ssao_attractor, "col_diffuse"), 1, glm::value_ptr(clr::col_diffuse));
+            glUniform1f(glGetUniformLocation(ssao_attractor, "k_s"), clr::k_s);
+            glUniform1f(glGetUniformLocation(ssao_attractor, "alpha"), clr::alpha);
+            glUniform3fv(glGetUniformLocation(ssao_attractor, "col_specular"), 1, glm::value_ptr(clr::col_specular));
             glDispatchCompute((width-1)/32+1, (height-1)/32+1, 1);
 
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);

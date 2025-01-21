@@ -9,14 +9,6 @@ uniform uvec2 screen_size;
 #define PI 3.14159265358
 mat2 inv_proj_small;
 
-
-//map range for jumpdistance
-// #define JD_FR_MIN 0
-// #define JD_FR_MAX 1
-// #define JD_TO_MIN 0
-// #define JD_TO_MAX 1
-
-//remove and replace by above when nice value found
 uniform float JD_FR_MIN;
 uniform float JD_FR_MAX;
 uniform float JD_TO_MIN;
@@ -25,7 +17,17 @@ uniform float JD_TO_MAX;
 
 float d, dnx, dny, dpx, dpy; //distance 
 vec3 wco, wconx, wcony, wcopx, wcopy; // world coordinate
-vec3 ssnormal;
+vec3 ssnormal; //normals
+
+uniform vec3 camera;
+uniform float k_a;
+uniform vec3 col_ambient;
+uniform float k_d;
+uniform vec3 col_diffuse;
+uniform float k_s;
+uniform float alpha;
+uniform vec3 col_specular;
+
 
 float sampleDepth(ivec2 pos){
     vec2 prod  = inv_proj_small * vec2(float(imageLoad(depth,pos).r)/(1<<31),1);
@@ -71,6 +73,28 @@ void computeNormals(){
     ssnormal = (cross(up,right) + cross(right, down) + cross(down, left), + cross(left, up))/4;
 }
 
+vec3 phong() {
+    vec3 light = vec3(0.0,5.0,0.0); //todo have a different light !
+
+    vec3 lightDir = normalize(light - wco);
+    vec3 viewDir = normalize(camera-wco);
+    vec3 reflectDir = reflect(-lightDir, ssnormal);
+    
+    // Ambient component
+    vec3 ambient = k_a * col_ambient;
+    
+    // Diffuse component
+    float diff = max(dot(ssnormal, lightDir), 0.0);
+    vec3 diffuse = k_d * diff * col_diffuse;
+    
+    // Specular component
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), exp(alpha));
+    vec3 specular = k_s * spec * col_specular;
+    
+    // Combine components
+    return ambient + diffuse + specular;
+}
+
 void main() {
     // Check if the current thread is within the bounds of the screen
     if (gl_GlobalInvocationID.x>=screen_size.x || gl_GlobalInvocationID.y>=screen_size.y)
@@ -79,6 +103,11 @@ void main() {
     inv_proj_small = mat2(inv_proj[2].zw,inv_proj[3].zw);
 
     d = sampleDepth(ivec2(gl_GlobalInvocationID.xy));
+    if(d<-99999){//early break for background
+        imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(0,0,0,1));
+        return;
+    }
+
     dnx = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(1,0));
     dpx = sampleDepth(ivec2(gl_GlobalInvocationID.xy)+ivec2(1,0));
     dny = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(0,1));
@@ -91,5 +120,9 @@ void main() {
 
     //debug
     computeNormals();
-    imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(abs(ssnormal.xyz),1));
+    //imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(abs(ssnormal.zyx),1)); //display normals
+    imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(phong().xyz,1));
+
+    //todo prise en compte de la jump distance pour faire un gradient sur la base color ?
+
 }
