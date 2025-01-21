@@ -509,11 +509,11 @@ namespace clr{
     float JD_TO_MAX = 0.8f;
 
     //phong param
-    float k_a = 0.32f;
+    float k_a = 0.2f;
     float k_d = 1.0f;
     float k_s = 1.0f;
-    float alpha = 3.0f;
-    glm::vec3 col_ambient = glm::vec3(1.0,0.0,0.0);
-    glm::vec3 col_diffuse = glm::vec3(0.0,1.0,0.0);
-    glm::vec3 col_specular = glm::vec3(0.0,0.0,1.0);
+    float alpha = 0.5f;
+    glm::vec3 col_ambient = glm::vec3(0.0,0.0,1.0);
+    glm::vec3 col_diffuse = glm::vec3(1.0,1.0,0.0);
+    glm::vec3 col_specular = glm::vec3(1.0,0.0,0.0);
 }
