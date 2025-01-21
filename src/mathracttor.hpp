@@ -502,8 +502,18 @@ namespace ani{
 
 //coloring. made for debugging purposes, should be removed and hardcoded whne nice values are found
 namespace clr{
+    //jump distance maprange
     float JD_FR_MIN = 0.3f;
     float JD_FR_MAX = 1.0f;
     float JD_TO_MIN = 0.2f;
     float JD_TO_MAX = 0.8f;
+
+    //phong param
+    float k_a = 0.32f;
+    float k_d = 1.0f;
+    float k_s = 1.0f;
+    float alpha = 3.0f;
+    glm::vec3 col_ambient = glm::vec3(1.0,0.0,0.0);
+    glm::vec3 col_diffuse = glm::vec3(0.0,1.0,0.0);
+    glm::vec3 col_specular = glm::vec3(0.0,0.0,1.0);
 }
