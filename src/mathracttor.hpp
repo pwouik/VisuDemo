@@ -34,7 +34,7 @@ namespace prm{ //param for random generation
     static float translation;
 
     void defaults(){
-        scale[0] = 0.3f; scale[1] = 1.0f;
+        scale[0] = 0.3f; scale[1] = 0.9f;
         angle = 180;
         shearing = 0.2f;
         translation = 0.8f;
