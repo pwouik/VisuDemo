@@ -22,6 +22,11 @@ uniform float JD_FR_MAX;
 uniform float JD_TO_MIN;
 uniform float JD_TO_MAX;
 
+
+float d, dnx, dny, dpx, dpy; //distance 
+vec3 wco, wconx, wcony, wcopx, wcopy; // world coordinate
+vec3 ssnormal;
+
 float sampleDepth(ivec2 pos){
     vec2 prod  = inv_proj_small * vec2(float(imageLoad(depth,pos).r)/(1<<31),1);
     return prod.x / prod.y * inv_proj[0].x * screen_size.x/2;
@@ -32,26 +37,59 @@ float sampleJumpDist(ivec2 pos){
     return (jd-JD_FR_MIN)/(JD_FR_MAX-JD_FR_MIN) * (JD_TO_MAX-JD_TO_MIN) + JD_TO_MIN;
 }
 
+//thanks gpt
+vec3 getWorldPosition(ivec2 pos) {
+    float z = float(imageLoad(depth, pos).r) / (1 << 31);
+
+    // Convert from screen space to normalized device coordinates (NDC)
+    vec2 ndc = vec2(pos) / screen_size * 2.0 - 1.0;
+
+    // Form the clip space position
+    vec4 clipSpacePos = vec4(ndc, z, 1.0);
+
+    // Unproject to world space
+    vec4 worldSpacePos = inv_proj * clipSpacePos;
+
+    //perspective divide
+    worldSpacePos /= worldSpacePos.w;
+
+    return worldSpacePos.xyz; // Return the 3D world position
+}
+
+void computeNormals(){
+    wco = getWorldPosition(ivec2(gl_GlobalInvocationID.xy));
+    wconx = getWorldPosition(ivec2(gl_GlobalInvocationID.xy)-ivec2(1,0));
+    wcopx = getWorldPosition(ivec2(gl_GlobalInvocationID.xy)+ivec2(1,0));
+    wcony = getWorldPosition(ivec2(gl_GlobalInvocationID.xy)-ivec2(0,1));
+    wcopy = getWorldPosition(ivec2(gl_GlobalInvocationID.xy)+ivec2(0,1));
+
+    vec3 up = normalize(wcopy-wco);
+    vec3 down = normalize(wcony-wco);
+    vec3 right = normalize(wcopx-wco);
+    vec3 left = normalize(wconx-wco);
+
+    ssnormal = (cross(up,right) + cross(right, down) + cross(down, left), + cross(left, up))/4;
+}
 
 void main() {
     // Check if the current thread is within the bounds of the screen
     if (gl_GlobalInvocationID.x>=screen_size.x || gl_GlobalInvocationID.y>=screen_size.y)
         return;
-/*
-    vec4 unprojetcted_depth = inv_proj * vec4(0,0,float(imageLoad(depth, ivec2(gl_GlobalInvocationID.xy)).r)/(1<<31),1);
-    float d = unprojetcted_depth.z/unprojetcted_depth.w+1.5;
-*/
+
     inv_proj_small = mat2(inv_proj[2].zw,inv_proj[3].zw);
-    float d = sampleDepth(ivec2(gl_GlobalInvocationID.xy));
-    float dnx = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(1,0));
-    float dpx = sampleDepth(ivec2(gl_GlobalInvocationID.xy)+ivec2(1,0));
-    float dny = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(0,1));
-    float dpy = sampleDepth(ivec2(gl_GlobalInvocationID.xy)+ivec2(0,1));
+
+    d = sampleDepth(ivec2(gl_GlobalInvocationID.xy));
+    dnx = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(1,0));
+    dpx = sampleDepth(ivec2(gl_GlobalInvocationID.xy)+ivec2(1,0));
+    dny = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(0,1));
+    dpy = sampleDepth(ivec2(gl_GlobalInvocationID.xy)+ivec2(0,1));
+
     float c = 1-(atan(dnx-d)+atan(dpx-d)+atan(dny-d)+atan(dpy-d))/(PI*2);
     
     float dj =  sampleJumpDist(ivec2(gl_GlobalInvocationID.xy));
-    imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(c,(c+dj)/2,dj,1));
+    //imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(c,(c+dj)/2,dj,1));
 
     //debug
-    //imageStore(jumpdist, ivec2(gl_GlobalInvocationID.xy), ivec4(200));
+    computeNormals();
+    imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(abs(ssnormal.xyz),1));
 }

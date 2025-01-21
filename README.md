@@ -4,7 +4,7 @@
 
 - improve depthmap based shading
     - approximat normal (->PHONG or whatever)
-    - SSAO
+    - SSAO *: kinda doomed because we need to compute accurate normals ... (nvm computing normal seems doable)
 - Based on fractal
     - store "distance from last jump" in a texture and convert 0-1 to a gradient color (done, I'll try some maprange clamping but doesn't seem to do a big dif)
     - color depending or which attractor it jumped to (bof à priori)
