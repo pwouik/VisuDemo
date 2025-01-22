@@ -3,7 +3,7 @@
 #include <iostream>
 #include <cstring>
 
-leap_connection_class::leap_connection_class(const uint64_t set, const uint64_t clear)
+LeapConnection::LeapConnection(const uint64_t set, const uint64_t clear)
 {
     auto res = LeapCreateConnection(nullptr, &leap_connection);
     if (res != eLeapRS_Success) std::cout << "Error: " << result_string(res) << ".\n";
@@ -13,28 +13,28 @@ leap_connection_class::leap_connection_class(const uint64_t set, const uint64_t 
     if (res != eLeapRS_Success) std::cout << "Error: " << result_string(res) << ".\n";
 }
 
-leap_connection_class::leap_connection_class(const LEAP_ALLOCATOR& allocator, const uint64_t set,
-                                             const uint64_t clear): leap_connection_class(set, clear)
+LeapConnection::LeapConnection(const LEAP_ALLOCATOR& allocator, const uint64_t set,
+                                             const uint64_t clear): LeapConnection(set, clear)
 {
     const auto res = LeapSetAllocator(leap_connection, &allocator);
     if (res != eLeapRS_Success) std::cout << "Error: " << result_string(res) << ".\n";
 }
 
-leap_connection_class::~leap_connection_class()
+LeapConnection::~LeapConnection()
 {
     LeapCloseConnection(leap_connection);
     terminate_service();
     LeapDestroyConnection(leap_connection);
 }
 
-void leap_connection_class::start_service()
+void LeapConnection::start_service()
 {
     if (is_service_running) return;
     is_service_running = true;
     polling_thread = std::thread{[this] { this->service_message_loop(); }};
 }
 
-void leap_connection_class::start_playback(const std::string& filename)
+void LeapConnection::start_playback(const std::string& filename)
 {
     is_service_running = true;
     polling_thread = std::thread{
@@ -89,14 +89,14 @@ void leap_connection_class::start_playback(const std::string& filename)
     };
 }
 
-void leap_connection_class::terminate_service()
+void LeapConnection::terminate_service()
 {
     if (!is_service_running) return;
     is_service_running = false;
     polling_thread.join();
 }
 
-void leap_connection_class::service_message_loop()
+void LeapConnection::service_message_loop()
 {
     LEAP_CONNECTION_MESSAGE connection_message;
     while (is_service_running)
@@ -151,7 +151,7 @@ void leap_connection_class::service_message_loop()
     }
 }
 
-std::string leap_connection_class::result_string(const eLeapRS result)
+std::string LeapConnection::result_string(const eLeapRS result)
 {
     switch (result)
     {
@@ -179,19 +179,19 @@ std::string leap_connection_class::result_string(const eLeapRS result)
     }
 }
 
-void leap_connection_class::handle_connection_event(const LEAP_CONNECTION_EVENT*)
+void LeapConnection::handle_connection_event(const LEAP_CONNECTION_EVENT*)
 {
     is_connected = true;
     on_connection();
 }
 
-void leap_connection_class::handle_connection_lost_event(const LEAP_CONNECTION_LOST_EVENT*)
+void LeapConnection::handle_connection_lost_event(const LEAP_CONNECTION_LOST_EVENT*)
 {
     is_connected = false;
     on_connection_lost();
 }
 
-void leap_connection_class::handle_device_event(const LEAP_DEVICE_EVENT* device_event)
+void LeapConnection::handle_device_event(const LEAP_DEVICE_EVENT* device_event)
 {
     if (device_event == nullptr) return;
     LEAP_DEVICE device;
@@ -219,52 +219,52 @@ void leap_connection_class::handle_device_event(const LEAP_DEVICE_EVENT* device_
     LeapCloseDevice(device);
 }
 
-void leap_connection_class::handle_device_lost_event(const LEAP_DEVICE_EVENT*) const
+void LeapConnection::handle_device_lost_event(const LEAP_DEVICE_EVENT*) const
 {
     on_device_lost();
 }
 
-void leap_connection_class::handle_device_failure_event(const LEAP_DEVICE_FAILURE_EVENT* device_failure_event) const
+void LeapConnection::handle_device_failure_event(const LEAP_DEVICE_FAILURE_EVENT* device_failure_event) const
 {
     if (device_failure_event == nullptr) return;
     on_device_failure(device_failure_event->status, device_failure_event->hDevice);
 }
 
-void leap_connection_class::handle_tracking_event(const LEAP_TRACKING_EVENT* tracking_event)
+void LeapConnection::handle_tracking_event(const LEAP_TRACKING_EVENT* tracking_event)
 {
     if (tracking_event == nullptr) return;
     set_frame(*tracking_event);
     on_frame(*tracking_event);
 }
 
-void leap_connection_class::handle_policy_event(const LEAP_POLICY_EVENT* policy_event) const
+void LeapConnection::handle_policy_event(const LEAP_POLICY_EVENT* policy_event) const
 {
     if (policy_event == nullptr) return;
 
     on_policy(policy_event->current_policy);
 }
 
-void leap_connection_class::handle_image_event(const LEAP_IMAGE_EVENT* image_event) const
+void LeapConnection::handle_image_event(const LEAP_IMAGE_EVENT* image_event) const
 {
     if (image_event == nullptr) return;
 
     on_image(*image_event);
 }
 
-void leap_connection_class::handle_tracking_mode_event(const LEAP_TRACKING_MODE_EVENT* tracking_mode_event) const
+void LeapConnection::handle_tracking_mode_event(const LEAP_TRACKING_MODE_EVENT* tracking_mode_event) const
 {
     if (tracking_mode_event == nullptr) return;
 
     on_tracking_mode(*tracking_mode_event);
 }
 
-void leap_connection_class::handle_imu_event(const LEAP_IMU_EVENT* imu_event) const
+void LeapConnection::handle_imu_event(const LEAP_IMU_EVENT* imu_event) const
 {
     if (imu_event == nullptr) return;
     on_imu(*imu_event);
 }
 
-void leap_connection_class::set_device(LEAP_DEVICE_INFO& device_info)
+void LeapConnection::set_device(LEAP_DEVICE_INFO& device_info)
 {
     std::lock_guard<std::mutex> lock_guard(data_lock);
     if (last_device)
@@ -285,7 +285,7 @@ void deep_copy_tracking_event(LEAP_TRACKING_EVENT& dst, const LEAP_TRACKING_EVEN
     std::memcpy(dst.pHands, src.pHands, src.nHands * sizeof(LEAP_HAND));
 }
 
-void leap_connection_class::set_frame(const LEAP_TRACKING_EVENT& frame)
+void LeapConnection::set_frame(const LEAP_TRACKING_EVENT& frame)
 {
     std::lock_guard<std::mutex> lock_guard(data_lock);
     if (!last_frame)

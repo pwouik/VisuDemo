@@ -16,7 +16,7 @@ using imu_callback = std::function<void(const LEAP_IMU_EVENT& imu_event)>;
 using tracking_mode_callback = std::function<void(const LEAP_TRACKING_MODE_EVENT& mode_event)>;
 
 
-class leap_connection_class
+class LeapConnection
 {
     std::thread polling_thread;
     std::mutex data_lock;
@@ -56,9 +56,9 @@ public:
     imu_callback on_imu;
     tracking_mode_callback on_tracking_mode;
     
-    explicit leap_connection_class(uint64_t set = 0, uint64_t clear = 0);
-    explicit leap_connection_class(const LEAP_ALLOCATOR& allocator, uint64_t set = 0, uint64_t clear = 0);
-    ~leap_connection_class();
+    explicit LeapConnection(uint64_t set = 0, uint64_t clear = 0);
+    explicit LeapConnection(const LEAP_ALLOCATOR& allocator, uint64_t set = 0, uint64_t clear = 0);
+    ~LeapConnection();
     void start_service();
     void start_playback(const std::string& filename);
     void terminate_service();

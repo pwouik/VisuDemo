@@ -9,7 +9,10 @@
 #include <cmath>
 #include <cstdio>
 #include <iostream>
+#include <mutex>
 
+#include "glm/ext/matrix_transform.hpp"
+#include "glm/fwd.hpp"
 #include "imgui_util.hpp" 
 #include "leap_connection.h"
 #define GLM_ENABLE_EXPERIMENTAL
@@ -134,7 +137,8 @@ public:
     glm::vec3 specular;
     float occlusion;
     glm::vec3 fractal_position{0.0f, 0.0f, 0.0f};
-    glm::vec3 fractal_rotation{0.0f, 0.0f, 0.0f};
+    std::mutex leapmotion_mutex;
+    glm::quat fractal_rotation = glm::identity<glm::quat>();
     float speed;
     GLuint compute_program;
     GLuint compute_program_attractor;
@@ -156,5 +160,5 @@ public:
     float prevFpsUpdate = 0 ;
     float currentFPS;
 
-    std::unique_ptr<leap_connection_class> leap_connection;
+    std::unique_ptr<LeapConnection> leap_connection;
 };

@@ -17,6 +17,7 @@
 #include "glm/matrix.hpp"
 #include "glm/ext.hpp"
 #include <algorithm> //for std::fill
+#include <mutex>
 #include <vector>
 
 // #include <thread> //this therad
@@ -444,6 +445,7 @@ while (!glfwWindowShouldClose(window)) {
                 glm::vec3(0.0, 1.0, 0.0)),
             glm::vec3(-pos.x, -pos.y, -pos.z)));
         if(curr_mode == Raymarching){
+            std::lock_guard<std::mutex> lock(leapmotion_mutex);
             if(glfwGetKey(window, GLFW_KEY_UP)==GLFW_PRESS){
                 fractal_position += glm::vec3(-1.0f ,0.0f, 0.0f) * speed;
             }
@@ -462,21 +464,12 @@ while (!glfwWindowShouldClose(window)) {
             if(glfwGetKey(window, GLFW_KEY_PAGE_DOWN)==GLFW_PRESS){
                 fractal_position += glm::vec3(0.0f ,-1.0f, 0.0f) * speed;
             }
-            if(glfwGetKey(window, GLFW_KEY_KP_1)==GLFW_PRESS){
-                fractal_rotation += glm::vec3(0.1f ,0.0f, 0.0f) * speed;
-            }
-            if(glfwGetKey(window, GLFW_KEY_KP_2)==GLFW_PRESS){
-                fractal_rotation += glm::vec3(0.0f ,0.1f, 0.0f) * speed;
-            }
-            if(glfwGetKey(window, GLFW_KEY_KP_3)==GLFW_PRESS){
-                fractal_rotation += glm::vec3(0.0f ,0.0f, 0.1f) * speed;
-            }
             if(glfwGetKey(window, GLFW_KEY_L)==GLFW_PRESS){
                 light_pos = pos;
             }
 
-            glm::mat4 fractal_transform = glm::orientate4(fractal_rotation)*glm::translate(glm::identity<glm::mat4>(),fractal_position);
-            glm::mat4 total_transform = fractal_transform*inv_camera_view;
+            glm::mat4 fractal_transform =  glm::translate(glm::identity<glm::mat4>(),fractal_position) * glm::toMat4(fractal_rotation);
+            glm::mat4 total_transform = glm::inverse(fractal_transform)*inv_camera_view;
 
             utl::newframeIMGUI();
             draw_ui();
@@ -487,7 +480,7 @@ while (!glfwWindowShouldClose(window)) {
             glUniformMatrix4fv(glGetUniformLocation(compute_program, "inv_proj"),1, GL_FALSE, glm::value_ptr(glm::inverse(proj)));
             glUniform2ui(glGetUniformLocation(compute_program, "screen_size"), width,height);
             glUniform3fv(glGetUniformLocation(compute_program, "camera"), 1, glm::value_ptr(pos));
-            glUniform3fv(glGetUniformLocation(compute_program, "light_pos"), 1, glm::value_ptr(light_pos+glm::vec3(fractal_transform[3])));
+            glUniform3fv(glGetUniformLocation(compute_program, "light_pos"), 1, glm::value_ptr(glm::inverse(fractal_transform)*glm::vec4(light_pos,1.0)));
             glUniform3fv(glGetUniformLocation(compute_program, "param1"), 1, glm::value_ptr(param1));
             glUniform3fv(glGetUniformLocation(compute_program, "param2"), 1, glm::value_ptr(param2));
             glUniform1f(glGetUniformLocation(compute_program, "k_a"), k_a);
@@ -596,11 +589,19 @@ void App::setupLeapMotion()
         [](void* ptr, void*){if(!ptr) return; free(ptr);},
         nullptr
     };
-    leap_connection.reset(new leap_connection_class(allocator, eLeapPolicyFlag_Images | eLeapPolicyFlag_MapPoints, 0));
+    leap_connection.reset(new LeapConnection(allocator, eLeapPolicyFlag_Images | eLeapPolicyFlag_MapPoints, 0));
     leap_connection->on_connection = []{std::cout << "Leap device connected.\n";};
     leap_connection->on_policy = [](const uint32_t){/*Prevents bad function call*/};
     leap_connection->on_device_found = [](const LEAP_DEVICE_INFO& device_info){std::cout << "Found device " << device_info.serial << ".\n";};
-    leap_connection->on_frame = [](const LEAP_TRACKING_EVENT& frame){/*if (frame.info.frame_id % 60 == 0) */std::cout << "Frame " << frame.info.frame_id << " with " << frame.nHands << " hands.\n";};
+    leap_connection->on_frame = [this](const LEAP_TRACKING_EVENT& frame){
+        std::cout << "Frame " << frame.info.frame_id << " with " << frame.nHands << " hands.\n";
+        std::lock_guard<std::mutex> lock(leapmotion_mutex);
+        if(frame.nHands>1){
+            fractal_position = glm::make_vec3(frame.pHands[0].palm.position.v)/30.0f;
+            fractal_rotation = glm::make_quat(frame.pHands[0].palm.orientation.v);
+        }
+
+    };
     leap_connection->on_image = [](const LEAP_IMAGE_EVENT& image)
     {
         std::cout << "Image " << image.info.frame_id << " => Left: " << image.image[0].properties.width << " x " << image.image[0].properties.height << " (bpp = " << image.image[0].properties.bpp * 8
