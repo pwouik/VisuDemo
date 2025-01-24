@@ -566,12 +566,23 @@ void App::setupLeapMotion()
     leap_connection->on_connection = []{std::cout << "Leap device connected.\n";};
     leap_connection->on_policy = [](const uint32_t){/*Prevents bad function call*/};
     leap_connection->on_device_found = [](const LEAP_DEVICE_INFO& device_info){std::cout << "Found device " << device_info.serial << ".\n";};
-    leap_connection->on_frame = [](const LEAP_TRACKING_EVENT& frame){/*if (frame.info.frame_id % 60 == 0) */std::cout << "Frame " << frame.info.frame_id << " with " << frame.nHands << " hands.\n";};
+    leap_connection->on_frame = [](const LEAP_TRACKING_EVENT& frame)
+    {
+        std::cout << "Frame " << frame.info.frame_id << " with " << frame.nHands << " hands. ";
+        for (int i = 0; i < frame.nHands; i++)
+        {
+            if (frame.pHands[i].type == eLeapHandType_Left)
+            {
+                const LEAP_HAND left = frame.pHands[i];
+                std::cout << "Left hand is at: " << left.palm.position.x << ", " << left.palm.position.y << ", " << left.palm.position.z << " with " << left.confidence << " confidence";
+                break;
+            }
+        }
+        std::cout << "\n";
+    };
     leap_connection->on_image = [](const LEAP_IMAGE_EVENT& image)
     {
         std::cout << "Image " << image.info.frame_id << " => Left: " << image.image[0].properties.width << " x " << image.image[0].properties.height << " (bpp = " << image.image[0].properties.bpp * 8
         << "), Right: " << image.image[1].properties.width << " x " << image.image[1].properties.height << " (bpp = " << image.image[1].properties.bpp * 8 << ").\n";
     };
-    // leap_connection->start_playback("leap_recordings/leapRecording2.lmt");
-    // leap_connection->start_service();
 }

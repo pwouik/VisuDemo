@@ -29,13 +29,14 @@ leap_connection_class::~leap_connection_class()
 
 void leap_connection_class::start_service()
 {
-    if (is_service_running_) return;
+    terminate_service();
     is_service_running_ = true;
     polling_thread = std::thread{[this] { this->service_message_loop(); }};
 }
 
 void leap_connection_class::start_playback(const std::string& filename)
 {
+    terminate_service();
     is_service_running_ = true;
     polling_thread = std::thread{
         [this, filename]
@@ -47,7 +48,6 @@ void leap_connection_class::start_playback(const std::string& filename)
             eLeapRS result = LeapRecordingOpen(&recording, filename.c_str(), parameters);
             if (result == eLeapRS_Success)
             {
-                LEAP_TRACKING_EVENT* tracking_event = nullptr;
                 while (is_service_running_ && result == eLeapRS_Success)
                 {
                     uint64_t next_frame_size = 0;
@@ -59,8 +59,8 @@ void leap_connection_class::start_playback(const std::string& filename)
                     }
                     else if (next_frame_size > 0)
                     {
-                        tracking_event = new LEAP_TRACKING_EVENT[next_frame_size];
-                        result = LeapRecordingRead(recording, tracking_event, next_frame_size);
+                        std::unique_ptr<LEAP_TRACKING_EVENT> tracking_event{new LEAP_TRACKING_EVENT[next_frame_size]};
+                        result = LeapRecordingRead(recording, tracking_event.get(), next_frame_size);
                         if (result == eLeapRS_Success)
                         {
                             on_frame(*tracking_event);
@@ -69,7 +69,6 @@ void leap_connection_class::start_playback(const std::string& filename)
                         {
                             std::cerr << "Could not read frame: " << result_string(result) << ".\n";
                         }
-                        delete[] tracking_event;
                     }
                     std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 }
@@ -83,7 +82,7 @@ void leap_connection_class::start_playback(const std::string& filename)
             {
                 std::cerr << "Error: " << result_string(result) << ".\n";
             }
-            terminate_service();
+            is_service_running_ = false;
             std::cout << "Playback finished.\n";
         }
     };
@@ -91,8 +90,8 @@ void leap_connection_class::start_playback(const std::string& filename)
 
 void leap_connection_class::terminate_service()
 {
-    if (!is_service_running_) return;
     is_service_running_ = false;
+    if (!polling_thread.joinable()) return;
     polling_thread.join();
 }
 
