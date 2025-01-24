@@ -566,7 +566,7 @@ void App::setupLeapMotion()
     leap_connection->on_connection = []{std::cout << "Leap device connected.\n";};
     leap_connection->on_policy = [](const uint32_t){/*Prevents bad function call*/};
     leap_connection->on_device_found = [](const LEAP_DEVICE_INFO& device_info){std::cout << "Found device " << device_info.serial << ".\n";};
-    leap_connection->on_frame = [](const LEAP_TRACKING_EVENT& frame)
+    leap_connection->on_frame = [this](const LEAP_TRACKING_EVENT& frame)
     {
         std::cout << "Frame " << frame.info.frame_id << " with " << frame.nHands << " hands. ";
         for (int i = 0; i < frame.nHands; i++)
@@ -574,7 +574,18 @@ void App::setupLeapMotion()
             if (frame.pHands[i].type == eLeapHandType_Left)
             {
                 const LEAP_HAND left = frame.pHands[i];
-                std::cout << "Left hand is at: " << left.palm.position.x << ", " << left.palm.position.y << ", " << left.palm.position.z << " with " << left.confidence << " confidence";
+                std::cout << "Left hand velocity: " << left.palm.velocity.x << ", " << left.palm.velocity.y << ", " << left.palm.velocity.z << " with " << left.confidence << " confidence. Pinch distance: " << std::floor(left.pinch_distance);
+                const glm::quat palm_orientation{left.palm.orientation.w, left.palm.orientation.x, left.palm.orientation.y, left.palm.orientation.z};
+                const glm::vec3 palm_orientation_euler = glm::eulerAngles(palm_orientation);
+                fractal_rotation.x = palm_orientation_euler.x;
+                fractal_rotation.y = palm_orientation_euler.y;
+                fractal_rotation.z = palm_orientation_euler.z;
+                if (left.pinch_distance < 10)
+                {
+                    fractal_position.x += left.palm.velocity.x * speed;
+                    fractal_position.y += left.palm.velocity.y * speed;
+                    fractal_position.x += left.palm.velocity.z * speed;
+                }
                 break;
             }
         }
