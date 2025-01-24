@@ -1,26 +1,90 @@
 #version 460 core
-layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
-layout(rgba32f, binding = 0) uniform image2D imgOutput;
-uniform mat4 inv_proj;
-uniform mat4 inv_view;
+layout (local_size_x = 1024, local_size_y = 1, local_size_z = 1) in;
+layout(r32i, binding = 1) uniform iimage2D depth;
+layout(std430, binding = 3) buffer PointBuffer {          // SSBO binding point 3
+    vec4 points[];
+};
+layout(std140, binding = 1) uniform Matrices { // the list of mat4 attractors
+    mat4 matrixArray[10];
+};
+uniform int randInt_seed;
+uniform int matrixPerAttractor; //number of matrices in array
+uniform int immobileCount; //number of point that won't move
+
+uniform mat4 proj;
+uniform mat4 view;
 uniform uvec2 screen_size;
 uniform vec3 camera;
 uniform vec3 light_pos;
 uniform float time;
 
-	
+
 
 const uint max_iter = 256;
 const float EPSILON = 1e-4;
 const float PI = 3.14159265358979;
 
-//black canvas for now
+//magic values
+#define NBPTS 20000000
+#define MAX_FUNC_PER_ATTRACTOR 10 //magic value synced with matthracttor.hpp
+//TODO optimisation : lower number of thread to process multiples point per thread ?
 
 
+void screenWriteCoord(vec4 pt){
+    vec4 camera_space = view * pt;
 
+    vec4 projected_point = proj * camera_space;
+    if (projected_point.w != 0.0) {
+        projected_point.xyz /= projected_point.w; // Perspective divide
+    }
+    if(projected_point.z>1.0){return;}
+
+    vec2 screen_coord = (projected_point.xy + 1.0) * 0.5; // [-1,1] to [0,1]
+    screen_coord *= vec2(screen_size); // Map to screen space (pixels) 
+    int d = int(projected_point.z*(1<<31));
+    if(imageLoad(depth, ivec2(screen_coord)).r<d)
+        imageStore(depth, ivec2(screen_coord), ivec4(d));
+}
+uint hash(uint x)
+{
+    x ^= x >> 17;
+    x *= 0xed5ad4bbU;
+    x ^= x >> 11;
+    x *= 0xac4c1b51U;
+    x ^= x >> 15;
+    x *= 0x31848babU;
+    x ^= x >> 14;
+    return x;
+}
 void main() {
-    if(gl_GlobalInvocationID.x>=screen_size.x || gl_GlobalInvocationID.y>=screen_size.y)
-        return;
-    vec4 color = vec4(0.0,0.0,0.0,1.0);
-    imageStore(imgOutput, ivec2(gl_GlobalInvocationID.xy), color);
+    uint idx = gl_GlobalInvocationID.x;
+    if(idx >= NBPTS) return;
+
+    vec4 point = points[idx];
+    vec4 pts[MAX_FUNC_PER_ATTRACTOR];
+
+    //update point coordinate with attractor (for now choose attractor with % index but later have custom weight)
+    if(matrixPerAttractor > 0) {        
+        //get a unique seed per thread. 
+        //TODO there may be hash collisions !
+        uint fake_rand = hash(idx^randInt_seed)%(matrixPerAttractor+immobileCount); 
+
+        //compute all points to display. Note that 3<matrixPerAttractor<MAX_FUNC_PER_ATTRACTOR = 10
+        for(int i =0; i < matrixPerAttractor; i++){
+            pts[i] = matrixArray[i] * point;
+        }
+
+        //jump to a random position or stay still (depending on immobile count)
+        for(int i =0; i < matrixPerAttractor; i++){
+            if(fake_rand == i){
+                points[idx] = pts[i];
+                break; //idk if break really optimized in glsl
+            }
+        }
+
+    }
+    //draw all atteignable point.
+    for(int i =0; i < matrixPerAttractor; i++){
+        screenWriteCoord(pts[i]);
+    }
 }

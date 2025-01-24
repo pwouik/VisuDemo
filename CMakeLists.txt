@@ -12,7 +12,7 @@ project (opengl-cmake-skeleton)
 # C5045 C5219 C4514 idk
 #ideally suppressed warning only comming from given path
 if(MSVC)
-    add_compile_options(/wd4710 /wd4711 /wd4191 /wd4244 /wd4100 /wd4514 /wd4464 /wd4820 /wd4365 /wd5039)
+    add_compile_options(/wd4710 /wd4711 /wd4191 /wd4244 /wd4100 /wd4514 /wd4464 /wd4820 /wd4365 /wd5039 /wd4505)
 endif()
 
 

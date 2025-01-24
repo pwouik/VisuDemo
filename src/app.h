@@ -10,16 +10,30 @@
 #include <cstdio>
 #include <vector>
 
+#include <iostream>
+
 #include "imgui_util.hpp" 
 #include "leap_connection.h"
 #define GLM_ENABLE_EXPERIMENTAL
 
 #define PI 3.14159265358979323f
+#define FPS_UPDATE_DELAY 1
 
 enum Mode{
     Raymarching,
     Attractor
 };
+
+enum LerpMode{
+    lerp_Matrix,
+    lerp_PerComponent
+};
+
+#define DEBUG(x) std::cout << x << std::endl;
+//#define DEBUG
+
+#define DEBUG(x) std::cout << x << std::endl;
+//#define DEBUG
 
 class App
 {
@@ -58,16 +72,14 @@ public:
         glViewport(0, 0, width, height);
         width=w;
         height=h;
-
-        glGenTextures(1, &texture);
-        glActiveTexture(GL_TEXTURE0);
+        
         glBindTexture(GL_TEXTURE_2D, texture);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, w, h, 0, GL_RGBA, 
                     GL_FLOAT, NULL);
+
+        glBindTexture(GL_TEXTURE_2D, depth_texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, w, h, 0, GL_RED_INTEGER, 
+                    GL_INT, nullptr);
 
     glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
         proj = glm::perspective(70.0f * PI / 180.0f,(float)width/(float)height,0.1f,10000.0f);
@@ -81,8 +93,10 @@ public:
     }
 
     void draw_ui();
+    void draw_ui_attractor();
+    void updateFps();
 
-private:
+public:
     GLFWwindow* window;
 
     static void onKey(GLFWwindow* window, int key, int scancode, int actions, int mods)
@@ -127,14 +141,22 @@ private:
     float speed;
     GLuint compute_program;
     GLuint compute_program_attractor;
+    GLuint ssao_attractor;
     GLuint blit_program;
     GLuint texture;
+    GLuint depth_texture;
     GLuint dummy_vbo;
     GLuint dummy_vao;
     glm::mat4 proj;
     bool mouse_lock = false;
+    glm::mat4 old_view;
 
     Mode curr_mode = Raymarching;
+    LerpMode lerpmode = lerp_Matrix;
+
+    int frameAcc = 0;
+    float prevFpsUpdate = 0 ;
+    float currentFPS;
 
     std::unique_ptr<leap_connection_class> leap_connection;
 };

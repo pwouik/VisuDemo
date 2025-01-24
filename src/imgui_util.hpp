@@ -8,6 +8,20 @@
 
 namespace utl{
 
+static void HelpMarker(const char* desc){
+    ImGui::SameLine();
+    ImGui::TextDisabled("(?)");
+    if (ImGui::BeginItemTooltip())
+    {
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
+
+
+
 static void initIMGUI(GLFWwindow* window){
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();

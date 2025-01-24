@@ -1,0 +1,29 @@
+#version 460 core
+layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+layout(rgba32f, binding = 0) uniform image2D target;
+layout(r32i, binding = 1) uniform iimage2D depth;
+uniform mat4 inv_proj;
+uniform uvec2 screen_size;
+#define PI 3.14159265358
+mat2 inv_proj_small;
+float sampleDepth(ivec2 pos){
+    vec2 prod  = inv_proj_small * vec2(float(imageLoad(depth,pos).r)/(1<<31),1);
+    return prod.x / prod.y * inv_proj[0].x * screen_size.x/2;
+}
+void main() {
+    // Check if the current thread is within the bounds of the screen
+    if (gl_GlobalInvocationID.x>=screen_size.x || gl_GlobalInvocationID.y>=screen_size.y)
+        return;
+/*
+    vec4 unprojetcted_depth = inv_proj * vec4(0,0,float(imageLoad(depth, ivec2(gl_GlobalInvocationID.xy)).r)/(1<<31),1);
+    float d = unprojetcted_depth.z/unprojetcted_depth.w+1.5;
+*/
+    inv_proj_small = mat2(inv_proj[2].zw,inv_proj[3].zw);
+    float d = sampleDepth(ivec2(gl_GlobalInvocationID.xy));
+    float dnx = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(1,0));
+    float dpx = sampleDepth(ivec2(gl_GlobalInvocationID.xy)+ivec2(1,0));
+    float dny = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(0,1));
+    float dpy = sampleDepth(ivec2(gl_GlobalInvocationID.xy)+ivec2(0,1));
+    float c = 1-(atan(dnx-d)+atan(dpx-d)+atan(dny-d)+atan(dpy-d))/(PI*2);
+    imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(c,c,c,1));
+}
