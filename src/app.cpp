@@ -8,6 +8,7 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <iostream>
 #include <memory>
+#include <vector>
 
 #include "leap_connection.h"
 #include "glm/gtc/type_ptr.hpp"
@@ -192,10 +193,28 @@ void App::draw_ui(){
         ImGui::SliderFloat("alpha", &alpha, 1.0f, 5.0f);
         ImGui::ColorEdit3("specular", glm::value_ptr(specular));
         ImGui::SliderFloat("occlusion", &occlusion, -10.0f, 10.0f);
+        ImGui::SeparatorText("Leap motion");
+        if (!leap_connection->is_service_running())
+        {
+            static int current = 0;
+            ImGui::Combo("Select recording", &current, recordings.data(), recordings.size());
+            if(ImGui::Button("Start record playback") && current < recordings.size() && current >= 0)
+            {
+                leap_connection->start_playback(recordings[current]);
+            }
+            else if(ImGui::Button("Start leap capture"))
+            {
+                leap_connection->start_service();
+            }
+        }
+        else if(ImGui::Button("Stop leap service"))
+        {
+            leap_connection->terminate_service();
+        }
     ImGui::End();
 }
 void App::run(){
-while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         
         if(glfwGetKey(window, GLFW_KEY_W)==GLFW_PRESS){
@@ -348,6 +367,6 @@ void App::setupLeapMotion()
         std::cout << "Image " << image.info.frame_id << " => Left: " << image.image[0].properties.width << " x " << image.image[0].properties.height << " (bpp = " << image.image[0].properties.bpp * 8
         << "), Right: " << image.image[1].properties.width << " x " << image.image[1].properties.height << " (bpp = " << image.image[1].properties.bpp * 8 << ").\n";
     };
-    leap_connection->start_playback("leap_recordings/leapRecording2.lmt");
+    // leap_connection->start_playback("leap_recordings/leapRecording2.lmt");
     // leap_connection->start_service();
 }

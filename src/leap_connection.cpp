@@ -29,14 +29,14 @@ leap_connection_class::~leap_connection_class()
 
 void leap_connection_class::start_service()
 {
-    if (is_service_running) return;
-    is_service_running = true;
+    if (is_service_running_) return;
+    is_service_running_ = true;
     polling_thread = std::thread{[this] { this->service_message_loop(); }};
 }
 
 void leap_connection_class::start_playback(const std::string& filename)
 {
-    is_service_running = true;
+    is_service_running_ = true;
     polling_thread = std::thread{
         [this, filename]
         {
@@ -48,7 +48,7 @@ void leap_connection_class::start_playback(const std::string& filename)
             if (result == eLeapRS_Success)
             {
                 LEAP_TRACKING_EVENT* tracking_event = nullptr;
-                while (is_service_running && result == eLeapRS_Success)
+                while (is_service_running_ && result == eLeapRS_Success)
                 {
                     uint64_t next_frame_size = 0;
                     result = LeapRecordingReadSize(recording, &next_frame_size);
@@ -83,7 +83,7 @@ void leap_connection_class::start_playback(const std::string& filename)
             {
                 std::cerr << "Error: " << result_string(result) << ".\n";
             }
-            is_service_running = false;
+            terminate_service();
             std::cout << "Playback finished.\n";
         }
     };
@@ -91,15 +91,20 @@ void leap_connection_class::start_playback(const std::string& filename)
 
 void leap_connection_class::terminate_service()
 {
-    if (!is_service_running) return;
-    is_service_running = false;
+    if (!is_service_running_) return;
+    is_service_running_ = false;
     polling_thread.join();
+}
+
+bool leap_connection_class::is_service_running() const
+{
+    return is_service_running_;
 }
 
 void leap_connection_class::service_message_loop()
 {
     LEAP_CONNECTION_MESSAGE connection_message;
-    while (is_service_running)
+    while (is_service_running_)
     {
         constexpr unsigned int timeout = 1000;
         const eLeapRS result = LeapPollConnection(leap_connection, timeout, &connection_message);

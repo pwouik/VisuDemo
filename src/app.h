@@ -8,6 +8,8 @@
 #include <glad/gl.h>
 #include <cmath>
 #include <cstdio>
+#include <vector>
+
 #include "imgui_util.hpp" 
 #include "leap_connection.h"
 #define GLM_ENABLE_EXPERIMENTAL
@@ -103,6 +105,7 @@ private:
         App* obj = (App*)glfwGetWindowUserPointer(window);
         obj->onResize(w,h);
     }
+    const std::vector<const char*> recordings{"leap_recordings/leapRecording2.lmt", "leap_recordings/leapRecording3.lmt"};
     int width;
     int height;
     float pitch;

@@ -22,7 +22,7 @@ class leap_connection_class
     std::mutex data_lock;
 
     LEAP_CONNECTION leap_connection{};
-    bool is_service_running = false;
+    bool is_service_running_ = false;
     bool is_connected = false;
 
     std::unique_ptr<LEAP_DEVICE_INFO> last_device;
@@ -62,6 +62,7 @@ public:
     void start_service();
     void start_playback(const std::string& filename);
     void terminate_service();
+    bool is_service_running() const;
 };
 
 
