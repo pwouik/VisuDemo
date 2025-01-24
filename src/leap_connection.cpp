@@ -38,54 +38,7 @@ void leap_connection_class::start_playback(const std::string& filename)
 {
     terminate_service();
     is_service_running_ = true;
-    polling_thread = std::thread{
-        [this, filename]
-        {
-            LEAP_RECORDING recording;
-            LEAP_RECORDING_PARAMETERS parameters;
-
-            parameters.mode = eLeapRecordingFlags_Reading;
-            eLeapRS result = LeapRecordingOpen(&recording, filename.c_str(), parameters);
-            if (result == eLeapRS_Success)
-            {
-                while (is_service_running_ && result == eLeapRS_Success)
-                {
-                    uint64_t next_frame_size = 0;
-                    result = LeapRecordingReadSize(recording, &next_frame_size);
-                    if (result != eLeapRS_Success)
-                    {
-                        next_frame_size = 0;
-                        std::cerr << "Could not read next frame size: " << result_string(result) << ".\n";
-                    }
-                    else if (next_frame_size > 0)
-                    {
-                        std::unique_ptr<LEAP_TRACKING_EVENT> tracking_event{new LEAP_TRACKING_EVENT[next_frame_size]};
-                        result = LeapRecordingRead(recording, tracking_event.get(), next_frame_size);
-                        if (result == eLeapRS_Success)
-                        {
-                            on_frame(*tracking_event);
-                        }
-                        else
-                        {
-                            std::cerr << "Could not read frame: " << result_string(result) << ".\n";
-                        }
-                    }
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                }
-                result = LeapRecordingClose(&recording);
-                if (result != eLeapRS_Success)
-                {
-                    std::cerr << "Error: " << result_string(result) << ".\n";
-                }
-            }
-            else
-            {
-                std::cerr << "Error: " << result_string(result) << ".\n";
-            }
-            is_service_running_ = false;
-            std::cout << "Playback finished.\n";
-        }
-    };
+    polling_thread = std::thread{[this, filename] { this->playback_record(filename); }};
 }
 
 void leap_connection_class::terminate_service()
@@ -153,6 +106,50 @@ void leap_connection_class::service_message_loop()
             std::cout << "Unhandled message type " << connection_message.type << ".\n";
         }
     }
+}
+
+void leap_connection_class::playback_record(const std::string& filename)
+{
+    LEAP_RECORDING recording;
+    LEAP_RECORDING_PARAMETERS parameters;
+
+    parameters.mode = eLeapRecordingFlags_Reading;
+    eLeapRS result = LeapRecordingOpen(&recording, filename.c_str(), parameters);
+    while (result == eLeapRS_Success && is_service_running_)
+    {
+        uint64_t next_frame_size = 0;
+        result = LeapRecordingReadSize(recording, &next_frame_size);
+        if (result != eLeapRS_Success)
+        {
+            next_frame_size = 0;
+            std::cerr << "Could not read next frame size: " << result_string(result) << ".\n";
+        }
+        else if (next_frame_size > 0)
+        {
+            std::unique_ptr<LEAP_TRACKING_EVENT> tracking_event{new LEAP_TRACKING_EVENT[next_frame_size]};
+            result = LeapRecordingRead(recording, tracking_event.get(), next_frame_size);
+            if (result == eLeapRS_Success)
+            {
+                on_frame(*tracking_event);
+            }
+            else
+            {
+                std::cerr << "Could not read frame: " << result_string(result) << ".\n";
+            }
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    result = LeapRecordingClose(&recording);
+    if (result != eLeapRS_Success)
+    {
+        std::cerr << "Error: " << result_string(result) << ".\n";
+    }
+    if (result != eLeapRS_Success)
+    {
+        std::cerr << "Error: " << result_string(result) << ".\n";
+    }
+    is_service_running_ = false;
+    std::cout << "Playback finished.\n";
 }
 
 std::string leap_connection_class::result_string(const eLeapRS result)
