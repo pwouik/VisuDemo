@@ -21,7 +21,7 @@ uniform vec3 specular;
 uniform float occlusion;
 uniform float time;                                     // Time variable (unused in this shader)
 
-
+float outside = 1;
 	
 float sdBox( vec3 p, vec3 b )
 {
@@ -129,7 +129,7 @@ float de(vec3 position) {
   float combinedScaleFactor = pow(scaleFactor, -round(fractalIterations));
   transformedPos *= combinedScaleFactor;
   float minDist = sdBox(transformedPos,vec3(combinedScaleFactor*8))-combinedScaleFactor;
-  return minDist;
+  return minDist*outside;
 }
 vec3 estimateNormal(vec3 p,float e) {
     return normalize(vec3(
@@ -163,7 +163,7 @@ vec3 fract_color(vec3 position) {
   return 1-color;
 }
 // Phong lighting model for calculating color
-vec4 phong(vec3 pos,vec3 camera,vec3 color, float ao, float e) {
+vec3 phong(vec3 pos,vec3 camera,vec3 color, float min_light,float shadow,float ao, float e) {
     
     vec3 normal = estimateNormal(pos, e*3);           // Estimate the normal vector at the point
     if (dot(normal, pos - camera) > 0.0) {
@@ -174,12 +174,11 @@ vec4 phong(vec3 pos,vec3 camera,vec3 color, float ao, float e) {
     vec3 reflect_dir = reflect(-light_dir, normal); // Calculate the reflection direction
     vec3 pos_dir = normalize(camera - pos);         // Calculate the direction to the camera
     // Calculate diffuse and specular components
-    float coeff_diffuse = dot(normal, light_dir) * k_d;
-    float coeff_specular = pow(max(dot(pos_dir, reflect_dir), 0.0), exp(alpha)) * k_s * (sign(dot(light_dir, normal))*0.5+0.5);
+    float coeff_diffuse = dot(normal, light_dir);
+    float coeff_specular = pow(max(dot(pos_dir, reflect_dir), 0.0), exp(alpha)) * k_s;
     // Combine ambient, diffuse, and specular components to get the final color
-    return vec4(ambient * k_a + ao * (
-                 color * coeff_diffuse *k_d +
-                 specular * coeff_specular * k_s), 1.0);
+    return vec3(color *(max(coeff_diffuse *k_d * shadow,min_light) * ao) +
+                 specular * coeff_specular * k_s * shadow);
 }
 
 
@@ -197,6 +196,7 @@ void main() {
     vec3 pos = camera;  // Starting position of the ray
     uint steps = 0;
     float dist = 0;
+    outside = sign(de(pos));
     
     // Ray marching loop
     for (int i=0; i<max_iter; i++)
@@ -210,9 +210,30 @@ void main() {
             break;
         }
     }
-    vec4 color =  phong(pos,camera,fract_color(pos), exp(-float(steps)*exp(-occlusion)),dist*EPSILON);
-    if(de(pos)>1e10){
-        color = vec4(1.0);
+
+    //light loop
+    vec3 light_dir = normalize(light_pos - pos);
+    float light_size = 0.1;
+    float light_dist = distance(pos,light_pos);
+    float max_aperture = 999999;
+    float dist2 = 0.01;
+    vec3 pos2 = pos+light_dir*dist2;
+    for (int i=0; i<max_iter; i++)
+    {
+        float d = de(pos2);  // Calculate the distance to the surface
+        max_aperture = min(max_aperture,d/dist2);
+        pos2 += light_dir*d;       // Step along the ray
+        dist2 += d;
+        if (d<dist2*EPSILON || d>light_dist-light_size){ // Early termination condition
+            if(d<light_dist-light_size){
+                max_aperture=0;
+            }
+            break;
+        }
     }
-    imageStore(target, ivec2(gl_GlobalInvocationID.xy), color);
+    vec3 color =  phong(pos,camera,diffuse,k_a,min(max_aperture*light_dist/light_size,1.0),exp(-float(steps)*exp(-occlusion)), dist*EPSILON);
+    if(de(pos)>1e10){
+        color = vec3(1.0);
+    }
+    imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(color,1));
 }
