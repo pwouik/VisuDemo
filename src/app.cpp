@@ -566,7 +566,6 @@ void App::run(){
             glUniform1i(glGetUniformLocation(compute_program_attractor, "randInt_seed"),rand()%RAND_MAX);
             
             //send attractor data to compute shader
-            //TODO HERE uncommnet
             uvl::update_ubo_matrices(lerpmode);
             glBindBuffer(GL_UNIFORM_BUFFER, atr::uboM4);
             glBufferSubData(GL_UNIFORM_BUFFER, 0, uvl::matrixPerAttractor * sizeof(glm::mat4), uvl::ubo_matrices.data());
@@ -580,6 +579,7 @@ void App::run(){
 
             glUseProgram(ssao_attractor);
             glUniform2ui(glGetUniformLocation(ssao_attractor, "screen_size"), width,height);
+            glUniformMatrix4fv(glGetUniformLocation(ssao_attractor, "inv_view"),1, GL_FALSE, glm::value_ptr(inv_camera_view));
             glUniformMatrix4fv(glGetUniformLocation(ssao_attractor, "inv_proj"),1, GL_FALSE, glm::value_ptr(glm::inverse(proj)));
             glUniform3fv(glGetUniformLocation(ssao_attractor, "camera"), 1, glm::value_ptr(pos)); //here todo
             glUniform1f(glGetUniformLocation(ssao_attractor, "JD_FR_MIN"), clr::JD_FR_MIN);

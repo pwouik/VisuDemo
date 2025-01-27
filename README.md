@@ -4,8 +4,7 @@
 
 Todo
 - full screen support
-- fix coloring
-- separate light pos from camera pos
+- fix specular light
 - better normal computation
 - SSAO
 - use "distance from last jump" as color base color
@@ -21,6 +20,17 @@ Maybe ?
 
 
 # VisuDemo
+
+## Building the app
+
+in /build/
+```cmd
+cmake ..
+```
+
+```cmd
+cmake --build . --config Release
+```
 
 ## Ray Marching
 
