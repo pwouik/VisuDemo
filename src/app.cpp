@@ -340,9 +340,17 @@ void App::draw_ui(){
                 leap_connection->start_service();
             }
         }
-        else if(ImGui::Button("Stop leap service"))
+        else
         {
-            leap_connection->terminate_service();
+            ImGui::TextColored(hasLeftHand ? ImVec4(0.0f, 1.0f, 0.0f, 1.0f) : ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Left hand");
+            ImGui::SameLine();
+            ImGui::Text(" | ");
+            ImGui::SameLine();
+            ImGui::TextColored(hasRightHand ? ImVec4(0.0f, 1.0f, 0.0f, 1.0f) : ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Right hand");
+            if (ImGui::Button("Stop leap service"))
+            {
+                leap_connection->terminate_service();
+            }
         }
     ImGui::End();
 }
@@ -639,6 +647,7 @@ void App::onFrame(const LEAP_TRACKING_EVENT& frame)
         static bool right_was_pinched = false;
         if (left.has_value())
         {
+            hasLeftHand = true;
             std::cout << "Left hand velocity: " << left.value().palm.velocity.x << ", " << left.value().palm.velocity.y << ", " << left.value().palm.velocity.z << " with " << left.value().confidence << " confidence. Pinch distance: " << std::floor(left.value().pinch_distance);
             static glm::quat left_start_rotation;
             if (left.value().pinch_distance < 25)
@@ -660,10 +669,12 @@ void App::onFrame(const LEAP_TRACKING_EVENT& frame)
         }
         else
         {
+            hasLeftHand = false;
             left_was_pinched = false;
         }
         if (right.has_value())
         {
+            hasRightHand = true;
             static glm::quat start_param1;
             static glm::vec3 start_param2;
             if (right.value().pinch_distance < 25){
@@ -685,6 +696,7 @@ void App::onFrame(const LEAP_TRACKING_EVENT& frame)
         }
         else
         {
+            hasRightHand = false;
             right_was_pinched = false;
         }
         std::cout << "\n";

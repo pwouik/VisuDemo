@@ -165,6 +165,7 @@ public:
     int frameAcc = 0;
     float prevFpsUpdate = 0 ;
     float currentFPS;
-
+    bool hasLeftHand = false;
+    bool hasRightHand = false;
     std::unique_ptr<leap::leap_connection> leap_connection;
 };
