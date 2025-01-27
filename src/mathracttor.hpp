@@ -8,7 +8,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/random.hpp>
-#include <vector> //It may be possible to use array and template<int T>
+#include <vector> //It may be possible to use array and template<int T> //actually not requiered
 #include <string>
 
 #include <iostream> //TODO REMOVE
@@ -21,6 +21,7 @@
 //UI util
 #define SL ImGui::SameLine();
 #define CW ImGui::SetNextItemWidth(inputWidth);
+//generate unique ID for ImGui input fields
 #define UID(val) (std::string("##") + std::to_string(reinterpret_cast<uintptr_t>(&val))).c_str()
 #define UIDT(txt, val) (std::string(txt) + std::string("##") + std::to_string(reinterpret_cast<uintptr_t>(&val))).c_str()
 //#define UID(val) "##tantpis" // UID GENERATION ABOVE
@@ -514,6 +515,6 @@ namespace clr{
     float k_s = 1.0f;
     float alpha = 10.0f;
     glm::vec3 col_ambient = glm::vec3(0.0,0.0,1.0);
-    glm::vec3 col_diffuse = glm::vec3(1.0,1.0,0.0);
+    glm::vec3 col_diffuse = glm::vec3(0.0,1.0,0.0);
     glm::vec3 col_specular = glm::vec3(1.0,0.0,0.0);
 }

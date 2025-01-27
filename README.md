@@ -2,17 +2,21 @@
 
 ## Shading
 
-- improve depthmap based shading
-    - approximat normal (->PHONG or whatever)
-    - SSAO *: kinda doomed because we need to compute accurate normals ... (nvm computing normal seems doable)
-- Based on fractal
-    - store "distance from last jump" in a texture and convert 0-1 to a gradient color (done, I'll try some maprange clamping but doesn't seem to do a big dif)
-    - color depending or which attractor it jumped to (bof à priori)
+Todo
+- full screen support
+- fix coloring
+- separate light pos from camera pos
+- better normal computation
+- SSAO
+- use "distance from last jump" as color base color
+
+Maybe ?
+- coloring based on which attractor it jumps to (tends to do ugly noise so no)
 
 ## Optimization
 
 - Currently we're doing : 1 point -> draw 3 points from attractor / keep 1. We could potentially compute 3, compute 9, draw 3+9=12, keep 1 randomly - DONE / ~ -30% fps for 4 times the ammount of point. For some reasons perf difference differ on computer so extensive testing will be requiered
-- Lower MAX_FUNC_PER_ATTRACTOR in render_attractor.comp (may be irrelevant but get rid of useless memory in each kernel so may be significant)
+- Lower MAX_FUNC_PER_ATTRACTOR in render_attractor.comp (may be irrelevant but get rid of useless memory in each kernel so maybe significant) (currently supports up to 10 function per attractor)
 
 
 
@@ -60,15 +64,14 @@ Because in a conflit there's a 50% of the result being correct we divide it by 2
 The 2048 kernels will run until all 20 000 000 points are drawn, so 20 000 000 / 2048  = 1 000 times
 With those approximation we get 13 000 pixels having improper depth. This is 8% of the cloud on the texture
 
-That's acceptable. We can fixe those 8% in our normal computation (not done yet) or shameless run a blur to fix it.
+Actually that's not accurate, because 8% is only the proportion of issues. But whenever a conflict occurs, it can be overwritten later. So with gross assumption with assume that the proportion of conflict making it out to the final depthmap texture is 160k pixel / 20m ~0.8% of write. So 0.8% of 8% = 0.64% of 160k points.
+
+That's acceptable. We can maybe fixes those numbers in our normal computation (ie detect value to extreme to ignore them, not done yet) or shameless run a blur to fix it.
 Well that's assuming atomic is really expensive tbf we didn't really benchmarked it.
 
 We also note that this calcul heavily depends on the number of kernel on the GPU.
 
 All math and assumption aside we can simply observe a decent result.
-
-
-
 
 
 ## Leap Motion Integration
