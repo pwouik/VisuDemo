@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <vector>
 
 #include "glm/gtc/quaternion.hpp"
@@ -612,50 +613,77 @@ void App::setupLeapMotion()
     };
     leap_connection.reset(new LeapConnection(allocator, eLeapPolicyFlag_Images | eLeapPolicyFlag_MapPoints, 0));
     leap_connection->on_connection = []{std::cout << "Leap device connected.\n";};
-    leap_connection->on_policy = [](const uint32_t){/*Prevents bad function call*/};
     leap_connection->on_device_found = [](const LEAP_DEVICE_INFO& device_info){std::cout << "Found device " << device_info.serial << ".\n";};
 
     leap_connection->on_frame = [this](const LEAP_TRACKING_EVENT& frame)
     {
         std::cout << "Frame " << frame.info.frame_id << " with " << frame.nHands << " hands. ";
+        std::optional<LEAP_HAND> left = std::nullopt;
+        std::optional<LEAP_HAND> right = std::nullopt;
         for (int i = 0; i < frame.nHands; i++)
         {
-            if (frame.pHands[i].type == eLeapHandType_Left)
+            if (frame.pHands[i].type == eLeapHandType_Left && frame.pHands[i].confidence > 0.1)
             {
-                const LEAP_HAND left = frame.pHands[i];
-                std::cout << "Left hand velocity: " << left.palm.velocity.x << ", " << left.palm.velocity.y << ", " << left.palm.velocity.z << " with " << left.confidence << " confidence. Pinch distance: " << std::floor(left.pinch_distance);
-                static bool wasPinched = false;
-                static glm::quat left_start_rotation;
-                if (left.pinch_distance < 30)
-                {
-                    const glm::quat palm_orientation = glm::make_quat(left.palm.orientation.v);
-                    if (!wasPinched)
-                    {
-                        wasPinched = true;
-                        left_start_rotation = palm_orientation;
-                    }
-                    fractal_position += glm::make_vec3(left.palm.velocity.v) * 0.001;
-                    fractal_rotation = glm::inverse(left_start_rotation) * palm_orientation;
-                }
-                else
-                {
-                    wasPinched = false;
-                }
+                left = frame.pHands[i];
+                continue;
             }
-            if (frame.pHands[i].type == eLeapHandType_Right)
+            if (frame.pHands[i].type == eLeapHandType_Right && frame.pHands[i].confidence > 0.1)
             {
-                const LEAP_HAND right = frame.pHands[i];
-                if (right.pinch_distance < 40){
-                    param1 = glm::eulerAngles(glm::make_quat(right.palm.orientation.v));
-                    param2 = glm::make_vec3(right.palm.position.v)/50.0;
-                }
+                right = frame.pHands[i];
             }
         }
+        static bool left_was_pinched = false;
+        static bool right_was_pinched = false;
+        if (left.has_value())
+        {
+            std::cout << "Left hand velocity: " << left.value().palm.velocity.x << ", " << left.value().palm.velocity.y << ", " << left.value().palm.velocity.z << " with " << left.value().confidence << " confidence. Pinch distance: " << std::floor(left.value().pinch_distance);
+            static glm::quat left_start_rotation;
+            if (left.value().pinch_distance < 30)
+            {
+                const glm::quat palm_orientation = glm::make_quat(left.value().palm.orientation.v);
+                if (!left_was_pinched)
+                {
+                    left_was_pinched = true;
+                    left_start_rotation = palm_orientation;
+                }
+                fractal_position += glm::make_vec3(left.value().palm.velocity.v) * 0.001;
+                fractal_rotation *= glm::inverse(left_start_rotation) * palm_orientation;
+                left_start_rotation = palm_orientation;
+            }
+            else
+            {
+                left_was_pinched = false;
+            }
+        }
+        else
+        {
+            left_was_pinched = false;
+        }
+        if (right.has_value())
+        {
+            static glm::quat start_param1;
+            static glm::vec3 start_param2;
+            if (right.value().pinch_distance < 40){
+                if (!right_was_pinched)
+                {
+                    right_was_pinched = true;
+                    start_param1 = glm::make_quat(right.value().palm.orientation.v);
+                    start_param2 = glm::make_vec3(right.value().palm.position.v);
+                }
+                param1 += glm::eulerAngles(glm::inverse(start_param1) * glm::make_quat(right.value().palm.orientation.v));
+                param2 += (start_param2 - glm::make_vec3(right.value().palm.position.v)) / 50.0;
+                start_param1 = glm::make_quat(right.value().palm.orientation.v);
+                start_param2 = glm::make_vec3(right.value().palm.position.v);
+            }
+            else
+            {
+                right_was_pinched = false;
+            }
+        }
+        else
+        {
+            right_was_pinched = false;
+        }
         std::cout << "\n";
-    };
-    leap_connection->on_image = [](const LEAP_IMAGE_EVENT& image)
-    {
-        //std::cout << "Image " << image.info.frame_id << " => Left: " << image.image[0].properties.width << " x " << image.image[0].properties.height << " (bpp = " << image.image[0].properties.bpp * 8
-        //<< "), Right: " << image.image[1].properties.width << " x " << image.image[1].properties.height << " (bpp = " << image.image[1].properties.bpp * 8 << ").\n";
     };
 }
