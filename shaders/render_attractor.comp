@@ -39,7 +39,6 @@ Wether we should use main v1 or v2 is hightly debatable and seems to depends on 
 
 
 void screenWriteCoord(vec4 pt, float dist_jump){
-    pt = vec4(normalize(pt.xyz),1.0);
     vec4 camera_space = view * pt;
 
     vec4 projected_point = proj * camera_space;
