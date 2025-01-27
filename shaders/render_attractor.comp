@@ -74,7 +74,6 @@ void main() {
 
     vec4 point = points[idx];
     vec4 pts[MAX_FUNC_PER_ATTRACTOR];
-    float dist_jump;
 
     //update point coordinate with attractor
     if(matrixPerAttractor > 0) {        
@@ -90,7 +89,6 @@ void main() {
         for(int i =0; i < matrixPerAttractor; i++){
             if(fake_rand == i){
                 points[idx] = pts[i];
-                dist_jump = distance(pts[i], point);
                 break; //idk if break really optimized in glsl
             }
         }
@@ -98,7 +96,7 @@ void main() {
     }
     //draw all points
     for(int i =0; i < matrixPerAttractor; i++){
-        screenWriteCoord(pts[i],dist_jump);
+        screenWriteCoord(pts[i],distance(pts[i], point));
     }
 }
 
