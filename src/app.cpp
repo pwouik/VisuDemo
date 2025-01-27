@@ -148,6 +148,7 @@ namespace atr{
         //todo unbind ssbo
     }
 
+    //not used anywhere ? must be deleted
     void clearTexture(int w, int h, GLuint texture){
         glBindTexture(GL_TEXTURE_2D, texture);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGBA, GL_FLOAT, blackData);

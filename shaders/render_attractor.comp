@@ -7,7 +7,7 @@ layout(std140, binding = 1) uniform Matrices { // the list of mat4 attractors
 layout(std430, binding = 3) buffer PointBuffer {          // SSBO points
     vec4 points[];
 };
-layout(r32f, binding = 4) uniform image2D jumpdist; //texture that store jump distances
+layout(r32i, binding = 4) uniform iimage2D jumpdist; //texture that store jump distances
 uniform int randInt_seed;   //a random value per frame (between 0 and RAND_MAX, WARNING RAND_MAX depends on compiler !)
 uniform int matrixPerAttractor; //number of matrices in array
 
@@ -49,10 +49,11 @@ void screenWriteCoord(vec4 pt, float dist_jump){
 
     vec2 screen_coord = (projected_point.xy + 1.0) * 0.5; // [-1,1] to [0,1]
     screen_coord *= vec2(screen_size); // Map to screen space (pixels) 
-    int d = int(projected_point.z*(1<<31));
-    if(imageLoad(depth, ivec2(screen_coord)).r<d){
-        imageStore(depth, ivec2(screen_coord), ivec4(d));
-        imageStore(jumpdist, ivec2(screen_coord), vec4(dist_jump));
+    int depth_int = int(projected_point.z*(1<<31));
+    if(imageLoad(depth, ivec2(screen_coord)).r<depth_int){
+        int jumpdist_int = int(dist_jump*(1<<31));
+        imageStore(depth, ivec2(screen_coord), ivec4(depth_int));
+        imageStore(jumpdist, ivec2(screen_coord), ivec4(jumpdist_int));
         //other metadata
     }
 }

@@ -2,7 +2,7 @@
 layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 layout(rgba32f, binding = 0) uniform image2D target;
 layout(r32i, binding = 1) uniform iimage2D depth;
-layout(r32f, binding = 4) uniform image2D jumpdist; //texture that store jump distances
+layout(r32i, binding = 4) uniform iimage2D jumpdist; //texture that store jump distances
 uniform mat4 inv_view;
 uniform mat4 inv_proj;
 uniform uvec2 screen_size;
@@ -36,7 +36,7 @@ float sampleDepth(ivec2 pos){
 }
 
 float sampleJumpDist(ivec2 pos){
-    float jd = imageLoad(jumpdist, pos).r;
+    float jd = float(imageLoad(jumpdist, pos).r)/(1<<31);
     return (jd-JD_FR_MIN)/(JD_FR_MAX-JD_FR_MIN) * (JD_TO_MAX-JD_TO_MIN) + JD_TO_MIN;
 }
 
@@ -118,11 +118,11 @@ void main() {
     computeNormals();
 
     //Phong
-    imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(phong().xyz,1)); 
+    //imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(phong().xyz,1)); 
 
     //prise en compte de la jump distance pour faire un gradient sur la base color ?
-    //vec3 col_cloud = vec3(dj,dj,dj);
-    //imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(col_cloud.xyz,1)); 
+    vec3 col_cloud = vec3(dj,1-dj,0)*phong().xyz;
+    imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(col_cloud.xyz,1)); 
 
 
     //debugging display normals
