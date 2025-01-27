@@ -21,7 +21,6 @@ uniform vec3 specular;
 uniform float occlusion;
 uniform float time;                                     // Time variable (unused in this shader)
 
-float outside = 1;
 	
 float sdBox( vec3 p, vec3 b )
 {
@@ -58,6 +57,12 @@ float de5(vec3 p){
 const uint max_iter = 128;          // Maximum number of iterations for ray casting
 const float EPSILON = 1e-3;         // Epsilon value for early termination
 const float PI = 3.14159265358979;  // Pi constant
+
+vec3 gradient(float i){
+    return min(vec3(1),max(vec3(0),sin((vec3(0,2.0/3,4.0/3)+i)*PI)+.5));
+}
+
+
 
 #define CSize vec3(1., 1.7, 1.)
 
@@ -129,7 +134,7 @@ float de(vec3 position) {
   float combinedScaleFactor = pow(scaleFactor, -round(fractalIterations));
   transformedPos *= combinedScaleFactor;
   float minDist = sdBox(transformedPos,vec3(combinedScaleFactor*8))-combinedScaleFactor;
-  return minDist*outside;
+  return minDist;
 }
 vec3 estimateNormal(vec3 p,float e) {
     return normalize(vec3(
@@ -144,12 +149,11 @@ vec3 fract_color(vec3 position) {
   float scaleFactor = 2.0;
   float fractalIterations = 16.0;
   vec3 angles = param1;
-  vec3 color = vec3(1.0);
-  for (float i = 0.0; i < fractalIterations; i++) {
+  float color = 0.0;
+  for (float i = 0.0; i < 5; i++) {
      transformedPos *= scaleFactor;
      transformedPos = abs(transformedPos) - param2;
-     if(i<5)
-        color -= cos(transformedPos)/4;
+     color += length(transformedPos)/10;
      transformedPos.xy *= mat2(
         cos(angles.x), -sin(angles.x), sin(angles.x), cos(angles.x)
      );
@@ -160,12 +164,12 @@ vec3 fract_color(vec3 position) {
         cos(angles.z), -sin(angles.z), sin(angles.z), cos(angles.z)
      );
   }
-  return 1-color;
+  return gradient(color);
 }
 // Phong lighting model for calculating color
 vec3 phong(vec3 pos,vec3 camera,vec3 color, float min_light,float shadow,float ao, float e) {
     
-    vec3 normal = estimateNormal(pos, e*3);           // Estimate the normal vector at the point
+    vec3 normal = estimateNormal(pos, e*2);           // Estimate the normal vector at the point
     if (dot(normal, pos - camera) > 0.0) {
         normal = -normal; // Flip the normal if it faces away from the camera
     }
@@ -196,16 +200,14 @@ void main() {
     vec3 pos = camera;  // Starting position of the ray
     uint steps = 0;
     float dist = 0;
-    outside = sign(de(pos));
     
     // Ray marching loop
-    for (int i=0; i<max_iter; i++)
+    for (; steps<max_iter; steps++)
     {
         float d = de(pos);  // Calculate the distance to the surface
         
         pos += dir*d;       // Step along the ray
         dist += d;
-        steps += 1;
         if (d<dist*EPSILON || d>1e10){ // Early termination condition
             break;
         }

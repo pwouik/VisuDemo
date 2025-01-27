@@ -39,6 +39,7 @@ Wether we should use main v1 or v2 is hightly debatable and seems to depends on 
 
 
 void screenWriteCoord(vec4 pt, float dist_jump){
+    pt = vec4(normalize(pt.xyz),1.0);
     vec4 camera_space = view * pt;
 
     vec4 projected_point = proj * camera_space;
@@ -131,7 +132,6 @@ void main_desac() {
                 break; //idk if break really optimized in glsl
             }
         }
-
     }
     //draw all reachable points form gen1 & gen2.
     for(int i =0; i < matrixPerAttractor; i++){
