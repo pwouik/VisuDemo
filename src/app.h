@@ -122,6 +122,9 @@ public:
         App* obj = (App*)glfwGetWindowUserPointer(window);
         obj->onResize(w,h);
     }
+
+    void onFrame(const LEAP_TRACKING_EVENT& frame);
+    
     const std::vector<const char*> recordings{"leap_recordings/leapRecording2.lmt", "leap_recordings/leapRecording3.lmt"};
     int width;
     int height;
@@ -163,5 +166,5 @@ public:
     float prevFpsUpdate = 0 ;
     float currentFPS;
 
-    std::unique_ptr<LeapConnection> leap_connection;
+    std::unique_ptr<leap::leap_connection> leap_connection;
 };

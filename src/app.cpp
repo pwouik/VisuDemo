@@ -605,17 +605,20 @@ void App::run(){
 
 void App::setupLeapMotion()
 {
-    const LEAP_ALLOCATOR allocator
+    constexpr LEAP_ALLOCATOR allocator
     {
         [](const uint32_t size, eLeapAllocatorType, void*){void* ptr = malloc(size); return ptr;},
         [](void* ptr, void*){if(!ptr) return; free(ptr);},
         nullptr
     };
-    leap_connection.reset(new LeapConnection(allocator, eLeapPolicyFlag_Images | eLeapPolicyFlag_MapPoints, 0));
+    leap_connection = std::make_unique<leap::leap_connection>(allocator, eLeapPolicyFlag_Images | eLeapPolicyFlag_MapPoints, 0);
     leap_connection->on_connection = []{std::cout << "Leap device connected.\n";};
     leap_connection->on_device_found = [](const LEAP_DEVICE_INFO& device_info){std::cout << "Found device " << device_info.serial << ".\n";};
 
-    leap_connection->on_frame = [this](const LEAP_TRACKING_EVENT& frame)
+    leap_connection->on_frame = [this](const LEAP_TRACKING_EVENT& frame){onFrame(frame);};
+}
+
+void App::onFrame(const LEAP_TRACKING_EVENT& frame)
     {
         std::cout << "Frame " << frame.info.frame_id << " with " << frame.nHands << " hands. ";
         std::optional<LEAP_HAND> left = std::nullopt;
@@ -685,5 +688,4 @@ void App::setupLeapMotion()
             right_was_pinched = false;
         }
         std::cout << "\n";
-    };
-}
+    }
