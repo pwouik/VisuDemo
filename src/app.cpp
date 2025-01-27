@@ -1,5 +1,6 @@
 #include "app.h"
 #include <GLFW/glfw3.h>
+#include <LeapC.h>
 #include <climits>
 #include <cstddef>
 #include <cstdlib>
@@ -13,6 +14,7 @@
 #include <memory>
 #include <vector>
 
+#include "glm/gtc/quaternion.hpp"
 #include "leap_connection.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/matrix.hpp"
@@ -639,7 +641,14 @@ void App::setupLeapMotion()
                 {
                     wasPinched = false;
                 }
-                break;
+            }
+            if (frame.pHands[i].type == eLeapHandType_Right)
+            {
+                const LEAP_HAND right = frame.pHands[i];
+                if (right.pinch_distance < 40){
+                    param1 = glm::eulerAngles(glm::make_quat(right.palm.orientation.v));
+                    param2 = glm::make_vec3(right.palm.position.v)/50.0;
+                }
             }
         }
         std::cout << "\n";

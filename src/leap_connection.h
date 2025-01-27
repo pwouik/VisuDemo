@@ -43,7 +43,7 @@ class LeapConnection
     void handle_imu_event(const LEAP_IMU_EVENT*) const;
 
     void set_frame(const LEAP_TRACKING_EVENT& frame);
-    void set_device(LEAP_DEVICE_INFO& device_info);
+    void set_device(std::unique_ptr<LEAP_DEVICE_INFO>&& device_info);
 
 public:
     connection_callback on_connection = []{};

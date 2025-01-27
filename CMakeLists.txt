@@ -29,7 +29,7 @@ endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(VisuDemo ${cpp_source_files} ${c_source_files} ${IMGUI_source_files})
-set_property(TARGET VisuDemo PROPERTY CXX_STANDARD 11)
+set_property(TARGET VisuDemo PROPERTY CXX_STANDARD 14)
 target_compile_options(VisuDemo PRIVATE -Wall)
 
 find_package(OpenGL REQUIRED)

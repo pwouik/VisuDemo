@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cstring>
+#include <memory>
 
 LeapConnection::LeapConnection(const uint64_t set, const uint64_t clear)
 {
@@ -190,29 +191,28 @@ void LeapConnection::handle_connection_lost_event(const LEAP_CONNECTION_LOST_EVE
 
 void LeapConnection::handle_device_event(const LEAP_DEVICE_EVENT* device_event)
 {
+    printf("status %d\n",device_event->status);
     if (device_event == nullptr) return;
     LEAP_DEVICE device;
     eLeapRS result = LeapOpenDevice(device_event->device, &device);
     if (result != eLeapRS_Success) return;
-    LEAP_DEVICE_INFO device_info{sizeof(device_info)};
-    device_info.serial_length = 1;
-    device_info.serial = new char[device_info.serial_length];
-    result = LeapGetDeviceInfo(device, &device_info);
+    std::unique_ptr<LEAP_DEVICE_INFO> device_info = std::make_unique<LEAP_DEVICE_INFO>();
+    device_info->serial_length = 1;
+    device_info->serial = new char[device_info->serial_length];
+    result = LeapGetDeviceInfo(device, device_info.get());
     if (result == eLeapRS_InsufficientBuffer)
     {
         //try again with correct buffer size
-        device_info.serial = static_cast<char*>(realloc(device_info.serial, device_info.serial_length));
-        result = LeapGetDeviceInfo(device, &device_info);
+        device_info->serial = static_cast<char*>(realloc(device_info->serial, device_info->serial_length));
+        result = LeapGetDeviceInfo(device, device_info.get());
         if (result != eLeapRS_Success)
         {
             std::cout << "Failed to get device info " << result_string(result) << ".\n";
-            free(device_info.serial);
+            free(device_info->serial);
         }
     }
-    set_device(device_info);
-    on_device_found(device_info);
-
-    free(device_info.serial);
+    on_device_found(*device_info);
+    set_device( std::move(device_info));
     LeapCloseDevice(device);
 }
 
@@ -261,16 +261,16 @@ void LeapConnection::handle_imu_event(const LEAP_IMU_EVENT* imu_event) const
     on_imu(*imu_event);
 }
 
-void LeapConnection::set_device(LEAP_DEVICE_INFO& device_info)
+void LeapConnection::set_device(std::unique_ptr<LEAP_DEVICE_INFO>&& device_info)
 {
     std::lock_guard<std::mutex> lock_guard(data_lock);
     if (last_device)
     {
         free(last_device->serial);
     }
-    last_device.reset(&device_info);
-    last_device->serial = new char[device_info.serial_length];
-    std::memcpy(last_device->serial, device_info.serial, device_info.serial_length);
+    last_device = std::move(device_info);
+    last_device->serial = new char[last_device->serial_length];
+    std::memcpy(last_device->serial, last_device->serial, last_device->serial_length);
 }
 
 void deep_copy_tracking_event(LEAP_TRACKING_EVENT& dst, const LEAP_TRACKING_EVENT& src)
