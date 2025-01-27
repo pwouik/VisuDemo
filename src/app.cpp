@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <memory>
+#include <vector>
 
 #include "leap_connection.h"
 #include "glm/gtc/type_ptr.hpp"
@@ -322,6 +323,24 @@ void App::draw_ui(){
         ImGui::SliderFloat("alpha", &alpha, 1.0f, 5.0f);
         ImGui::ColorEdit3("specular", glm::value_ptr(specular));
         ImGui::SliderFloat("occlusion", &occlusion, -10.0f, 10.0f);
+        ImGui::SeparatorText("Leap motion");
+        if (!leap_connection->is_service_running())
+        {
+            static int current = 0;
+            ImGui::Combo("Select recording", &current, recordings.data(), recordings.size());
+            if(ImGui::Button("Start record playback") && current < recordings.size() && current >= 0)
+            {
+                leap_connection->start_playback(recordings[current]);
+            }
+            else if(ImGui::Button("Start leap capture"))
+            {
+                leap_connection->start_service();
+            }
+        }
+        else if(ImGui::Button("Stop leap service"))
+        {
+            leap_connection->terminate_service();
+        }
     ImGui::End();
 }
 
@@ -410,7 +429,7 @@ void App::draw_ui_attractor(){
 }
 
 void App::run(){
-while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         if(gbl::paused) continue;
         updateFps();
@@ -593,20 +612,33 @@ void App::setupLeapMotion()
     leap_connection->on_connection = []{std::cout << "Leap device connected.\n";};
     leap_connection->on_policy = [](const uint32_t){/*Prevents bad function call*/};
     leap_connection->on_device_found = [](const LEAP_DEVICE_INFO& device_info){std::cout << "Found device " << device_info.serial << ".\n";};
-    leap_connection->on_frame = [this](const LEAP_TRACKING_EVENT& frame){
-        std::cout << "Frame " << frame.info.frame_id << " with " << frame.nHands << " hands.\n";
-        std::lock_guard<std::mutex> lock(leapmotion_mutex);
-        if(frame.nHands>1){
-            fractal_position = glm::make_vec3(frame.pHands[0].palm.position.v)/30.0f;
-            fractal_rotation = glm::make_quat(frame.pHands[0].palm.orientation.v);
-        }
 
+    leap_connection->on_frame = [this](const LEAP_TRACKING_EVENT& frame)
+    {
+        std::cout << "Frame " << frame.info.frame_id << " with " << frame.nHands << " hands. ";
+        for (int i = 0; i < frame.nHands; i++)
+        {
+            if (frame.pHands[i].type == eLeapHandType_Left)
+            {
+                const LEAP_HAND left = frame.pHands[i];
+                std::cout << "Left hand velocity: " << left.palm.velocity.x << ", " << left.palm.velocity.y << ", " << left.palm.velocity.z << " with " << left.confidence << " confidence. Pinch distance: " << std::floor(left.pinch_distance);
+                const glm::quat palm_orientation{left.palm.orientation.w, left.palm.orientation.x, left.palm.orientation.y, left.palm.orientation.z};
+                const glm::vec3 palm_orientation_euler = glm::eulerAngles(palm_orientation);
+                fractal_rotation.x = palm_orientation_euler.x;
+                fractal_rotation.y = palm_orientation_euler.y;
+                fractal_rotation.z = palm_orientation_euler.z;
+                if (left.pinch_distance < 10)
+                {
+                    fractal_position += glm::make_vec3(left.palm.velocity.v) * speed;
+                }
+                break;
+            }
+        }
+        std::cout << "\n";
     };
     leap_connection->on_image = [](const LEAP_IMAGE_EVENT& image)
     {
         std::cout << "Image " << image.info.frame_id << " => Left: " << image.image[0].properties.width << " x " << image.image[0].properties.height << " (bpp = " << image.image[0].properties.bpp * 8
         << "), Right: " << image.image[1].properties.width << " x " << image.image[1].properties.height << " (bpp = " << image.image[1].properties.bpp * 8 << ").\n";
     };
-    leap_connection->start_playback("leap_recordings/leapRecording2.lmt");
-    // leap_connection->start_service();
 }

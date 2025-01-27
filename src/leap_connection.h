@@ -22,12 +22,13 @@ class LeapConnection
     std::mutex data_lock;
 
     LEAP_CONNECTION leap_connection{};
-    bool is_service_running = false;
+    bool is_service_running_ = false;
     bool is_connected = false;
 
     std::unique_ptr<LEAP_DEVICE_INFO> last_device;
     std::unique_ptr<LEAP_TRACKING_EVENT> last_frame;
-    
+
+    void playback_record(const std::string& filename);
     void service_message_loop();
     static std::string result_string(eLeapRS result);
     void handle_connection_event(const LEAP_CONNECTION_EVENT*);
@@ -62,6 +63,7 @@ public:
     void start_service();
     void start_playback(const std::string& filename);
     void terminate_service();
+    bool is_service_running() const;
 };
 
 
