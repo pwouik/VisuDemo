@@ -638,7 +638,7 @@ void App::setupLeapMotion()
         {
             std::cout << "Left hand velocity: " << left.value().palm.velocity.x << ", " << left.value().palm.velocity.y << ", " << left.value().palm.velocity.z << " with " << left.value().confidence << " confidence. Pinch distance: " << std::floor(left.value().pinch_distance);
             static glm::quat left_start_rotation;
-            if (left.value().pinch_distance < 30)
+            if (left.value().pinch_distance < 25)
             {
                 const glm::quat palm_orientation = glm::make_quat(left.value().palm.orientation.v);
                 if (!left_was_pinched)
@@ -646,8 +646,8 @@ void App::setupLeapMotion()
                     left_was_pinched = true;
                     left_start_rotation = palm_orientation;
                 }
-                fractal_position += glm::make_vec3(left.value().palm.velocity.v) * 0.001;
-                fractal_rotation *= glm::inverse(left_start_rotation) * palm_orientation;
+                fractal_position += glm::make_vec3(left.value().palm.velocity.v) * 7.5e-5;
+                fractal_rotation *= glm::mix(glm::identity<glm::quat>(), glm::inverse(left_start_rotation) * palm_orientation, 0.75f);
                 left_start_rotation = palm_orientation;
             }
             else
@@ -663,7 +663,7 @@ void App::setupLeapMotion()
         {
             static glm::quat start_param1;
             static glm::vec3 start_param2;
-            if (right.value().pinch_distance < 40){
+            if (right.value().pinch_distance < 25){
                 if (!right_was_pinched)
                 {
                     right_was_pinched = true;
@@ -671,7 +671,7 @@ void App::setupLeapMotion()
                     start_param2 = glm::make_vec3(right.value().palm.position.v);
                 }
                 param1 += glm::eulerAngles(glm::inverse(start_param1) * glm::make_quat(right.value().palm.orientation.v));
-                param2 += (start_param2 - glm::make_vec3(right.value().palm.position.v)) / 50.0;
+                param2 += (start_param2 - glm::make_vec3(right.value().palm.position.v)) / 5e2;
                 start_param1 = glm::make_quat(right.value().palm.orientation.v);
                 start_param2 = glm::make_vec3(right.value().palm.position.v);
             }

@@ -63,7 +63,7 @@ public:
     void start_service();
     void start_playback(const std::string& filename);
     void terminate_service();
-    bool is_service_running() const;
+    [[nodiscard]] bool is_service_running() const;
 };
 
 

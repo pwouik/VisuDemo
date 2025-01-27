@@ -58,8 +58,7 @@ void LeapConnection::service_message_loop()
     while (is_service_running_)
     {
         constexpr unsigned int timeout = 1000;
-        const eLeapRS result = LeapPollConnection(leap_connection, timeout, &connection_message);
-        if (result != eLeapRS_Success)
+        if (const eLeapRS result = LeapPollConnection(leap_connection, timeout, &connection_message); result != eLeapRS_Success)
         {
             std::cout << "LeapC PollConnection call was " << result_string(result) << ".\n";
             continue;
@@ -124,11 +123,11 @@ void LeapConnection::playback_record(const std::string& filename)
         }
         else if (next_frame_size > 0)
         {
-            std::unique_ptr<LEAP_TRACKING_EVENT> tracking_event{new LEAP_TRACKING_EVENT[next_frame_size]};
+            auto tracking_event{std::make_unique<LEAP_TRACKING_EVENT[]>(next_frame_size)};
             result = LeapRecordingRead(recording, tracking_event.get(), next_frame_size);
             if (result == eLeapRS_Success)
             {
-                on_frame(*tracking_event);
+                on_frame(*tracking_event.get());
             }
             else
             {
@@ -191,12 +190,11 @@ void LeapConnection::handle_connection_lost_event(const LEAP_CONNECTION_LOST_EVE
 
 void LeapConnection::handle_device_event(const LEAP_DEVICE_EVENT* device_event)
 {
-    printf("status %d\n",device_event->status);
     if (device_event == nullptr) return;
     LEAP_DEVICE device;
     eLeapRS result = LeapOpenDevice(device_event->device, &device);
     if (result != eLeapRS_Success) return;
-    std::unique_ptr<LEAP_DEVICE_INFO> device_info = std::make_unique<LEAP_DEVICE_INFO>();
+    auto device_info = std::make_unique<LEAP_DEVICE_INFO>();
     device_info->serial_length = 1;
     device_info->serial = new char[device_info->serial_length];
     result = LeapGetDeviceInfo(device, device_info.get());
@@ -212,7 +210,7 @@ void LeapConnection::handle_device_event(const LEAP_DEVICE_EVENT* device_event)
         }
     }
     on_device_found(*device_info);
-    set_device( std::move(device_info));
+    set_device(std::move(device_info));
     LeapCloseDevice(device);
 }
 
@@ -252,7 +250,7 @@ void LeapConnection::handle_tracking_mode_event(const LEAP_TRACKING_MODE_EVENT* 
 {
     if (tracking_mode_event == nullptr) return;
 
-    //on_tracking_mode(*tracking_mode_event);
+    on_tracking_mode(*tracking_mode_event);
 }
 
 void LeapConnection::handle_imu_event(const LEAP_IMU_EVENT* imu_event) const
@@ -263,7 +261,7 @@ void LeapConnection::handle_imu_event(const LEAP_IMU_EVENT* imu_event) const
 
 void LeapConnection::set_device(std::unique_ptr<LEAP_DEVICE_INFO>&& device_info)
 {
-    std::lock_guard<std::mutex> lock_guard(data_lock);
+    std::lock_guard lock_guard(data_lock);
     if (last_device)
     {
         free(last_device->serial);
@@ -284,7 +282,7 @@ void deep_copy_tracking_event(LEAP_TRACKING_EVENT& dst, const LEAP_TRACKING_EVEN
 
 void LeapConnection::set_frame(const LEAP_TRACKING_EVENT& frame)
 {
-    std::lock_guard<std::mutex> lock_guard(data_lock);
+    std::lock_guard lock_guard(data_lock);
     if (!last_frame)
     {
         last_frame.reset(new LEAP_TRACKING_EVENT);
