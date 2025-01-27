@@ -622,14 +622,11 @@ void App::setupLeapMotion()
             {
                 const LEAP_HAND left = frame.pHands[i];
                 std::cout << "Left hand velocity: " << left.palm.velocity.x << ", " << left.palm.velocity.y << ", " << left.palm.velocity.z << " with " << left.confidence << " confidence. Pinch distance: " << std::floor(left.pinch_distance);
-                const glm::quat palm_orientation{left.palm.orientation.w, left.palm.orientation.x, left.palm.orientation.y, left.palm.orientation.z};
-                const glm::vec3 palm_orientation_euler = glm::eulerAngles(palm_orientation);
-                fractal_rotation.x = palm_orientation_euler.x;
-                fractal_rotation.y = palm_orientation_euler.y;
-                fractal_rotation.z = palm_orientation_euler.z;
-                if (left.pinch_distance < 10)
+                const glm::quat palm_orientation = glm::make_quat(left.palm.orientation.v);
+                fractal_rotation = palm_orientation;
+                if (left.pinch_distance < 20)
                 {
-                    fractal_position += glm::make_vec3(left.palm.velocity.v) * speed;
+                    fractal_position += glm::make_vec3(left.palm.velocity.v) * 0.001;
                 }
                 break;
             }
@@ -638,7 +635,7 @@ void App::setupLeapMotion()
     };
     leap_connection->on_image = [](const LEAP_IMAGE_EVENT& image)
     {
-        std::cout << "Image " << image.info.frame_id << " => Left: " << image.image[0].properties.width << " x " << image.image[0].properties.height << " (bpp = " << image.image[0].properties.bpp * 8
-        << "), Right: " << image.image[1].properties.width << " x " << image.image[1].properties.height << " (bpp = " << image.image[1].properties.bpp * 8 << ").\n";
+        //std::cout << "Image " << image.info.frame_id << " => Left: " << image.image[0].properties.width << " x " << image.image[0].properties.height << " (bpp = " << image.image[0].properties.bpp * 8
+        //<< "), Right: " << image.image[1].properties.width << " x " << image.image[1].properties.height << " (bpp = " << image.image[1].properties.bpp * 8 << ").\n";
     };
 }

@@ -252,7 +252,7 @@ void LeapConnection::handle_tracking_mode_event(const LEAP_TRACKING_MODE_EVENT* 
 {
     if (tracking_mode_event == nullptr) return;
 
-    on_tracking_mode(*tracking_mode_event);
+    //on_tracking_mode(*tracking_mode_event);
 }
 
 void LeapConnection::handle_imu_event(const LEAP_IMU_EVENT* imu_event) const
