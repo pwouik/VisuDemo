@@ -3,19 +3,22 @@
 ## Shading
 
 Todo
+- fine tune light (why does k_d needs to be ridiculously high currently ???)
 - full screen support
-- fix specular light
 - better normal computation
-- SSAO
-- use "distance from last jump" as color base color
 
 Maybe ?
+- SSAO ? simple phong & jump dist seem enough
 - coloring based on which attractor it jumps to (tends to do ugly noise so no)
 
 ## Optimization
 
 - Currently we're doing : 1 point -> draw 3 points from attractor / keep 1. We could potentially compute 3, compute 9, draw 3+9=12, keep 1 randomly - DONE / ~ -30% fps for 4 times the ammount of point. For some reasons perf difference differ on computer so extensive testing will be requiered
 - Lower MAX_FUNC_PER_ATTRACTOR in render_attractor.comp (may be irrelevant but get rid of useless memory in each kernel so maybe significant) (currently supports up to 10 function per attractor)
+
+## Bugs
+
+- overwrite matrix option kinda not working at some times for *reasons*
 
 
 

@@ -383,10 +383,13 @@ void App::draw_ui_attractor(){
         if(ImGui::CollapsingHeader("Coloring", ImGuiTreeNodeFlags_DefaultOpen )){
             ImGui::Text("temporary, must be hardcoded when it'll look nice");
             if(ImGui::TreeNode("Jump Distance MapRange")){
+                ImGui::ColorEdit3("jd low color", glm::value_ptr(clr::col_jd_low));
+                ImGui::ColorEdit3("jd high color", glm::value_ptr(clr::col_jd_high));
                 ImGui::DragFloat("from min",&clr::JD_FR_MIN, 0.005f, 0.0f, 2.0f, "%.2f");
                 ImGui::DragFloat("from max",&clr::JD_FR_MAX, 0.005f, 0.0f, 2.0f, "%.2f");
-                ImGui::DragFloat("to min",&clr::JD_TO_MIN, 0.005f, 0.0f, 2.0f, "%.2f");
-                ImGui::DragFloat("to max",&clr::JD_TO_MAX, 0.005f, 0.0f, 2.0f, "%.2f");
+                //goes to 0-1 so useless
+                //ImGui::DragFloat("to min",&clr::JD_TO_MIN, 0.005f, 0.0f, 2.0f, "%.2f");
+                //ImGui::DragFloat("to max",&clr::JD_TO_MAX, 0.005f, 0.0f, 2.0f, "%.2f");
 
                 ImGui::TreePop();
             }
@@ -559,8 +562,10 @@ while (!glfwWindowShouldClose(window)) {
             glUniform3fv(glGetUniformLocation(ssao_attractor, "camera"), 1, glm::value_ptr(pos)); //here todo
             glUniform1f(glGetUniformLocation(ssao_attractor, "JD_FR_MIN"), clr::JD_FR_MIN);
             glUniform1f(glGetUniformLocation(ssao_attractor, "JD_FR_MAX"), clr::JD_FR_MAX);
-            glUniform1f(glGetUniformLocation(ssao_attractor, "JD_TO_MIN"), clr::JD_TO_MIN);
-            glUniform1f(glGetUniformLocation(ssao_attractor, "JD_TO_MAX"), clr::JD_TO_MAX);
+            glUniform1f(glGetUniformLocation(ssao_attractor, "JD_TO_MIN"), clr::JD_TO_MIN); //todo remove
+            glUniform1f(glGetUniformLocation(ssao_attractor, "JD_TO_MAX"), clr::JD_TO_MAX); //todo remove
+            glUniform3fv(glGetUniformLocation(ssao_attractor, "col_jd_low"), 1, glm::value_ptr(clr::col_jd_low));
+            glUniform3fv(glGetUniformLocation(ssao_attractor, "col_jd_high"), 1, glm::value_ptr(clr::col_jd_high));
             glUniform1f(glGetUniformLocation(ssao_attractor, "k_a"), clr::k_a);
             glUniform3fv(glGetUniformLocation(ssao_attractor, "col_ambient"), 1, glm::value_ptr(clr::col_ambient));
             glUniform1f(glGetUniformLocation(ssao_attractor, "k_d"), clr::k_d);

@@ -10,10 +10,13 @@ uniform uvec2 screen_size;
 #define PI 3.14159265358
 mat2 inv_proj_small;
 
+uniform vec3 col_jd_low;
+uniform vec3 col_jd_high;
+
 uniform float JD_FR_MIN;
 uniform float JD_FR_MAX;
-uniform float JD_TO_MIN;
-uniform float JD_TO_MAX;
+uniform float JD_TO_MIN; //todo remove
+uniform float JD_TO_MAX; //todo remove
 
 
 //float d, dnx, dny, dpx, dpy; //distance 
@@ -108,7 +111,7 @@ void main() {
 
     float d = sampleDepth(ivec2(gl_GlobalInvocationID.xy));
     if(d<-99999){//early break for background
-        imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(0,0,0,1));
+        imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(1,1,1,1));
         return;
     }
 
@@ -117,16 +120,18 @@ void main() {
 
     computeNormals();
 
-    //Phong
-    //imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(phong().xyz,1)); 
+    
 
     //prise en compte de la jump distance pour faire un gradient sur la base color ?
-    vec3 col_cloud = vec3(dj,1-dj,0)*phong().xyz;
+    vec3 col_cloud = (col_jd_low*(1-dj)+dj*col_jd_high) *phong().xyz;
     imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(col_cloud.xyz,1)); 
 
 
     //debugging display normals
     //imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(abs(ssnormal.zyx),1)); 
+
+    //Debuggin Simple phong
+    //imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(phong().xyz,1)); 
     
     //debuging coordinate space matching ?
     //when moving mouse the result changes proving a mistake somewhere in computation
