@@ -622,11 +622,22 @@ void App::setupLeapMotion()
             {
                 const LEAP_HAND left = frame.pHands[i];
                 std::cout << "Left hand velocity: " << left.palm.velocity.x << ", " << left.palm.velocity.y << ", " << left.palm.velocity.z << " with " << left.confidence << " confidence. Pinch distance: " << std::floor(left.pinch_distance);
-                const glm::quat palm_orientation = glm::make_quat(left.palm.orientation.v);
-                fractal_rotation = palm_orientation;
-                if (left.pinch_distance < 20)
+                static bool wasPinched = false;
+                static glm::quat left_start_rotation;
+                if (left.pinch_distance < 30)
                 {
+                    const glm::quat palm_orientation = glm::make_quat(left.palm.orientation.v);
+                    if (!wasPinched)
+                    {
+                        wasPinched = true;
+                        left_start_rotation = palm_orientation;
+                    }
                     fractal_position += glm::make_vec3(left.palm.velocity.v) * 0.001;
+                    fractal_rotation = glm::inverse(left_start_rotation) * palm_orientation;
+                }
+                else
+                {
+                    wasPinched = false;
                 }
                 break;
             }
