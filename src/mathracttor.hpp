@@ -35,7 +35,7 @@ namespace prm{ //param for random generation
     static float translation;
 
     void defaults(){
-        scale[0] = 0.3f; scale[1] = 0.9f;
+        scale[0] = 0.4f; scale[1] = 0.95f;
         angle = 180;
         shearing = 0.2f;
         translation = 0.8f;
@@ -472,7 +472,7 @@ namespace ani{
 
     float spin_Period = 30.0f; //time in second to make a full circle
     float height_and_distance[2] = {2.0f, 1.75f};
-    float lerp_period = 6.0f; //time between 2 seed change
+    float lerp_period = 3.0f; //time between 2 seed change
     float lerp_stiffness = 3.5f; //parmeter k of the function used for lerping curve. Function is (1/(1+exp(-k(2x-1))) - mv) * 1/(1-2mv) where mv =  1+(1+exp(k))
 
     inline float smooth_curve(float v){
@@ -506,20 +506,20 @@ namespace clr{
     //TODO hardcode most of those value in shader as magic values
 
     //jump distance maprange
-    float JD_FR_MIN = 0.3f;
-    float JD_FR_MAX = 1.0f;
+    float JD_FR_MIN = 0.0f;
+    float JD_FR_MAX = 0.6f;
     float JD_TO_MIN = 0.0f; //useless
     float JD_TO_MAX = 1.0f; //useless
 
     //phong param
     float k_a = 0.2f;
-    float k_d = 1.0f;
+    float k_d = 6.0f;
     float k_s = 1.0f;
     float alpha = 10.0f;
     glm::vec3 col_ambient = glm::vec3(0.7,0.7,0.7);
     glm::vec3 col_diffuse = glm::vec3(0.7,0.7,0.7);
     glm::vec3 col_specular = glm::vec3(0.7,0.7,0.7);
 
-    glm::vec3 col_jd_low = glm::vec3(0.0,0.0,1.0);
-    glm::vec3 col_jd_high = glm::vec3(1.0,0.0,0.0);
+    glm::vec3 col_jd_low = glm::vec3(0.0,0.8,1.0);
+    glm::vec3 col_jd_high = glm::vec3(0.8,0.0,1.0);
 }

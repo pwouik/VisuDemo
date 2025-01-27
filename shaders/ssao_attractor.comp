@@ -40,7 +40,7 @@ float sampleDepth(ivec2 pos){
 
 float sampleJumpDist(ivec2 pos){
     float jd = float(imageLoad(jumpdist, pos).r)/(1<<31);
-    return (jd-JD_FR_MIN)/(JD_FR_MAX-JD_FR_MIN) * (JD_TO_MAX-JD_TO_MIN) + JD_TO_MIN;
+    return (jd-JD_FR_MIN)/(JD_FR_MAX-JD_FR_MIN); // * (JD_TO_MAX-JD_TO_MIN) + JD_TO_MIN; //useless bc 0-1
 }
 
 vec3 getWorldPosition(ivec2 pos) {

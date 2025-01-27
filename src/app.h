@@ -147,7 +147,7 @@ public:
     glm::mat4 old_view;
 
     Mode curr_mode = Raymarching;
-    LerpMode lerpmode = lerp_Matrix;
+    LerpMode lerpmode = lerp_PerComponent;
 
     int frameAcc = 0;
     float prevFpsUpdate = 0 ;
