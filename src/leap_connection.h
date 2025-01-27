@@ -46,16 +46,16 @@ class LeapConnection
     void set_device(LEAP_DEVICE_INFO& device_info);
 
 public:
-    connection_callback on_connection;
-    connection_callback on_connection_lost;
-    device_callback on_device_found;
-    device_lost_callback on_device_lost;
-    device_failure_callback on_device_failure;
-    policy_callback on_policy;
-    tracking_callback on_frame;
-    image_callback on_image;
-    imu_callback on_imu;
-    tracking_mode_callback on_tracking_mode;
+    connection_callback on_connection = []{};
+    connection_callback on_connection_lost = []{};
+    device_callback on_device_found = [](const LEAP_DEVICE_INFO&){};
+    device_lost_callback on_device_lost = []{};
+    device_failure_callback on_device_failure = [](eLeapDeviceStatus, LEAP_DEVICE){};
+    policy_callback on_policy = [](uint32_t){};
+    tracking_callback on_frame = [](const LEAP_TRACKING_EVENT&){};
+    image_callback on_image = [](const LEAP_IMAGE_EVENT&){};
+    imu_callback on_imu = [](const LEAP_IMU_EVENT&){};
+    tracking_mode_callback on_tracking_mode = [](const LEAP_TRACKING_MODE_EVENT&){};
     
     explicit LeapConnection(uint64_t set = 0, uint64_t clear = 0);
     explicit LeapConnection(const LEAP_ALLOCATOR& allocator, uint64_t set = 0, uint64_t clear = 0);
