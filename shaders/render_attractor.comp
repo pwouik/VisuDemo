@@ -102,7 +102,8 @@ void main() {
     }
 }
 
-//MAIN BERSION 2 : draw 2 generation (all points reachable point from the first generation)
+//MAIN VERSION 2 : draw 2 generation (all points reachable point from the first generation)
+//warning : jump distance not implementd yet here
 void main_desac() {
     uint idx = gl_GlobalInvocationID.x;
     if(idx >= NBPTS) return;
