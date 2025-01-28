@@ -3,9 +3,11 @@
 ## Shading
 
 Todo
-- fine tune light (why does k_d needs to be ridiculously high currently ???)
-- full screen support
-- better normal computation
+- fine tune light and pick beatifull ✨🎨 colors
+- fake SSAO (tangent plane)
+- resize / full screen support
+- better normal computation (edge cases support for aberrent values)
+- leapmotion integration
 
 Maybe ?
 - SSAO ? simple phong & jump dist seem enough

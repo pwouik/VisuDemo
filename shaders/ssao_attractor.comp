@@ -8,31 +8,35 @@ uniform mat4 inv_proj;
 uniform uvec2 screen_size;
 
 #define PI 3.14159265358
+#define BGCOLOR vec4(0,0,0,1)
+
 uniform vec3 col_jd_low;
 uniform vec3 col_jd_high;
 
 uniform float JD_FR_MIN;
 uniform float JD_FR_MAX;
-uniform float JD_TO_MIN; //todo remove
-uniform float JD_TO_MAX; //todo remove
+//uniform float JD_TO_MIN; //todo remove
+//uniform float JD_TO_MAX; //todo remove
 
-
-//float d, dnx, dny, dpx, dpy; //distance 
+float d; //depth of current pixel
 vec3 wco, wconx, wcony, wcopx, wcopy; // world coordinate
 vec3 ssnormal; //normals computed from screen space
 
 uniform vec3 camera;
-uniform float k_a;
-uniform vec3 col_ambient;
+uniform float k_a;          //used as min_light in phong
+//uniform vec3 col_ambient; //not used anymore
 uniform float k_d;
-uniform vec3 col_diffuse;
+//uniform vec3 col_diffuse; //not used anymore
 uniform float k_s;
 uniform float alpha;
-uniform vec3 col_specular;
+uniform vec3 col_specular; //still used (why ?)
+
+uniform float ao_fac;
+uniform vec3 col_ao;
 
 float sampleJumpDist(ivec2 pos){
     float jd = float(imageLoad(jumpdist, pos).r)/(1<<31);
-    return (jd-JD_FR_MIN)/(JD_FR_MAX-JD_FR_MIN); // * (JD_TO_MAX-JD_TO_MIN) + JD_TO_MIN; //useless bc 0-1
+    return (jd-JD_FR_MIN)/(JD_FR_MAX-JD_FR_MIN);
 }
 
 vec3 getWorldPosition(ivec2 pos) {
@@ -66,23 +70,41 @@ void computeNormals(){
 
     ssnormal = -normalize(cross(up,right) + cross(right, down) + cross(down, left) + cross(left, up));
 }
-float ssao(){
-    
+
+#define SSAORANGE 4
+#define SSAOSTEP 1
+#define SSAOSKIP 5 //magic value found by experimentation
+float dubious_ssao(){
+    float acc = 0;
+    for(int dx = -SSAORANGE; dx <= SSAORANGE; dx+=SSAOSTEP){
+        for(int dy = -SSAORANGE; dy <= SSAORANGE; dy+=SSAOSTEP){
+            float trueDepth = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(dx,dy));
+            float dif = trueDepth-d;
+            if(dif > SSAOSKIP)continue;
+            acc+= max(trueDepth-d,0);
+        }
+    }
+    return acc;
 }
 
+//ambient and diffuse are pure white.
 vec3 phong(vec3 color, float min_light,float shadow,float ao) {
     vec3 light = vec3(100,100,0);
 
+    vec3 light_dir = normalize(light - wco);  
+    vec3 reflect_dir = reflect(-light_dir, ssnormal);
+    vec3 pos_dir = normalize(camera - wco);
 
-    vec3 light_dir = normalize(light - wco);      // Calculate the direction to the light source
-    vec3 reflect_dir = reflect(-light_dir, ssnormal); // Calculate the reflection direction
-    vec3 pos_dir = normalize(camera - wco);         // Calculate the direction to the camera
     // Calculate diffuse and specular components
     float coeff_diffuse = dot(ssnormal, light_dir);
     float coeff_specular = pow(max(dot(pos_dir, reflect_dir), 0.0), exp(alpha)) * k_s;
+
     // Combine ambient, diffuse, and specular components to get the final color
-    return vec3(color *(max(coeff_diffuse *k_d * shadow,min_light) * ao) +
-                 col_specular * coeff_specular * k_s * shadow);
+    //return vec3(color *(max(coeff_diffuse *k_d * shadow,min_light) * ao) +
+    //            col_specular * coeff_specular * k_s * shadow);
+    return vec3(color *(max(coeff_diffuse *k_d * shadow,min_light)) +
+                col_specular * coeff_specular * k_s * shadow
+                + ao * col_ao);
 }
 
 void main() {
@@ -92,22 +114,22 @@ void main() {
 
     inv_proj_small = mat2(inv_proj[2].zw,inv_proj[3].zw);
 
-    float d = sampleDepth(ivec2(gl_GlobalInvocationID.xy));
+    d = sampleDepth(ivec2(gl_GlobalInvocationID.xy));
     if(d<-99999){//early break for background
-        imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(1,1,1,1));
+        imageStore(target, ivec2(gl_GlobalInvocationID.xy), BGCOLOR);
         return;
     }
 
     
     float dj =  sampleJumpDist(ivec2(gl_GlobalInvocationID.xy));
-
     computeNormals();
 
-    //Phong
-    //imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(phong().xyz,1)); 
-
-    //prise en compte de la jump distance pour faire un gradient sur la base color ?
-    vec3 col_cloud = phong(vec3(dj,1.0-dj,1.0),0.2,1.0,1.0);
+    vec3 col_cloud = phong(
+        col_jd_low*(1-dj)+dj*col_jd_high,    //generate base color gradient from jump distance
+        k_a,                    //min light
+        1.0,                    //shadow
+        ao_fac*dubious_ssao()   //ambient occlusion
+        );
     imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(col_cloud.xyz,1)); 
 
 
@@ -116,12 +138,4 @@ void main() {
 
     //Debuggin Simple phong
     //imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(phong().xyz,1)); 
-    
-    //debuging coordinate space matching ?
-    //when moving mouse the result changes proving a mistake somewhere in computation
-    // if(camera.x < wco.x)
-    //     imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(1,0,0,1));
-    // else
-    //     imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(0,0,1,1)); 
-
 }
