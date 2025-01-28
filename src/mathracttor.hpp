@@ -521,9 +521,12 @@ namespace clr{
     float k_d = 1.0f;
     float k_s = 1.0f;
     float alpha = 10.0f;
-    glm::vec3 col_ambient = glm::vec3(0.7,0.7,0.7);
-    glm::vec3 col_diffuse = glm::vec3(0.7,0.7,0.7);
+    //glm::vec3 col_ambient = glm::vec3(0.7,0.7,0.7);
+    //glm::vec3 col_diffuse = glm::vec3(0.7,0.7,0.7);
     glm::vec3 col_specular = glm::vec3(0.7,0.7,0.7);
+
+    float ao_fac = 0.2f;
+    glm::vec3 col_ao = glm::vec3(0.7,0.7,0.7);
 
     glm::vec3 col_jd_low = glm::vec3(0.6,0.0,1.0);
     glm::vec3 col_jd_high = glm::vec3(1.0,0.8,0.0);

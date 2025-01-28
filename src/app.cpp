@@ -399,12 +399,14 @@ void App::draw_ui_attractor(){
             }
             if(ImGui::TreeNode("Phong parameters")){
                 ImGui::SliderFloat("k_a##attractor", &clr::k_a, 0.0f, 1.0f);
-                ImGui::ColorEdit3("ambient##attractor", glm::value_ptr(clr::col_ambient));
+                //ImGui::ColorEdit3("ambient##attractor", glm::value_ptr(clr::col_ambient));
                 ImGui::SliderFloat("k_d##attractor", &clr::k_d, 0.0f, 1.0f);
-                ImGui::ColorEdit3("diffuse##attractor", glm::value_ptr(clr::col_diffuse));
+                //ImGui::ColorEdit3("diffuse##attractor", glm::value_ptr(clr::col_diffuse));
                 ImGui::SliderFloat("k_s##attractor", &clr::k_s, 0.0f, 1.0f);
                 ImGui::SliderFloat("alpha##attractor", &clr::alpha, 0.1f, 20.0f);
                 ImGui::ColorEdit3("specular##attractor", glm::value_ptr(clr::col_specular));
+                ImGui::SliderFloat("AO factor##attractor", &clr::ao_fac, 0.0f, 5.0f);
+                ImGui::ColorEdit3("ambient occlusion##attractor", glm::value_ptr(clr::col_ao));
 
                 ImGui::TreePop();
             }
@@ -566,17 +568,20 @@ while (!glfwWindowShouldClose(window)) {
             glUniform3fv(glGetUniformLocation(ssao_attractor, "camera"), 1, glm::value_ptr(pos)); //here todo
             glUniform1f(glGetUniformLocation(ssao_attractor, "JD_FR_MIN"), clr::JD_FR_MIN);
             glUniform1f(glGetUniformLocation(ssao_attractor, "JD_FR_MAX"), clr::JD_FR_MAX);
-            glUniform1f(glGetUniformLocation(ssao_attractor, "JD_TO_MIN"), clr::JD_TO_MIN); //todo remove
-            glUniform1f(glGetUniformLocation(ssao_attractor, "JD_TO_MAX"), clr::JD_TO_MAX); //todo remove
+            // glUniform1f(glGetUniformLocation(ssao_attractor, "JD_TO_MIN"), clr::JD_TO_MIN);
+            // glUniform1f(glGetUniformLocation(ssao_attractor, "JD_TO_MAX"), clr::JD_TO_MAX);
             glUniform3fv(glGetUniformLocation(ssao_attractor, "col_jd_low"), 1, glm::value_ptr(clr::col_jd_low));
             glUniform3fv(glGetUniformLocation(ssao_attractor, "col_jd_high"), 1, glm::value_ptr(clr::col_jd_high));
             glUniform1f(glGetUniformLocation(ssao_attractor, "k_a"), clr::k_a);
-            glUniform3fv(glGetUniformLocation(ssao_attractor, "col_ambient"), 1, glm::value_ptr(clr::col_ambient));
+            //glUniform3fv(glGetUniformLocation(ssao_attractor, "col_ambient"), 1, glm::value_ptr(clr::col_ambient));
             glUniform1f(glGetUniformLocation(ssao_attractor, "k_d"), clr::k_d);
-            glUniform3fv(glGetUniformLocation(ssao_attractor, "col_diffuse"), 1, glm::value_ptr(clr::col_diffuse));
+            //glUniform3fv(glGetUniformLocation(ssao_attractor, "col_diffuse"), 1, glm::value_ptr(clr::col_diffuse));
             glUniform1f(glGetUniformLocation(ssao_attractor, "k_s"), clr::k_s);
             glUniform1f(glGetUniformLocation(ssao_attractor, "alpha"), clr::alpha);
             glUniform3fv(glGetUniformLocation(ssao_attractor, "col_specular"), 1, glm::value_ptr(clr::col_specular));
+            glUniform1f(glGetUniformLocation(ssao_attractor, "ao_fac"), clr::ao_fac);
+            glUniform3fv(glGetUniformLocation(ssao_attractor, "col_ao"), 1, glm::value_ptr(clr::col_ao));
+
             glDispatchCompute((width-1)/32+1, (height-1)/32+1, 1);
 
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
