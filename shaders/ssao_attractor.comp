@@ -98,10 +98,11 @@ float dubious_ssao_v2(){
     float acc = 0;
     for(int dx = -SSAORANGE; dx <= SSAORANGE; dx+=SSAOSTEP){
         for(int dy = -SSAORANGE; dy <= SSAORANGE; dy+=SSAOSTEP){
-            if(dx==0 && dy==0) continue;
+            //commenting those line actually doesn't seem to do much differences ...
+            /* if(dx==0 && dy==0) continue;
             float trueDepth = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(dx,dy));
             float dif = trueDepth-d;
-            if(dif > SSAOSKIP)continue;
+            if(dif > SSAOSKIP)continue;*/
             vec3 o_wco = getWorldPosition(ivec2(gl_GlobalInvocationID.xy)-ivec2(dx,dy));
             float val =  dot(ssnormal, normalize(o_wco-wco));
             acc+= max(val,0);
