@@ -82,7 +82,7 @@ void computeNormals(){
 #define SSAORANGE 4
 #define SSAOSTEP 1
 #define SSAOSKIP 5 //magic value found by experimentation. Tied to the widht of "edges"
-float dubious_ssao(){
+float dubious_ssao_v1(){
     float acc = 0;
     for(int dx = -SSAORANGE; dx <= SSAORANGE; dx+=SSAOSTEP){
         for(int dy = -SSAORANGE; dy <= SSAORANGE; dy+=SSAOSTEP){
@@ -93,6 +93,21 @@ float dubious_ssao(){
         }
     }
     return acc;
+}
+float dubious_ssao_v2(){
+    float acc = 0;
+    for(int dx = -SSAORANGE; dx <= SSAORANGE; dx+=SSAOSTEP){
+        for(int dy = -SSAORANGE; dy <= SSAORANGE; dy+=SSAOSTEP){
+            if(dx==0 && dy==0) continue;
+            float trueDepth = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(dx,dy));
+            float dif = trueDepth-d;
+            if(dif > SSAOSKIP)continue;
+            vec3 o_wco = getWorldPosition(ivec2(gl_GlobalInvocationID.xy)-ivec2(dx,dy));
+            float val =  dot(ssnormal, normalize(o_wco-wco));
+            acc+= max(val,0);
+        }
+    }
+    return acc*5; //times 5 to somewhat match v1 values
 }
 
 //ambient and diffuse are pure white.
@@ -136,7 +151,7 @@ void main() {
         col_jd_low*(1-dj)+dj*col_jd_high,    //generate base color gradient from jump distance
         k_a,                    //min light
         1.0,                    //shadow
-        ao_fac*dubious_ssao()   //ambient occlusion
+        ao_fac*dubious_ssao_v2()   //ambient occlusion
         );
     imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(col_cloud.xyz,1)); 
 
