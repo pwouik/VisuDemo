@@ -80,11 +80,14 @@ void computeNormals(){
 
 #define SSAORANGE 4
 #define SSAOSTEP 1
+#define SSAOSKIP 5 //magic value found by experimentation
 float dubious_ssao(){
     float acc = 0;
     for(int dx = -SSAORANGE; dx <= SSAORANGE; dx+=SSAOSTEP){
         for(int dy = -SSAORANGE; dy <= SSAORANGE; dy+=SSAOSTEP){
             float trueDepth = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(dx,dy));
+            float dif = trueDepth-d;
+            if(dif > SSAOSKIP)continue;
             acc+= max(trueDepth-d,0);
         }
     }
@@ -128,12 +131,11 @@ void main() {
     float dj =  sampleJumpDist(ivec2(gl_GlobalInvocationID.xy));
     computeNormals();
 
-    float ao = ao_fac*dubious_ssao();
     vec3 col_cloud = phong(
         col_jd_low*(1-dj)+dj*col_jd_high,    //generate base color gradient from jump distance
         k_a,                    //min light
         1.0,                    //shadow
-        ao                     //ao TODO
+        ao_fac*dubious_ssao()   //ambient occlusion
         );
     imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(col_cloud.xyz,1)); 
 

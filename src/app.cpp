@@ -405,7 +405,7 @@ void App::draw_ui_attractor(){
                 ImGui::SliderFloat("k_s##attractor", &clr::k_s, 0.0f, 1.0f);
                 ImGui::SliderFloat("alpha##attractor", &clr::alpha, 0.1f, 20.0f);
                 ImGui::ColorEdit3("specular##attractor", glm::value_ptr(clr::col_specular));
-                ImGui::SliderFloat("AO factor##attractor", &clr::ao_fac, 0.0f, 5.0f);
+                ImGui::SliderFloat("AO factor##attractor", &clr::ao_fac, 0.0f, 0.03f);
                 ImGui::ColorEdit3("ambient occlusion##attractor", glm::value_ptr(clr::col_ao));
 
                 ImGui::TreePop();
