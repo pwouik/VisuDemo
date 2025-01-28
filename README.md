@@ -4,8 +4,11 @@
 
 Todo
 - fine tune light (why does k_d needs to be ridiculously high currently ???)
-- full screen support
-- better normal computation
+- phong from main
+- fake SSAO (tangent plane)
+- resize / full screen support
+- better normal computation (edge cases=
+- leapmotion integration
 
 Maybe ?
 - SSAO ? simple phong & jump dist seem enough

@@ -35,7 +35,7 @@ namespace prm{ //param for random generation
     static float translation;
 
     void defaults(){
-        scale[0] = 0.4f; scale[1] = 0.95f;
+        scale[0] = 0.4f; scale[1] = 0.9f;
         angle = 180;
         shearing = 0.2f;
         translation = 0.8f;
@@ -506,14 +506,14 @@ namespace clr{
     //TODO hardcode most of those value in shader as magic values
 
     //jump distance maprange
-    float JD_FR_MIN = 0.0f;
-    float JD_FR_MAX = 0.6f;
+    float JD_FR_MIN = 0.2f;
+    float JD_FR_MAX = 0.8f;
     float JD_TO_MIN = 0.0f; //useless
     float JD_TO_MAX = 1.0f; //useless
 
     //phong param
     float k_a = 0.2f;
-    float k_d = 6.0f;
+    float k_d = 1.0f;
     float k_s = 1.0f;
     float alpha = 10.0f;
     glm::vec3 col_ambient = glm::vec3(0.7,0.7,0.7);
