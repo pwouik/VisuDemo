@@ -4,13 +4,11 @@
 
 Todo
 - fine tune light and pick beatifull ✨🎨 colors
-- fake SSAO (tangent plane)
 - resize / full screen support
 - better normal computation (edge cases support for aberrent values)
 - leapmotion integration
 
 Maybe ?
-- SSAO ? simple phong & jump dist seem enough
 - coloring based on which attractor it jumps to (tends to do ugly noise so no)
 
 ## Optimization
@@ -59,7 +57,17 @@ used to be displayed by concurent writting of pixels on a texture
 
 We write on a depthmap in the compute process.
 We approximate normals using this depthmap. (It's actually imprecise because it assume sufficient point density so each neigbhor on the texture is close enought)
-Then we just do a simple Phong Lighting based on those normals.
+Then, using those normals, we add :
+- a simple phong
+- handmades dubious SSAO implementation
+
+#### SSAO
+
+After consideration, actual SSAO as explained in the litterature seemed kinda bs to us (tbh we were too lazy to do the math requiered to sample points inside an half-sphere). So we had 2 approach, both looping over a 9 by 9 grid arround the pixel :
+1. accumulate positive depth difference between points and neighbors in the grid. This shouldn't work on paper but for some reasons it looks decent
+2. accumulate positive signed distance to tangent plane. The idea is that the bigger, the more occluded a point is (which can be easily understood with a picture). We can get this value with a dot product between the normal and the normalize vector from the point to its neighbor.
+
+Note that this brutforce approach produce a sh\*t ton of of useless computation which should probably be optimized by using some tilling approach and shared memory, but when we have millions points to handle it's actually not that much.
 
 #### race condition when writting on depthmap ?
 
