@@ -64,7 +64,6 @@ public:
     }
 
     void onResize(int w, int h){
-        DEBUG("resized : "<<w<<"/"<<h);
         width=w;
         height=h;
         glViewport(0, 0, width, height);
