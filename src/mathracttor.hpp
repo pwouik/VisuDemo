@@ -513,7 +513,7 @@ namespace clr{
 
     //phong param
     float k_a = 0.2f;
-    float k_d = 6.0f;
+    float k_d = 1.0f;
     float k_s = 1.0f;
     float alpha = 10.0f;
     glm::vec3 col_ambient = glm::vec3(0.7,0.7,0.7);

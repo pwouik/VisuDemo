@@ -664,8 +664,8 @@ void App::onFrame(const LEAP_TRACKING_EVENT& frame)
                     left_was_pinched = true;
                     left_start_rotation = palm_orientation;
                 }
-                fractal_position += glm::make_vec3(left.value().palm.velocity.v) * 7.5e-5;
-                fractal_rotation *= glm::mix(glm::identity<glm::quat>(), glm::inverse(left_start_rotation) * palm_orientation, 0.75f);
+                fractal_position += glm::make_vec3(left.value().palm.velocity.v) * 5e-5;
+                fractal_rotation = glm::mix(glm::identity<glm::quat>(), palm_orientation * glm::inverse(left_start_rotation) , 0.75f) * fractal_rotation;
                 left_start_rotation = palm_orientation;
             }
             else
@@ -690,8 +690,8 @@ void App::onFrame(const LEAP_TRACKING_EVENT& frame)
                     start_param1 = glm::make_quat(right.value().palm.orientation.v);
                     start_param2 = glm::make_vec3(right.value().palm.position.v);
                 }
-                param1 += glm::eulerAngles(glm::inverse(start_param1) * glm::make_quat(right.value().palm.orientation.v));
-                param2 += (start_param2 - glm::make_vec3(right.value().palm.position.v)) / 5e2;
+                param1 += glm::eulerAngles(glm::make_quat(right.value().palm.orientation.v) * glm::inverse(start_param1));
+                param2 += (start_param2 - glm::make_vec3(right.value().palm.position.v)) / 1e2;
                 start_param1 = glm::make_quat(right.value().palm.orientation.v);
                 start_param2 = glm::make_vec3(right.value().palm.position.v);
             }
