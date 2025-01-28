@@ -326,8 +326,12 @@ void App::draw_ui(){
 void App::draw_ui_attractor(){
     ImGui::Begin("attractor");
         if(ImGui::CollapsingHeader("Debug & all", ImGuiTreeNodeFlags_DefaultOpen )){
-            const char* items_cb2[] = { "per matrix", "per component"}; //MUST MATCH ENUM IN app.h !
             ImGui::SliderFloat("##lerpfactor", &uvl::lerpFactor, 0.0f, 1.0f, "lerp : %.3f");
+            ImGui::SliderFloat("##SliderLerpToMin", &uvl::lerpEdgeClamp, 0.0f, 0.5f, "lerp edge clamp: %.2f");
+                ui::HelpMarker("Lerp between [0+x; 1-x] (stop before reaching 0 or 1)"
+                    "relevant when using more than 3 functions per attractors"
+                    "keep it 0 if you don't know what your doing");
+            const char* items_cb2[] = { "per matrix", "per component"}; //MUST MATCH ENUM IN app.h !
             if(ImGui::Combo("lerping mode", (int*)&lerpmode, items_cb2, IM_ARRAYSIZE(items_cb2))){}
             
             ImGui::Checkbox("no clear", &ani::no_clear);

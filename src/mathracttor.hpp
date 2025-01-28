@@ -283,6 +283,7 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
 namespace uvl{ //utility values (also out of inspiration for naming namespace)
     int matrixPerAttractor = 0;
     float lerpFactor = 0.0f;
+    float lerpEdgeClamp = 0.0f;
     mtl::Attractor A_tractor;
     mtl::Attractor B_tractor;
     std::vector<glm::mat4> ubo_matrices;
@@ -476,9 +477,13 @@ namespace ani{
     float lerp_stiffness = 3.5f; //parmeter k of the function used for lerping curve. Function is (1/(1+exp(-k(2x-1))) - mv) * 1/(1-2mv) where mv =  1+(1+exp(k))
 
     inline float smooth_curve(float v){
-        float k = lerp_stiffness;
-        float mv = 1.0f/(1+exp(k));
-        return (1.0f/(1+exp(-k*(2*v-1)) ) - mv) * (1.0f/(1-2*mv));
+        const float k = lerp_stiffness;
+        const float os = uvl::lerpEdgeClamp;
+        const float mv = 1.0f/(1+exp(k));
+        //return (1.0f/(1+exp(-k*(2*v-1)) ) - mv) * (1.0f/(1-2*mv));
+        //trust the math I swear this works
+        return 0.5 + (1.0f/(1+exp(-k*(2*v-1)) ) - 0.5) * ( (0.5f-os)/(0.5-mv));
+        
     }
 
     glm::mat4 getIdleView(float time){
@@ -507,7 +512,7 @@ namespace clr{
 
     //jump distance maprange
     float JD_FR_MIN = 0.2f;
-    float JD_FR_MAX = 0.8f;
+    float JD_FR_MAX = 0.9f;
     float JD_TO_MIN = 0.0f; //useless
     float JD_TO_MAX = 1.0f; //useless
 
@@ -520,6 +525,6 @@ namespace clr{
     glm::vec3 col_diffuse = glm::vec3(0.7,0.7,0.7);
     glm::vec3 col_specular = glm::vec3(0.7,0.7,0.7);
 
-    glm::vec3 col_jd_low = glm::vec3(0.0,0.8,1.0);
-    glm::vec3 col_jd_high = glm::vec3(0.8,0.0,1.0);
+    glm::vec3 col_jd_low = glm::vec3(0.6,0.0,1.0);
+    glm::vec3 col_jd_high = glm::vec3(1.0,0.8,0.0);
 }
