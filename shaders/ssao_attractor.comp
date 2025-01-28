@@ -78,9 +78,10 @@ void computeNormals(){
     ssnormal = -normalize(cross(up,right) + cross(right, down) + cross(down, left) + cross(left, up));
 }
 
+//Most parameter here are highly interdependent. heavy fine tuning requiered if changer a single thing.
 #define SSAORANGE 4
 #define SSAOSTEP 1
-#define SSAOSKIP 5 //magic value found by experimentation
+#define SSAOSKIP 5 //magic value found by experimentation. Tied to the widht of "edges"
 float dubious_ssao(){
     float acc = 0;
     for(int dx = -SSAORANGE; dx <= SSAORANGE; dx+=SSAOSTEP){
@@ -88,7 +89,7 @@ float dubious_ssao(){
             float trueDepth = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(dx,dy));
             float dif = trueDepth-d;
             if(dif > SSAOSKIP)continue;
-            acc+= max(trueDepth-d,0);
+            acc+= max(dif,0);
         }
     }
     return acc;
