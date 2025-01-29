@@ -103,9 +103,38 @@ float dubious_ssao(){
             float de2 = dot(wd,wd);
             acc+= max(dif/de2,0);
             n++;
+
+//Most parameter here are highly interdependent. heavy fine tuning requiered if changer a single thing.
+#define SSAORANGE 4
+#define SSAOSTEP 1
+#define SSAOSKIP 5 //magic value found by experimentation. Tied to the widht of "edges"
+float dubious_ssao_v1(){
+    float acc = 0;
+    for(int dx = -SSAORANGE; dx <= SSAORANGE; dx+=SSAOSTEP){
+        for(int dy = -SSAORANGE; dy <= SSAORANGE; dy+=SSAOSTEP){
+            float trueDepth = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(dx,dy));
+            float dif = trueDepth-d;
+            if(dif > SSAOSKIP)continue;
+            acc+= max(dif,0);
         }
     }
     return 1.0-acc/n*ao_fac*100;
+}
+float dubious_ssao_v2(){
+    float acc = 0;
+    for(int dx = -SSAORANGE; dx <= SSAORANGE; dx+=SSAOSTEP){
+        for(int dy = -SSAORANGE; dy <= SSAORANGE; dy+=SSAOSTEP){
+            //commenting those line actually doesn't seem to do much differences ...
+            /* if(dx==0 && dy==0) continue;
+            float trueDepth = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(dx,dy));
+            float dif = trueDepth-d;
+            if(dif > SSAOSKIP)continue;*/
+            vec3 o_wco = getWorldPosition(ivec2(gl_GlobalInvocationID.xy)-ivec2(dx,dy));
+            float val =  dot(ssnormal, normalize(o_wco-wco));
+            acc+= max(val,0);
+        }
+    }
+    return acc*5; //times 5 to somewhat match v1 values
 }
 
 //ambient and diffuse are pure white.

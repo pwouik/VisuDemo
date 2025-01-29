@@ -525,8 +525,8 @@ namespace clr{
     //glm::vec3 col_diffuse = glm::vec3(0.7,0.7,0.7);
     glm::vec3 col_specular = glm::vec3(0.7,0.7,0.7);
 
-    float ao_fac = 0.005f;
-    glm::vec3 col_ao = glm::vec3(0.12,0.8,0.75);
+    float ao_fac = 0.008f;
+    glm::vec3 col_ao = glm::vec3(0.1,0.2,0.8);
 
     glm::vec3 col_jd_low = glm::vec3(0.9,0.8,0.15);
     glm::vec3 col_jd_high = glm::vec3(1.0,0.0,0.3);
