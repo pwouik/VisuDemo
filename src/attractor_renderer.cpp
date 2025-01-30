@@ -374,12 +374,6 @@ void AttractorRenderer::draw_ui(){
 }
 
 void AttractorRenderer::render(float width,float height,glm::vec3& pos,glm::mat4& inv_camera_view, glm::mat4& old_view, glm::mat4& proj, glm::vec3& light_pos){
-    //if(!anim.no_clear || inv_camera_view!=old_view){
-    // bool areEqual = 
-    //     glm::all(glm::epsilonEqual(inv_camera_view[0], old_view[0], 0.1f)) &&
-    //     glm::all(glm::epsilonEqual(inv_camera_view[1], old_view[1], 0.1f)) &&
-    //     glm::all(glm::epsilonEqual(inv_camera_view[2], old_view[2], 0.1f)) &&
-    //     glm::all(glm::epsilonEqual(inv_camera_view[3], old_view[3], 0.1f));
     if(!anim.no_clear || inv_camera_view!=old_view){
         int depth_clear = INT_MIN;
         glClearTexImage(((App*)appptr)->depth_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
@@ -455,18 +449,18 @@ void AttractorRenderer::defaultsValues(){
 
     clr.JD_FR_MIN = 0.1f;
     clr.JD_FR_MAX = 0.9f;
-    clr.col_jd_low = glm::vec3(0.9,0.8,0.15);
-    clr.col_jd_high = glm::vec3(1.0,0.0,0.3);
+    clr.col_jd_low = glm::vec3(0.3,1.0,0.15);
+    clr.col_jd_high = glm::vec3(0.0,0.8,1.0);
 
     clr.k_a = 0.2f;
-    clr.k_d = 1.0f;
+    clr.k_d = 0.5f;
     clr.k_s = 1.0f;
-    clr.alpha = 10.0f;
+    clr.alpha = 0.9f;
     clr.col_specular = glm::vec3(0.7,0.7,0.7);
 
-    clr.ao_fac = 0.008f;
+    clr.ao_fac = 0.015f;
     clr.ao_size = 0.2f;
-    clr.col_ao = glm::vec3(0.1,0.2,0.8);
+    clr.col_ao = glm::vec3(1.0,0.3,0.1);
 }
 
 void AttractorRenderer::randArray(float* array, int size, float range){
