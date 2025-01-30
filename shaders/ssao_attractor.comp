@@ -33,6 +33,7 @@ uniform float alpha;
 uniform vec3 col_specular; //still used (why ?)
 
 uniform float ao_fac;
+uniform float ao_size;
 uniform vec3 col_ao;
 
 float sampleDepth(ivec2 pos){
@@ -112,6 +113,29 @@ float dubious_ssao(){
 #define SSAOSTEP 1
 #define SSAOSKIP 5 //magic value found by experimentation. Tied to the widht of "edges"
 float dubious_ssao_v1(){
+    float cd = sampleDepth(ivec2(gl_GlobalInvocationID.xy));
+    float acc = 0.1;
+    float range = ao_size*float(screen_size.x)/(inv_proj[0].x*-cd);
+    float s = max(1,range/SSAOSAMPLES);
+    int n=1;
+    for(float dx = -range; dx < range; dx+=s){
+        for(float dy = -range; dy < range; dy+=s){
+            float trueDepth = sampleDepth(ivec2(gl_GlobalInvocationID.xy)+ivec2(dx,dy));
+            vec2 wd = vec2(dx,dy)/range;
+            float dif = trueDepth-cd;//(cd-dot(wd,ssnormal.xy)/ssnormal.z);
+            if(dif > ao_size) continue;
+            float de2 = dot(wd,wd);
+            acc+= max(dif/de2,0);
+            n++;
+        }
+    }
+    return acc/n*ao_fac*100; //times 100 to match somewhat coherent values with others dubious_ssao_v1 and _v2 implementation
+}
+//Magic values. Most parameter here are highly interdependent. heavy fine tuning requiered if changer a single thing.
+#define SSAORANGE 4 //square of size 9x9
+#define SSAOSTEP 1  //evaluate every pixel on the square
+#define SSAOSKIP 5  //distance requiered to considere it's too far
+float dubious_ssao_v2(){
     float d = sampleDepth(ivec2(gl_GlobalInvocationID.xy)) * inv_proj[0].x * screen_size.x/2;
     float acc = 0;
     for(int dx = -SSAORANGE; dx <= SSAORANGE; dx+=SSAOSTEP){
@@ -124,15 +148,10 @@ float dubious_ssao_v1(){
     }
     return acc;
 }
-float dubious_ssao_v2(){
+float dubious_ssao_v3(){
     float acc = 0;
     for(int dx = -SSAORANGE; dx <= SSAORANGE; dx+=SSAOSTEP){
         for(int dy = -SSAORANGE; dy <= SSAORANGE; dy+=SSAOSTEP){
-            //commenting those line actually doesn't seem to do much differences ...
-            /* if(dx==0 && dy==0) continue;
-            float trueDepth = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(dx,dy));
-            float dif = trueDepth-d;
-            if(dif > SSAOSKIP)continue;*/
             vec3 o_wco = getWorldPosition(ivec2(gl_GlobalInvocationID.xy)-ivec2(dx,dy));
             float val =  dot(ssnormal, normalize(o_wco-wco));
             acc+= max(val,0);
@@ -157,7 +176,8 @@ vec3 phong(vec3 color, float min_light,float shadow,float ao) {
     //return vec3(color *(max(coeff_diffuse *k_d * shadow,min_light) * ao) +
     //            col_specular * coeff_specular * k_s * shadow);
     return (color *max(coeff_diffuse *k_d * shadow,min_light) +
-                col_specular * coeff_specular * k_s * shadow)*ao;
+                col_specular * coeff_specular * k_s * shadow) +
+                ao * col_ao;
 }
 
 void main() {
@@ -182,7 +202,7 @@ void main() {
         col_jd_low*(1-dj)+dj*col_jd_high,    //generate base color gradient from jump distance
         0.1,                    //min light
         1.0,                    //shadow
-        dubious_ssao()   //ambient occlusion
+        dubious_ssao_v1()   //ambient occlusion
         );
     imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(color,1)); 
 

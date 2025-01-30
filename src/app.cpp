@@ -37,7 +37,7 @@
 
 using namespace std;
 
-#define NBPTS 20000000
+#define NBPTS 20'000'000
 
 
 
@@ -365,8 +365,16 @@ void App::draw_ui_attractor(){
                 ImGui::SliderFloat("k_s##attractor", &clr::k_s, 0.0f, 1.0f);
                 ImGui::SliderFloat("alpha##attractor", &clr::alpha, 0.1f, 20.0f);
                 ImGui::ColorEdit3("specular##attractor", glm::value_ptr(clr::col_specular));
+
+                ImGui::TreePop();
+            }
+            if(ImGui::TreeNode("Ambient Occlusions")){
+                ImGui::SliderFloat("AO size##attractor", &clr::ao_size, 0.0f, 1.0f);
+                    ui::HelpMarker("The size of the square in witch AO will be sampled");
                 ImGui::SliderFloat("AO factor##attractor", &clr::ao_fac, -0.025f, 0.025f);
-                ImGui::ColorEdit3("ambient occlusion##attractor", glm::value_ptr(clr::col_ao));
+                    ui::HelpMarker("A multiplicative factor applied to ambient occlusion"
+                        "to have darkenning AO, just set color to white and ao_fac to negative");
+                ImGui::ColorEdit3("ao colors##attractor", glm::value_ptr(clr::col_ao));
 
                 ImGui::TreePop();
             }
@@ -500,6 +508,7 @@ void App::run(){
             glUniform1f(glGetUniformLocation(ssao_attractor, "alpha"), clr::alpha);
             glUniform3fv(glGetUniformLocation(ssao_attractor, "col_specular"), 1, glm::value_ptr(clr::col_specular));
             glUniform1f(glGetUniformLocation(ssao_attractor, "ao_fac"), clr::ao_fac);
+            glUniform1f(glGetUniformLocation(ssao_attractor, "ao_size"), clr::ao_size);
             glUniform3fv(glGetUniformLocation(ssao_attractor, "col_ao"), 1, glm::value_ptr(clr::col_ao));
 
             glDispatchCompute((width-1)/32+1, (height-1)/32+1, 1);

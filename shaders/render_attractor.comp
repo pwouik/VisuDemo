@@ -103,7 +103,7 @@ void main() {
 }
 
 //MAIN VERSION 2 : draw 2 generation (all points reachable point from the first generation)
-//warning : jump distance not implementd yet here
+//tends to be way more laggy. Draws 4 times more points (with arguably better dispersion because it's consecutive generation ?). Consider lowering NBPTS when using this main
 void main_desac() {
     uint idx = gl_GlobalInvocationID.x;
     if(idx >= NBPTS) return;
@@ -135,9 +135,9 @@ void main_desac() {
     }
     //draw all reachable points form gen1 & gen2.
     for(int i =0; i < matrixPerAttractor; i++){
-        screenWriteCoord(pts_gen1[i],0.5);
+        screenWriteCoord(pts_gen1[i],distance(pts_gen1[i], point));
     }
     for(int i =0; i < matrixPerAttractor*matrixPerAttractor; i++){
-        screenWriteCoord(pts_gen2[i],0.5);
+        screenWriteCoord(pts_gen2[i],distance(pts_gen2[i], point));
     }
 }
