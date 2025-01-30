@@ -9,8 +9,7 @@
 #include <cmath>
 #include <cstdio>
 #include <vector>
-
-#include <iostream>
+#include "raymarching_renderer.h"
 #include <mutex>
 
 #include "glm/ext/matrix_transform.hpp"
@@ -46,6 +45,7 @@ public:
 	{
         if (leap_connection) leap_connection.reset();
         utl::shutdownIMGUI();
+        delete raymarching_renderer;
         glfwTerminate();
 	}
     void run();
@@ -96,7 +96,6 @@ public:
 
         glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
         proj = glm::perspective(70.0f * PI / 180.0f,(float)width/(float)height,0.1f,10000.0f);
-        glUniformMatrix4fv(glGetUniformLocation(compute_program, "persp"),1, GL_FALSE, glm::value_ptr(proj));
     }
 
     //getter. Maybe put everything public so we don't have those ?
@@ -142,21 +141,12 @@ public:
     float yaw;
     glm::vec3 pos;
     glm::vec3 light_pos;
-    glm::vec3 param1;
-    glm::vec3 param2;
-    float k_a;
-    float k_d;
-    float k_s;
-    float alpha;
-    glm::vec3 ambient;
-    glm::vec3 diffuse;
-    glm::vec3 specular;
-    float occlusion;
     glm::vec3 fractal_position{0.0f, 0.0f, 0.0f};
     std::mutex leapmotion_mutex;
     glm::quat fractal_rotation = glm::identity<glm::quat>();
     float speed;
-    GLuint compute_program;
+    RaymarchingRenderer* raymarching_renderer;
+
     GLuint compute_program_attractor;
     GLuint ssao_attractor;
     GLuint blit_program;

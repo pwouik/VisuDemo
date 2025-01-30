@@ -256,12 +256,12 @@ namespace mtl{   //namespace matrices utiles or whatever idk how to name it
         FixedProcess* genB = attractorB.attr_funcs[index];
 
         
-        glm::vec3 l_scale_factors = (1.0-t)*genA->scale_factors + t * genB->scale_factors;
-        glm::vec3 l_rot_axis = glm::normalize((1.0-t)*genA->rot_axis + t *genB->rot_axis);
-        float l_rot_angle = (1.0-t)*genA->rot_angle + t * genB->rot_angle;
-        glm::vec3 l_Sh_xy_xz_yx = (1.0-t)*genA->Sh_xy_xz_yx + t * genB->Sh_xy_xz_yx;
-        glm::vec3 l_Sh_yz_zx_zy = (1.0-t)*genA->Sh_yz_zx_zy + t * genB->Sh_yz_zx_zy;
-        glm::vec3 l_translation_vector = (1.0-t)*genA->translation_vector + t * genB->translation_vector;
+        glm::vec3 l_scale_factors = (1.0f-t)*genA->scale_factors + t * genB->scale_factors;
+        glm::vec3 l_rot_axis = glm::normalize((1.0f-t)*genA->rot_axis + t *genB->rot_axis);
+        float l_rot_angle = (1.0f-t)*genA->rot_angle + t * genB->rot_angle;
+        glm::vec3 l_Sh_xy_xz_yx = (1.0f-t)*genA->Sh_xy_xz_yx + t * genB->Sh_xy_xz_yx;
+        glm::vec3 l_Sh_yz_zx_zy = (1.0f-t)*genA->Sh_yz_zx_zy + t * genB->Sh_yz_zx_zy;
+        glm::vec3 l_translation_vector = (1.0f-t)*genA->translation_vector + t * genB->translation_vector;
 
         glm::mat4 matrix =
             glm::scale(glm::mat4(1.0f), l_scale_factors) *

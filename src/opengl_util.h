@@ -5,7 +5,7 @@
 #include <iostream>
 #include <glad/gl.h>
 
-std::string readShaderSource(const std::string& shaderFile)
+static std::string readShaderSource(const std::string& shaderFile)
 {
     std::ifstream file(shaderFile);
     if (!file.is_open())
@@ -18,7 +18,7 @@ std::string readShaderSource(const std::string& shaderFile)
     return content;
 }
 
-GLuint loadshader(const char* file,GLuint type)
+static GLuint loadshader(const char* file,GLuint type)
 {
     const std::string shaderSource = readShaderSource(file);
     const GLchar* source = shaderSource.c_str();
@@ -40,7 +40,7 @@ GLuint loadshader(const char* file,GLuint type)
     return shader;
 }
 
-void linkProgram(GLuint program){
+static void linkProgram(GLuint program){
     GLint linked;
     glGetProgramiv(program, GL_LINK_STATUS, &linked);
     if (!linked) {

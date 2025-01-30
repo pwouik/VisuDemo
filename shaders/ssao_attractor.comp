@@ -103,12 +103,16 @@ float dubious_ssao(){
             float de2 = dot(wd,wd);
             acc+= max(dif/de2,0);
             n++;
-
+        }
+    }
+    return 1.0-acc/n*ao_fac*100;
+}
 //Most parameter here are highly interdependent. heavy fine tuning requiered if changer a single thing.
 #define SSAORANGE 4
 #define SSAOSTEP 1
 #define SSAOSKIP 5 //magic value found by experimentation. Tied to the widht of "edges"
 float dubious_ssao_v1(){
+    float d = sampleDepth(ivec2(gl_GlobalInvocationID.xy)) * inv_proj[0].x * screen_size.x/2;
     float acc = 0;
     for(int dx = -SSAORANGE; dx <= SSAORANGE; dx+=SSAOSTEP){
         for(int dy = -SSAORANGE; dy <= SSAORANGE; dy+=SSAOSTEP){
@@ -118,7 +122,7 @@ float dubious_ssao_v1(){
             acc+= max(dif,0);
         }
     }
-    return 1.0-acc/n*ao_fac*100;
+    return acc;
 }
 float dubious_ssao_v2(){
     float acc = 0;
