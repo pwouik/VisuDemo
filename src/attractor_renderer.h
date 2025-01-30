@@ -1,5 +1,4 @@
 #pragma once
-
 #include <LeapC.h>
 #include <glad/gl.h>
 #include <glm/glm.hpp>

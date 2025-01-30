@@ -209,7 +209,7 @@ void App::run(){
         newframeIMGUI();
         draw_ui();
         switch (curr_mode) {
-        case Raymarching:{
+        case RaymarchingMode:{
             std::lock_guard<std::mutex> lock(leapmotion_mutex);
             raymarching_renderer->draw_ui();
             raymarching_renderer->render(width, height, pos, inv_camera_view, glm::inverse(proj), light_pos, fractal_position, fractal_rotation);
@@ -218,6 +218,7 @@ void App::run(){
         case Attractor:{
             attractor_renderer->draw_ui(speed, pos);
             attractor_renderer->render(width, height, pos, inv_camera_view, proj, light_pos, fractal_position, fractal_rotation);
+            break;
         }
         }
 

@@ -22,8 +22,8 @@
 #define FPS_UPDATE_DELAY 1
 
 enum Mode{
-    Raymarching,
-    Attractor
+    RaymarchingMode,
+    AttractorMode
 };
 
 
@@ -134,6 +134,7 @@ public:
     std::mutex leapmotion_mutex;
     glm::quat fractal_rotation = glm::identity<glm::quat>();
     float speed;
+    //pretty sure this could (and should) be stack allocated
     RaymarchingRenderer* raymarching_renderer;
     AttractorRenderer* attractor_renderer;
 
