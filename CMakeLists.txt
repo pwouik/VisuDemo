@@ -53,7 +53,8 @@ endif ()
 
 # Leap motion SDK
 if (WIN32)
-    set(ULTRALEAP_PATH_ROOT "$ENV{ProgramFiles}/Ultraleap")
+    #set(ULTRALEAP_PATH_ROOT "$ENV{ProgramFiles}/Ultraleap")
+    set(ULTRALEAP_PATH_ROOT "C:/Program Files/Ultraleap/LeapSDK/lib/cmake/LeapSDK") #hardcode path if problems
 elseif (APPLE)
     set(ULTRALEAP_PATH_ROOT "/Applications/Ultraleap\ Hand\ Tracking.app/Contents/LeapSDK/lib/cmake/LeapSDK")
 else()
@@ -65,7 +66,8 @@ find_package(LeapSDK
         5
         REQUIRED
         PATHS
-        "${ULTRALEAP_PATH_ROOT}")
+        "${ULTRALEAP_PATH_ROOT}"
+    )
 if (NOT LeapSDK_FOUND)
     message("aaaaaaaaaaaa")
 endif ()
