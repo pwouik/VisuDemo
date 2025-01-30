@@ -22,8 +22,8 @@
 #define FPS_UPDATE_DELAY 1
 
 enum Mode{
-    RaymarchingMode,
-    AttractorMode
+    Raymarching,
+    Attractor
 };
 
 

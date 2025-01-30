@@ -131,6 +131,8 @@ void AttractorRenderer::update_ubo_matrices(LerpMode mode){
 }
 
 void AttractorRenderer::transformInit(){
+
+    prm::defaults();
     printf("starting Attractor assingment ...\n");
     Transform* mga[MAX_FUNC_PER_ATTRACTOR];
     Transform* mgb[MAX_FUNC_PER_ATTRACTOR];

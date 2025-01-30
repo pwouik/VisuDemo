@@ -86,8 +86,6 @@ App::App(int w,int h)
 
     raymarching_renderer = new RaymarchingRenderer();
     attractor_renderer = new AttractorRenderer(w,h);
-
-    prm::defaults();
 }
 
 void App::updateFps(){
@@ -209,7 +207,7 @@ void App::run(){
         newframeIMGUI();
         draw_ui();
         switch (curr_mode) {
-        case RaymarchingMode:{
+        case Raymarching:{
             std::lock_guard<std::mutex> lock(leapmotion_mutex);
             raymarching_renderer->draw_ui();
             raymarching_renderer->render(width, height, pos, inv_camera_view, glm::inverse(proj), light_pos, fractal_position, fractal_rotation);

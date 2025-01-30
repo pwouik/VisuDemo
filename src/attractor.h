@@ -24,8 +24,8 @@ namespace prm{ //param for random generation
         shearing = 0.2f;
         translation = 0.8f;
     }
-
 }
+
 class Transform{
 public:
     glm::mat4 matrix;
