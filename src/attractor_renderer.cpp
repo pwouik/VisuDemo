@@ -435,9 +435,9 @@ void AttractorRenderer::resize(float w,float h){
                 GL_INT, nullptr);
 }
 
-void AttractorRenderer::render(float width,float height,glm::vec3 pos,glm::mat4 inv_view, glm::mat4 proj, glm::vec3 light_pos, glm::vec3 fractal_position,glm::quat fractal_rotation){
+void AttractorRenderer::render(float width,float height,glm::vec3& pos,glm::mat4& inv_view, glm::mat4& proj, glm::vec3& light_pos){
 
-    if(no_clear || inv_view!=old_view){
+    if(!no_clear || inv_view!=old_view){
         int depth_clear = INT_MIN;
         glClearTexImage(depth_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
         glClearTexImage(jumpdist_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
@@ -481,14 +481,10 @@ void AttractorRenderer::render(float width,float height,glm::vec3 pos,glm::mat4 
     glUniform3fv(glGetUniformLocation(shading_program, "camera"), 1, glm::value_ptr(pos)); //here todo
     glUniform1f(glGetUniformLocation(shading_program, "JD_FR_MIN"), JD_FR_MIN);
     glUniform1f(glGetUniformLocation(shading_program, "JD_FR_MAX"), JD_FR_MAX);
-    // glUniform1f(glGetUniformLocation(shading_program, "JD_TO_MIN"), JD_TO_MIN);
-    // glUniform1f(glGetUniformLocation(shading_program, "JD_TO_MAX"), JD_TO_MAX);
     glUniform3fv(glGetUniformLocation(shading_program, "col_jd_low"), 1, glm::value_ptr(col_jd_low));
     glUniform3fv(glGetUniformLocation(shading_program, "col_jd_high"), 1, glm::value_ptr(col_jd_high));
     glUniform1f(glGetUniformLocation(shading_program, "k_a"), k_a);
-    //glUniform3fv(glGetUniformLocation(shading_program, "col_ambient"), 1, glm::value_ptr(col_ambient));
     glUniform1f(glGetUniformLocation(shading_program, "k_d"), k_d);
-    //glUniform3fv(glGetUniformLocation(shading_program, "col_diffuse"), 1, glm::value_ptr(col_diffuse));
     glUniform1f(glGetUniformLocation(shading_program, "k_s"), k_s);
     glUniform1f(glGetUniformLocation(shading_program, "alpha"), alpha);
     glUniform3fv(glGetUniformLocation(shading_program, "col_specular"), 1, glm::value_ptr(col_specular));

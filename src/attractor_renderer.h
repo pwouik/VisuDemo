@@ -16,7 +16,7 @@ public:
     AttractorRenderer(int w,int h);
     void leap_update(const LEAP_TRACKING_EVENT& frame);
     void draw_ui(float& speed,glm::vec3& pos);
-    void render(float width,float height,glm::vec3 pos,glm::mat4 inv_view, glm::mat4 proj, glm::vec3 light_pos, glm::vec3 fractal_position,glm::quat fractal_rotation);
+    void render(float width,float height,glm::vec3& pos,glm::mat4& inv_view, glm::mat4& proj, glm::vec3& light_pos);
     void resize(float w,float h);
     void init_data(int w, int h);
     void reset();
@@ -39,16 +39,12 @@ private:
     //jump distance maprange
     float JD_FR_MIN = 0.1f;
     float JD_FR_MAX = 0.9f;
-    float JD_TO_MIN = 0.0f; //useless
-    float JD_TO_MAX = 1.0f; //useless
 
     //phong param
     float k_a = 0.2f;
     float k_d = 1.0f;
     float k_s = 1.0f;
     float alpha = 10.0f;
-    //glm::vec3 col_ambient = glm::vec3(0.7,0.7,0.7);
-    //glm::vec3 col_diffuse = glm::vec3(0.7,0.7,0.7);
     glm::vec3 col_specular = glm::vec3(0.7,0.7,0.7);
 
     float ao_fac = 0.008f;

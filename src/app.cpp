@@ -215,7 +215,7 @@ void App::run(){
         }
         case Attractor:{
             attractor_renderer->draw_ui(speed, pos);
-            attractor_renderer->render(width, height, pos, inv_camera_view, proj, light_pos, fractal_position, fractal_rotation);
+            attractor_renderer->render(width, height, pos, inv_camera_view, proj, light_pos);
             break;
         }
         }
