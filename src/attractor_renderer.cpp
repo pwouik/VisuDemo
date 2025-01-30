@@ -373,7 +373,13 @@ void AttractorRenderer::draw_ui(){
     ImGui::End();
 }
 
-void AttractorRenderer::render(float width,float height,glm::vec3 pos,glm::mat4 inv_camera_view, glm::mat4 old_view, glm::mat4 proj, glm::vec3 light_pos){
+void AttractorRenderer::render(float width,float height,glm::vec3& pos,glm::mat4& inv_camera_view, glm::mat4& old_view, glm::mat4& proj, glm::vec3& light_pos){
+    //if(!anim.no_clear || inv_camera_view!=old_view){
+    // bool areEqual = 
+    //     glm::all(glm::epsilonEqual(inv_camera_view[0], old_view[0], 0.1f)) &&
+    //     glm::all(glm::epsilonEqual(inv_camera_view[1], old_view[1], 0.1f)) &&
+    //     glm::all(glm::epsilonEqual(inv_camera_view[2], old_view[2], 0.1f)) &&
+    //     glm::all(glm::epsilonEqual(inv_camera_view[3], old_view[3], 0.1f));
     if(!anim.no_clear || inv_camera_view!=old_view){
         int depth_clear = INT_MIN;
         glClearTexImage(((App*)appptr)->depth_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);

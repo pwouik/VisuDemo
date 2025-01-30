@@ -71,7 +71,7 @@ class AttractorRenderer{
         //void leap_update(const LEAP_TRACKING_EVENT& frame);
         void defaultsValues();
         void draw_ui();
-        void render(float width,float height,glm::vec3 pos,glm::mat4 inv_view, glm::mat4 old_view, glm::mat4 proj, glm::vec3 light_pos);
+        void render(float width,float height,glm::vec3& pos,glm::mat4& inv_view, glm::mat4& old_view, glm::mat4& proj, glm::vec3& light_pos);
     private:
         void* appptr; //this is a temporary pointer to App until the entire refactoring is done
 
