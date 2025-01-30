@@ -282,7 +282,7 @@ void App::draw_ui(){
     ImGui::End();
 }
 
-
+/*
 void App::draw_ui_attractor(){
     ImGui::Begin("attractor");
         if(ImGui::CollapsingHeader("Debug & all", ImGuiTreeNodeFlags_DefaultOpen )){
@@ -382,7 +382,7 @@ void App::draw_ui_attractor(){
 
     ImGui::End();
 }
-
+*/
 void App::run(){
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -478,7 +478,7 @@ void App::run(){
             glUniform1i(glGetUniformLocation(compute_program_attractor, "randInt_seed"),rand()%RAND_MAX);
             
             //send attractor data to compute shader
-            uvl::update_ubo_matrices(lerpmode);
+            uvl::update_ubo_matrices(1);
             glBindBuffer(GL_UNIFORM_BUFFER, atr::uboM4);
             glBufferSubData(GL_UNIFORM_BUFFER, 0, uvl::matrixPerAttractor * sizeof(glm::mat4), uvl::ubo_matrices.data());
             glBindBuffer(GL_UNIFORM_BUFFER, 0);

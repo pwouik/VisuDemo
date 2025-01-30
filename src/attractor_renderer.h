@@ -55,7 +55,10 @@ public:
     
 };
 
-
+enum LerpMode{
+    lerp_Matrix,
+    lerp_PerComponent
+};
 
 class AttractorRenderer{
     public:
@@ -65,8 +68,14 @@ class AttractorRenderer{
         void draw_ui();
         void render(float width,float height,glm::vec3 pos,glm::mat4 inv_view, glm::mat4 inv_proj, glm::vec3 light_pos, glm::vec3 fractal_position,glm::quat fractal_rotation);
     private:
+        GLuint compute_program_positions; // compute_program_attractor (anciennement)
+        GLuint compute_program_shading; // ssao_attractor; (anciennement)
+
+
         //Variables linked to animation
         struct ANIM{
+            AttractorRenderer* parent;
+
             bool no_clear;
             bool idle;
             int iter;               //the number of iteration over the animation (counted in lerp)
@@ -74,16 +83,24 @@ class AttractorRenderer{
             float height_and_distance[2];
             float lerp_period;   //time between 2 seed change
             float lerp_stiffness;
+
+            glm::mat4 getIdleView(float time);
+            inline float smooth_curve(float v);
         } anim;
 
         //attractors values
         struct ATR {
             int matrixPerAttractor;
+            LerpMode lerpmode = lerp_PerComponent;
             float lerpFactor;
             float lerpEdgeClamp;
             Attractor A_tractor;
             Attractor B_tractor;
             std::vector<glm::mat4> ubo_matrices;
+
+            void update_ubo_matrices();
+            glm::mat4 matrixLerp(int index);
+            glm::mat4 componentLerp(int index);
         } atr;
 
         struct clr{

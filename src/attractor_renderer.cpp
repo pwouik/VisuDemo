@@ -11,6 +11,7 @@
 #define MAX_FUNC_PER_ATTRACTOR 10
 #define RNDF (float)rand()/RAND_MAX
 #define PI 3.14159265358979323f //duplicate, move it idk where
+#define NBPTS 20'000'000
 
 
 
@@ -128,8 +129,262 @@ void Attractor::freeAll(){
 
 
 
+glm::mat4 AttractorRenderer::ANIM::getIdleView(float time){
+    float angle = 2*PI*time / spin_Period;
+    float intpart;
+    parent->atr.lerpFactor = smooth_curve(std::modf(time/lerp_period, &intpart));
+    if(intpart > (float)iter){ //a little messy but modf takes a pointer to float so ....
+        iter = intpart;
+        if(iter%2) parent->atr.B_tractor.setRandom(parent->atr.matrixPerAttractor);
+        else parent->atr.A_tractor.setRandom(parent->atr.matrixPerAttractor);
+    }
+    parent->atr.lerpFactor = iter%2 ? parent->atr.lerpFactor : 1.0f - parent->atr.lerpFactor;
+
+    glm::vec3 eye = glm::vec3(
+        height_and_distance[1] * cos(angle),
+        height_and_distance[0],
+        height_and_distance[1] * sin(angle)
+    );
+    return glm::lookAt(eye,glm::vec3(0.0f),glm::vec3(0.0f,1.0f,0.0f));
+}
+inline float AttractorRenderer::ANIM::smooth_curve(float v){
+        const float k = lerp_stiffness;
+        const float os = parent->atr.lerpEdgeClamp;
+        const float mv = 1.0f/(1+exp(k));
+        //return (1.0f/(1+exp(-k*(2*v-1)) ) - mv) * (1.0f/(1-2*mv));
+        //trust the math I swear this works
+        return 0.5 + (1.0f/(1+exp(-k*(2*v-1)) ) - 0.5) * ( (0.5f-os)/(0.5-mv));
+        
+    }
+
+void AttractorRenderer::ATR::update_ubo_matrices(){
+    switch (lerpmode)
+    {
+    case lerp_Matrix:
+        for(int i=0; i < matrixPerAttractor; i++){
+            ubo_matrices[i] = matrixLerp(i);
+        }
+        break;
+    case lerp_PerComponent:    
+        for(int i=0; i < matrixPerAttractor; i++){
+            ubo_matrices[i] = componentLerp(i);
+        }
+        break;     
+    default:
+        throw std::runtime_error("Unhandled lerping mode");
+        break;
+    }
+}
+glm::mat4 AttractorRenderer::ATR::matrixLerp(int index) {
+    float t = lerpFactor;
+    glm::mat4 matA = A_tractor.attr_funcs[index]->getMatrix();
+    glm::mat4 matB = B_tractor.attr_funcs[index]->getMatrix();
+    return (1.0f - t) * matA + t * matB;
+}
+
+//fucked up if attractorfucntion aren't all fixed process. I plan on just deleting rawmatrix anyways
+glm::mat4 AttractorRenderer::ATR::componentLerp(int index) {
+    float t = lerpFactor;
+    AffineTransfo* genA = A_tractor.attr_funcs[index];
+    AffineTransfo* genB = B_tractor.attr_funcs[index];
+
+    
+    glm::vec3 l_scale_factors = (1.0f-t)*genA->scale_factors + t * genB->scale_factors;
+    glm::vec3 l_rot_axis = glm::normalize((1.0f-t)*genA->rot_axis + t *genB->rot_axis);
+    float l_rot_angle = (1.0f-t)*genA->rot_angle + t * genB->rot_angle;
+    glm::vec3 l_Sh_xy_xz_yx = (1.0f-t)*genA->Sh_xy_xz_yx + t * genB->Sh_xy_xz_yx;
+    glm::vec3 l_Sh_yz_zx_zy = (1.0f-t)*genA->Sh_yz_zx_zy + t * genB->Sh_yz_zx_zy;
+    glm::vec3 l_translation_vector = (1.0f-t)*genA->translation_vector + t * genB->translation_vector;
+
+    glm::mat4 matrix =
+        glm::scale(glm::mat4(1.0f), l_scale_factors) *
+        glm::rotate(glm::mat4(1.0f), l_rot_angle, l_rot_axis) *
+        glm::transpose(glm::mat4(
+            1.0f, l_Sh_xy_xz_yx.x,  l_Sh_xy_xz_yx.y, 0.0f,  //     1.0f, Shxy,  Shxz, 0.0f,
+            l_Sh_xy_xz_yx.z, 1.0f,  l_Sh_yz_zx_zy.x, 0.0f,  //     Shyx, 1.0f,  Shyz, 0.0f,
+            l_Sh_yz_zx_zy.y, l_Sh_yz_zx_zy.z,  1.0f, 0.0f,  //     Shzx, Shzy,  1.0f, 0.0f,
+            0.0f, 0.0f,  0.0f, 1.0f)) *                 //     0.0f, 0.0f,  0.0f, 1.0f))
+        glm::translate(glm::mat4(1.0f), l_translation_vector);
+    return matrix;
+}
+
 AttractorRenderer::AttractorRenderer(){
     defaultsValues();
+
+    //compute_program for attractor
+    compute_program_positions = glCreateProgram();
+    GLint comp_attractor = loadshader("shaders/render_attractor.comp", GL_COMPUTE_SHADER);
+    glAttachShader(compute_program_positions, comp_attractor);
+    glLinkProgram(compute_program_positions);
+    linkProgram(compute_program_positions);
+
+    compute_program_shading = glCreateProgram();
+    GLint ssao_shader = loadshader("shaders/ssao_attractor.comp", GL_COMPUTE_SHADER);
+    glAttachShader(compute_program_shading, ssao_shader);
+    glLinkProgram(compute_program_shading);
+    linkProgram(compute_program_shading);
+}
+
+void AttractorRenderer::draw_ui(){
+    ImGui::Begin("attractor");
+        if(ImGui::CollapsingHeader("Debug & all", ImGuiTreeNodeFlags_DefaultOpen )){
+            ImGui::SliderFloat("##lerpfactor", &atr.lerpFactor, 0.0f, 1.0f, "lerp : %.3f");
+            ImGui::SliderFloat("##SliderLerpToMin", &atr.lerpEdgeClamp, 0.0f, 0.5f, "lerp edge clamp: %.2f");
+                ui::HelpMarker("Lerp between [0+x; 1-x] (stop before reaching 0 or 1)"
+                    "relevant when using more than 3 functions per attractors"
+                    "keep it 0 if you don't know what your doing");
+            const char* items_cb2[] = { "per matrix", "per component"}; //MUST MATCH ENUM IN app.h !
+            if(ImGui::Combo("lerping mode", (int*)&atr.lerpmode, items_cb2, IM_ARRAYSIZE(items_cb2))){}
+            
+            ImGui::Checkbox("no clear", &anim.no_clear);
+                ui::HelpMarker("Do not clear previous frame if view didn't changed");
+            ImGui::Checkbox("Idle animation", &anim.idle);
+                ui::HelpMarker("camera enter an idle spinning animation if checked");
+
+            if(ImGui::TreeNode("Idle params")){
+                ImGui::DragFloat("Spin period", &anim.spin_Period, 0.01f, 3.0f,10.0f,"%.2f");
+                ImGui::DragFloat("Lerp period", &anim.lerp_period, 0.01f, 3.0f,10.0f,"%.2f");
+                ImGui::DragFloat2("heigh & distance", anim.height_and_distance, 0.01f,-3.0f,3.0f,"%.2f");
+                ImGui::DragFloat("Lerp stiffness", &anim.lerp_stiffness, 0.01f, 0.5f,20.0f,"%.2f");
+                ui::HelpMarker("The stifness of the smoothing curve"
+                    "The function is a sigmoid mapranged to range 0-1, ie :"
+                    "(1/(1+exp(-k(2x-1))) - mv) * 1/(1-2mv)"
+                    "where mv is the value at 0,  1+(1+exp(k))");
+                ImGui::TreePop();
+            }
+            //ui::param_settings(); TODO param settings ! must be a property of attractor_renderer
+
+
+            //TODO other util : move into app::draw_ui
+            // if(ImGui::TreeNode("Other Utils")){
+            //     if(ImGui::Button("pref Speed")) speed = 0.025f;
+            //     if(ImGui::Button("reset cam")) pos = glm::vec3(0.0,0.0,-0.5);
+
+            //     ImGui::TreePop();
+            // }
+        }
+
+        //TODO support presets
+        if(ImGui::CollapsingHeader("Cool preset")){
+            // if(ImGui::Button("Sierpinski")) preset::sierpinski();
+            // if(ImGui::Button("Sierpintagon")) preset::sierpintagon();
+            // if(ImGui::Button("Sierpolygon")) preset::sierpolygon(); 
+            // SL ImGui::SetNextItemWidth(60); ImGui::DragInt("side", &preset::nb_cote, 1, 3, 10, "%d", ImGuiSliderFlags_AlwaysClamp);
+            // if(ImGui::Button("Barnsley Fern")) preset::barsnley_fern(); 
+        }
+
+
+        if(ImGui::CollapsingHeader("Attractors")){
+            ImGui::SliderInt("nb functions", &atr.matrixPerAttractor, 3, 10);
+                ui::HelpMarker("The number of different random matrices per attractor. going above ten will crash the program");
+            
+            if (ImGui::TreeNode("Attractor A")){
+                atr.A_tractor.ui(atr.matrixPerAttractor);
+
+                ImGui::TreePop();
+            }
+            if (ImGui::TreeNode("Attractor B")){
+                atr.B_tractor.ui(atr.matrixPerAttractor);
+
+                ImGui::TreePop();
+            }
+        }
+        if(ImGui::CollapsingHeader("Coloring", ImGuiTreeNodeFlags_DefaultOpen )){
+            ImGui::Text("temporary, must be hardcoded when it'll look nice");
+            if(ImGui::TreeNode("Jump Distance MapRange")){
+                ImGui::ColorEdit3("jd low color", glm::value_ptr(clr.col_jd_low));
+                ImGui::ColorEdit3("jd high color", glm::value_ptr(clr.col_jd_high));
+                ImGui::DragFloat("from min",&clr.JD_FR_MIN, 0.005f, 0.0f, 2.0f, "%.2f");
+                ImGui::DragFloat("from max",&clr.JD_FR_MAX, 0.005f, 0.0f, 2.0f, "%.2f");
+
+                ImGui::TreePop();
+            }
+            if(ImGui::TreeNode("Phong parameters")){
+                ImGui::SliderFloat("k_a##attractor", &clr.k_a, 0.0f, 1.0f);
+                ImGui::SliderFloat("k_d##attractor", &clr.k_d, 0.0f, 1.0f);
+                ImGui::SliderFloat("k_s##attractor", &clr.k_s, 0.0f, 1.0f);
+                ImGui::SliderFloat("alpha##attractor", &clr.alpha, 0.1f, 20.0f);
+                ImGui::ColorEdit3("specular##attractor", glm::value_ptr(clr.col_specular));
+
+                ImGui::TreePop();
+            }
+            if(ImGui::TreeNode("Ambient Occlusions")){
+                ImGui::SliderFloat("AO size##attractor", &clr.ao_size, 0.0f, 1.0f);
+                    ui::HelpMarker("The size of the square in witch AO will be sampled");
+                ImGui::SliderFloat("AO factor##attractor", &clr.ao_fac, -0.025f, 0.025f);
+                    ui::HelpMarker("A multiplicative factor applied to ambient occlusion"
+                        "to have darkenning AO, just set color to white and ao_fac to negative");
+                ImGui::ColorEdit3("ao colors##attractor", glm::value_ptr(clr.col_ao));
+
+                ImGui::TreePop();
+            }
+        }
+
+    ImGui::End();
+}
+
+void AttractorRenderer::render(float width,float height,glm::vec3 pos,glm::mat4 inv_view, glm::mat4 inv_proj, glm::vec3 light_pos, glm::vec3 fractal_position,glm::quat fractal_rotation){
+    if(!anim.no_clear || inv_camera_view!=old_view){
+        int depth_clear = INT_MIN;
+        glClearTexImage(depth_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
+        glClearTexImage(jumpdist_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
+    }
+
+    //overwrite camera view if idling
+    if(anim.idle){
+        //some optimizing could be done about inversing multiples times camera view
+        inv_camera_view = glm::inverse(anim.getIdleView((float)glfwGetTime()));
+    }
+    
+    old_view=inv_camera_view;
+    glUseProgram(compute_program_positions);
+
+    glUniformMatrix4fv(glGetUniformLocation(compute_program_positions, "view"),1, GL_FALSE, glm::value_ptr(glm::inverse(inv_camera_view)));
+    glUniformMatrix4fv(glGetUniformLocation(compute_program_positions, "proj"),1, GL_FALSE, glm::value_ptr(proj));
+    glUniform2ui(glGetUniformLocation(compute_program_attractor, "screen_size"), width,height);
+    glUniform3fv(glGetUniformLocation(compute_program_attractor, "camera"), 1, glm::value_ptr(pos));
+    glUniform3fv(glGetUniformLocation(compute_program_positions, "light_pos"), 1, glm::value_ptr(light_pos));
+    glUniform1f(glGetUniformLocation(compute_program_positions, "time"), glfwGetTime());
+    glUniform1i(glGetUniformLocation(compute_program_positions, "matrixPerAttractor"),atr.matrixPerAttractor);
+    glUniform1i(glGetUniformLocation(compute_program_positions, "randInt_seed"),rand()%RAND_MAX);
+    
+    //send attractor data to compute shader
+    atr.update_ubo_matrices(atr.lerpmode);
+    glBindBuffer(GL_UNIFORM_BUFFER, atr::uboM4);
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, atr.matrixPerAttractor * sizeof(glm::mat4), atr.ubo_matrices.data());
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    
+    glDispatchCompute((NBPTS-1)/1024+1, 1, 1);
+
+    // make sure writing to image has finished before read
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+
+    glUseProgram(ssao_attractor);
+    glUniform2ui(glGetUniformLocation(ssao_attractor, "screen_size"), width,height);
+    glUniformMatrix4fv(glGetUniformLocation(ssao_attractor, "inv_view"),1, GL_FALSE, glm::value_ptr(inv_camera_view));
+    glUniformMatrix4fv(glGetUniformLocation(ssao_attractor, "inv_proj"),1, GL_FALSE, glm::value_ptr(glm::inverse(proj)));
+    glUniform3fv(glGetUniformLocation(ssao_attractor, "camera"), 1, glm::value_ptr(pos)); //here todo
+    glUniform1f(glGetUniformLocation(ssao_attractor, "JD_FR_MIN"), clr::JD_FR_MIN);
+    glUniform1f(glGetUniformLocation(ssao_attractor, "JD_FR_MAX"), clr::JD_FR_MAX);
+    // glUniform1f(glGetUniformLocation(ssao_attractor, "JD_TO_MIN"), clr::JD_TO_MIN);
+    // glUniform1f(glGetUniformLocation(ssao_attractor, "JD_TO_MAX"), clr::JD_TO_MAX);
+    glUniform3fv(glGetUniformLocation(ssao_attractor, "col_jd_low"), 1, glm::value_ptr(clr::col_jd_low));
+    glUniform3fv(glGetUniformLocation(ssao_attractor, "col_jd_high"), 1, glm::value_ptr(clr::col_jd_high));
+    glUniform1f(glGetUniformLocation(ssao_attractor, "k_a"), clr::k_a);
+    //glUniform3fv(glGetUniformLocation(ssao_attractor, "col_ambient"), 1, glm::value_ptr(clr::col_ambient));
+    glUniform1f(glGetUniformLocation(ssao_attractor, "k_d"), clr::k_d);
+    //glUniform3fv(glGetUniformLocation(ssao_attractor, "col_diffuse"), 1, glm::value_ptr(clr::col_diffuse));
+    glUniform1f(glGetUniformLocation(ssao_attractor, "k_s"), clr::k_s);
+    glUniform1f(glGetUniformLocation(ssao_attractor, "alpha"), clr::alpha);
+    glUniform3fv(glGetUniformLocation(ssao_attractor, "col_specular"), 1, glm::value_ptr(clr::col_specular));
+    glUniform1f(glGetUniformLocation(ssao_attractor, "ao_fac"), clr::ao_fac);
+    glUniform1f(glGetUniformLocation(ssao_attractor, "ao_size"), clr::ao_size);
+    glUniform3fv(glGetUniformLocation(ssao_attractor, "col_ao"), 1, glm::value_ptr(clr::col_ao));
+
+    glDispatchCompute((width-1)/32+1, (height-1)/32+1, 1);
+
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 }
 
 void AttractorRenderer::defaultsValues(){

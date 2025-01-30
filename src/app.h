@@ -26,10 +26,6 @@ enum Mode{
     Attractor
 };
 
-enum LerpMode{
-    lerp_Matrix,
-    lerp_PerComponent
-};
 
 #define DEBUG(x) std::cout << x << std::endl;
 //#define DEBUG
@@ -147,8 +143,8 @@ public:
     float speed;
     RaymarchingRenderer* raymarching_renderer;
 
-    GLuint compute_program_attractor;
-    GLuint ssao_attractor;
+    GLuint compute_program_attractor; //torm
+    GLuint ssao_attractor;  //torm
     GLuint blit_program;
     GLuint texture;
     GLuint depth_texture;
@@ -160,7 +156,6 @@ public:
     glm::mat4 old_view;
 
     Mode curr_mode = Raymarching;
-    LerpMode lerpmode = lerp_PerComponent;
 
     int frameAcc = 0;
     float prevFpsUpdate = 0 ;
