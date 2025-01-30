@@ -132,7 +132,6 @@ void AttractorRenderer::update_ubo_matrices(LerpMode mode){
 
 void AttractorRenderer::transformInit(){
 
-    prm::defaults();
     printf("starting Attractor assingment ...\n");
     Transform* mga[MAX_FUNC_PER_ATTRACTOR];
     Transform* mgb[MAX_FUNC_PER_ATTRACTOR];
@@ -349,10 +348,10 @@ void AttractorRenderer::draw_ui(float& speed,glm::vec3& pos){
         }
         if(ImGui::TreeNode("random range")){
             HelpMarker("The lower / upper born at range random parameter will be generated");
-            ImGui::DragFloat2("max scaling",prm::scale, 0.005f, 0.2f, 1.5f, "%.3f");
-            ImGui::DragInt("max rotation", &prm::angle, 1, 0, 180, "%d");
-            ImGui::DragFloat("max shearing", &prm::shearing, 0.005f, 0.0f, 2.0f, "%.2f");
-            ImGui::DragFloat("max translate", &prm::translation, 0.005f, 0.0f, 2.0f, "%.2f");
+            ImGui::DragFloat2("max scaling",prm.scale, 0.005f, 0.2f, 1.5f, "%.3f");
+            ImGui::DragInt("max rotation", &prm.angle, 1, 0, 180, "%d");
+            ImGui::DragFloat("max shearing", &prm.shearing, 0.005f, 0.0f, 2.0f, "%.2f");
+            ImGui::DragFloat("max translate", &prm.translation, 0.005f, 0.0f, 2.0f, "%.2f");
             ImGui::TreePop();
         }
     }
@@ -437,7 +436,7 @@ void AttractorRenderer::resize(float w,float h){
 
 void AttractorRenderer::render(float width,float height,glm::vec3 pos,glm::mat4 inv_view, glm::mat4 proj, glm::vec3 light_pos, glm::vec3 fractal_position,glm::quat fractal_rotation){
 
-    if(no_clear || inv_view!=old_view){
+    if(!no_clear || inv_view!=old_view){
         int depth_clear = INT_MIN;
         glClearTexImage(depth_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
         glClearTexImage(jumpdist_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
