@@ -331,7 +331,7 @@ void App::draw_ui_attractor(){
 
         if(ImGui::CollapsingHeader("Attractors")){
             ImGui::SliderInt("nb functions", &uvl::matrixPerAttractor, 3, 10);
-                utl::HelpMarker("The number of different random matrices per attractor. going above ten will crash the program");
+                ui::HelpMarker("The number of different random matrices per attractor. going above ten will crash the program");
             
             if (ImGui::TreeNode("Attractor A")){
                 uvl::A_tractor.ui(uvl::matrixPerAttractor);
