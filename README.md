@@ -26,6 +26,9 @@ Maybe ?
 
 ## Building the app
 
+Download [leap SDK ](https://leap2.ultraleap.com/downloads/) (the Leap Motion Controller, not the 2)
+(On windows : if you have issue, consider changeing  `ULTRALEAP_PATH_ROOT` in `CMakeLists.txt` to the path containing `leapsdk-config.cmake` )
+
 in /build/
 ```cmd
 cmake ..

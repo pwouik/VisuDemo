@@ -1,5 +1,6 @@
 #include "app.h"
 #include <GLFW/glfw3.h>
+#include <LeapC.h>
 #include <climits>
 #include <cstddef>
 #include <cstdlib>
@@ -8,18 +9,27 @@
 #include <glm/fwd.hpp>
 #include <glm/trigonometric.hpp>
 #include <glm/gtx/rotate_vector.hpp>
+#include "opengl_util.h"
+
 
 #include <iostream>
+#include <memory>
+#include <optional>
+#include <vector>
+
+#include "glm/gtc/quaternion.hpp"
+#include "leap_connection.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/matrix.hpp"
 #include "glm/ext.hpp"
 #include <algorithm> //for std::fill
-#include <vector>
+#include <mutex>
 
 // #include <thread> //this therad
 // #include <chrono> //sleep
 
 #include "mathracttor.hpp" //utility function for attractors
+#include "raymarching_renderer.h"
 
 
 
@@ -27,58 +37,8 @@
 
 using namespace std;
 
-#define NBPTS 20'000'000
+#define NBPTS 20000000
 
-
-std::string readShaderSource(const std::string& shaderFile)
-{
-    std::ifstream file(shaderFile);
-    if (!file.is_open())
-    {
-        std::cerr << "Error could not open file " << shaderFile << std::endl;
-        return "";
-    }
-    std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    file.close();
-    return content;
-}
-
-GLuint loadshader(const char* file,GLuint type)
-{
-    const std::string shaderSource = readShaderSource(file);
-    const GLchar* source = shaderSource.c_str();
-    GLuint shader = glCreateShader(type);
-    glShaderSource(shader, 1, &source, nullptr);
-    glCompileShader(shader);
-    GLint compiled;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
-    if (!compiled) {
-        printf("%s failed to compile:\n", file);
-        GLint logSize;
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logSize);
-        char* logMsg = new char[logSize];
-        glGetShaderInfoLog(shader, logSize, nullptr, logMsg);
-        printf("%s\n", logMsg);
-        delete[] logMsg;
-        exit(EXIT_FAILURE);
-    }
-    return shader;
-}
-
-void linkProgram(GLuint program){
-    GLint linked;
-    glGetProgramiv(program, GL_LINK_STATUS, &linked);
-    if (!linked) {
-        printf("Shader program failed to link:\n");
-        GLint logSize;
-        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logSize);
-        char* logMsg = new char[logSize];
-        glGetProgramInfoLog(program, logSize, nullptr, logMsg);
-        printf("%s\n", logMsg);
-        delete[] logMsg;
-        exit(EXIT_FAILURE);
-    }
-}
 
 
 namespace gbl{
@@ -161,16 +121,6 @@ App::App(int w,int h)
 {
     pos = glm::vec3(0.0,0.0,0.0);
     light_pos = glm::vec3(0.0,0.0,0.0);
-    param1 = glm::vec3( -3.0f, 1.0f, 0.55f );
-    param2 = glm::vec3( 1.0f, 1.1f, 2.2f );
-    occlusion = 4.5;
-    ambient = glm::vec3(1.0,0.6,0.9);
-    diffuse = glm::vec3(1.0,0.6,0.0);
-    specular = glm::vec3(1.0,1.0,1.0);
-    k_a = 0.32f;
-    k_d = 1.0;
-    k_s = 1.0;
-    alpha = 3.0;
     speed = 0.02f;
     width = w;
     height = h;
@@ -197,12 +147,6 @@ App::App(int w,int h)
     printf("GL %d.%d\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
     
     //compute_program for ray marching
-    compute_program = glCreateProgram();
-    GLint comp = loadshader("shaders/render.comp", GL_COMPUTE_SHADER);
-    glAttachShader(compute_program, comp);
-    glLinkProgram(compute_program);
-    linkProgram(compute_program);
-    glUseProgram(compute_program);
 
     glGenTextures(1, &texture);
     glActiveTexture(GL_TEXTURE0);
@@ -270,7 +214,8 @@ App::App(int w,int h)
     glGenBuffers(1, &dummy_vbo);
 
     proj = glm::perspective(glm::radians(70.0f),(float)width/(float)height,0.1f,10000.0f);
-    glUniformMatrix4fv(glGetUniformLocation(compute_program, "persp"),1, GL_FALSE, glm::value_ptr(proj));
+
+    raymarching_renderer = new RaymarchingRenderer();
 
     prm::defaults();
 }
@@ -308,17 +253,32 @@ void App::draw_ui(){
         ImGui::Text("fractal at %.2fx, %.2fy, %.2fz. Move with arrows", fractal_position.x, fractal_position.y, fractal_position.z);
         ImGui::Text("fractal rotation at pitch: %.2f, yaw: %.2f, roll: %.2f. Change with numpad 1, 2 or 3", fractal_rotation.x, fractal_rotation.y, fractal_rotation.z);
         ImGui::Text("speed %.2e. Scroll to change", speed);
-        ImGui::SeparatorText("params");
-        ImGui::SliderFloat3("param1", glm::value_ptr(param1), -4.0, 4.0);
-        ImGui::SliderFloat3("param2", glm::value_ptr(param2), -4.0, 4.0);
-        ImGui::SliderFloat("k_a", &k_a, 0.0f, 2.0f);
-        ImGui::ColorEdit3("ambient", glm::value_ptr(ambient));
-        ImGui::SliderFloat("k_d", &k_d, 0.0f, 2.0f);
-        ImGui::ColorEdit3("diffuse", glm::value_ptr(diffuse));
-        ImGui::SliderFloat("k_s", &k_s, 0.0f, 2.0f);
-        ImGui::SliderFloat("alpha", &alpha, 1.0f, 5.0f);
-        ImGui::ColorEdit3("specular", glm::value_ptr(specular));
-        ImGui::SliderFloat("occlusion", &occlusion, -10.0f, 10.0f);
+        ImGui::SeparatorText("Leap motion");
+        if (!leap_connection->is_service_running())
+        {
+            static int current = 0;
+            ImGui::Combo("Select recording", &current, recordings.data(), recordings.size());
+            if(ImGui::Button("Start record playback") && current < recordings.size() && current >= 0)
+            {
+                leap_connection->start_playback(recordings[current]);
+            }
+            else if(ImGui::Button("Start leap capture"))
+            {
+                leap_connection->start_service();
+            }
+        }
+        else
+        {
+            ImGui::TextColored(hasLeftHand ? ImVec4(0.0f, 1.0f, 0.0f, 1.0f) : ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Left hand");
+            ImGui::SameLine();
+            ImGui::Text(" | ");
+            ImGui::SameLine();
+            ImGui::TextColored(hasRightHand ? ImVec4(0.0f, 1.0f, 0.0f, 1.0f) : ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Right hand");
+            if (ImGui::Button("Stop leap service"))
+            {
+                leap_connection->terminate_service();
+            }
+        }
     ImGui::End();
 }
 
@@ -416,7 +376,7 @@ void App::draw_ui_attractor(){
 }
 
 void App::run(){
-while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         if(gbl::paused) continue;
         updateFps();
@@ -442,6 +402,27 @@ while (!glfwWindowShouldClose(window)) {
         if(glfwGetKey(window, GLFW_KEY_L)==GLFW_PRESS){
             light_pos = pos;
         }
+        if(glfwGetKey(window, GLFW_KEY_UP)==GLFW_PRESS){
+            fractal_position += glm::vec3(-1.0f ,0.0f, 0.0f) * speed;
+        }
+        if(glfwGetKey(window, GLFW_KEY_DOWN)==GLFW_PRESS){
+            fractal_position += glm::vec3(1.0f ,0.0f, 0.0f) * speed;
+        }
+        if(glfwGetKey(window, GLFW_KEY_LEFT)==GLFW_PRESS){
+            fractal_position += glm::vec3(0.0f ,0.0f, 1.0f) * speed;
+        }
+        if(glfwGetKey(window, GLFW_KEY_RIGHT)==GLFW_PRESS){
+            fractal_position += glm::vec3(0.0f ,0.0f, -1.0f) * speed;
+        }
+        if(glfwGetKey(window, GLFW_KEY_PAGE_UP)==GLFW_PRESS){
+            fractal_position += glm::vec3(0.0f ,1.0f, 0.0f) * speed;
+        }
+        if(glfwGetKey(window, GLFW_KEY_PAGE_DOWN)==GLFW_PRESS){
+            fractal_position += glm::vec3(0.0f ,-1.0f, 0.0f) * speed;
+        }
+        if(glfwGetKey(window, GLFW_KEY_L)==GLFW_PRESS){
+            light_pos = pos;
+        }
 
         glm::mat4 inv_camera_view = glm::inverse(glm::translate(glm::rotate(
                 glm::rotate(glm::identity<glm::mat4>(),
@@ -450,78 +431,17 @@ while (!glfwWindowShouldClose(window)) {
                 -glm::radians(yaw),
                 glm::vec3(0.0, 1.0, 0.0)),
             glm::vec3(-pos.x, -pos.y, -pos.z)));
-        if(curr_mode == Raymarching){
-            if(glfwGetKey(window, GLFW_KEY_UP)==GLFW_PRESS){
-                fractal_position += glm::vec3(-1.0f ,0.0f, 0.0f) * speed;
-            }
-            if(glfwGetKey(window, GLFW_KEY_DOWN)==GLFW_PRESS){
-                fractal_position += glm::vec3(1.0f ,0.0f, 0.0f) * speed;
-            }
-            if(glfwGetKey(window, GLFW_KEY_LEFT)==GLFW_PRESS){
-                fractal_position += glm::vec3(0.0f ,0.0f, 1.0f) * speed;
-            }
-            if(glfwGetKey(window, GLFW_KEY_RIGHT)==GLFW_PRESS){
-                fractal_position += glm::vec3(0.0f ,0.0f, -1.0f) * speed;
-            }
-            if(glfwGetKey(window, GLFW_KEY_PAGE_UP)==GLFW_PRESS){
-                fractal_position += glm::vec3(0.0f ,1.0f, 0.0f) * speed;
-            }
-            if(glfwGetKey(window, GLFW_KEY_PAGE_DOWN)==GLFW_PRESS){
-                fractal_position += glm::vec3(0.0f ,-1.0f, 0.0f) * speed;
-            }
-            if(glfwGetKey(window, GLFW_KEY_KP_1)==GLFW_PRESS){
-                fractal_rotation += glm::vec3(0.1f ,0.0f, 0.0f) * speed;
-            }
-            if(glfwGetKey(window, GLFW_KEY_KP_2)==GLFW_PRESS){
-                fractal_rotation += glm::vec3(0.0f ,0.1f, 0.0f) * speed;
-            }
-            if(glfwGetKey(window, GLFW_KEY_KP_3)==GLFW_PRESS){
-                fractal_rotation += glm::vec3(0.0f ,0.0f, 0.1f) * speed;
-            }
-            if(glfwGetKey(window, GLFW_KEY_L)==GLFW_PRESS){
-                light_pos = pos;
-            }
 
-            glm::mat4 fractal_transform = glm::orientate4(fractal_rotation)*glm::translate(glm::identity<glm::mat4>(),fractal_position);
-            glm::mat4 total_transform = fractal_transform*inv_camera_view;
-
-            utl::newframeIMGUI();
-            draw_ui();
-
-            glUseProgram(compute_program);
-
-            glUniformMatrix4fv(glGetUniformLocation(compute_program, "inv_view"),1, GL_FALSE, glm::value_ptr(total_transform));
-            glUniformMatrix4fv(glGetUniformLocation(compute_program, "inv_proj"),1, GL_FALSE, glm::value_ptr(glm::inverse(proj)));
-            glUniform2ui(glGetUniformLocation(compute_program, "screen_size"), width,height);
-            glUniform3fv(glGetUniformLocation(compute_program, "camera"), 1, glm::value_ptr(pos));
-            glUniform3fv(glGetUniformLocation(compute_program, "light_pos"), 1, glm::value_ptr(light_pos+glm::vec3(fractal_transform[3])));
-            glUniform3fv(glGetUniformLocation(compute_program, "param1"), 1, glm::value_ptr(param1));
-            glUniform3fv(glGetUniformLocation(compute_program, "param2"), 1, glm::value_ptr(param2));
-            glUniform1f(glGetUniformLocation(compute_program, "k_a"), k_a);
-            glUniform3fv(glGetUniformLocation(compute_program, "ambient"), 1, glm::value_ptr(ambient));
-            glUniform1f(glGetUniformLocation(compute_program, "k_d"), k_d);
-            glUniform3fv(glGetUniformLocation(compute_program, "diffuse"), 1, glm::value_ptr(diffuse));
-            glUniform1f(glGetUniformLocation(compute_program, "k_s"), k_s);
-            glUniform1f(glGetUniformLocation(compute_program, "alpha"), alpha);
-            glUniform3fv(glGetUniformLocation(compute_program, "specular"), 1, glm::value_ptr(specular));
-            glUniform1f(glGetUniformLocation(compute_program, "occlusion"), occlusion);
-            glUniform1f(glGetUniformLocation(compute_program, "time"), glfwGetTime());
-            glDispatchCompute((width-1)/8+1, (height-1)/8+1, 1);
-
-            // make sure writing to image has finished before read
-            glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-            glUseProgram(blit_program);
-            glBindVertexArray(dummy_vao);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, texture);
-            glDrawArrays(GL_TRIANGLES,0,3);
-
+        utl::newframeIMGUI();
+        draw_ui();
+        switch (curr_mode) {
+        case Raymarching:{
+            std::lock_guard<std::mutex> lock(leapmotion_mutex);
+            raymarching_renderer->draw_ui();
+            raymarching_renderer->render(width, height, pos, inv_camera_view, glm::inverse(proj), light_pos, fractal_position, fractal_rotation);
+            break;
         }
-        else if(curr_mode == Attractor){
-
-            utl::newframeIMGUI();
-            draw_ui();
+        case Attractor:{
             draw_ui_attractor();
 
             
@@ -586,16 +506,81 @@ while (!glfwWindowShouldClose(window)) {
 
             glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-            glClear(GL_COLOR_BUFFER_BIT);
-
-            glUseProgram(blit_program);
-            glBindVertexArray(dummy_vao);
-            glBindTexture(GL_TEXTURE_2D, texture);
-            glDrawArrays(GL_TRIANGLES,0,3);
 
         }
+        }
+
+        glUseProgram(blit_program);
+        glBindVertexArray(dummy_vao);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glDrawArrays(GL_TRIANGLES,0,3);
+
         utl::enframeIMGUI();
         utl::multiViewportIMGUI(window);
         glfwSwapBuffers(window);
     }
 }
+
+void App::setupLeapMotion()
+{
+    constexpr LEAP_ALLOCATOR allocator
+    {
+        [](const uint32_t size, eLeapAllocatorType, void*){void* ptr = malloc(size); return ptr;},
+        [](void* ptr, void*){if(!ptr) return; free(ptr);},
+        nullptr
+    };
+    leap_connection = std::make_unique<leap::leap_connection>(allocator, eLeapPolicyFlag_Images | eLeapPolicyFlag_MapPoints, 0);
+    leap_connection->on_connection = []{std::cout << "Leap device connected.\n";};
+    leap_connection->on_device_found = [](const LEAP_DEVICE_INFO& device_info){std::cout << "Found device " << device_info.serial << ".\n";};
+
+    leap_connection->on_frame = [this](const LEAP_TRACKING_EVENT& frame){onFrame(frame);};
+}
+
+void App::onFrame(const LEAP_TRACKING_EVENT& frame)
+    {
+        raymarching_renderer->leap_update(frame);
+        std::cout << "Frame " << frame.info.frame_id << " with " << frame.nHands << " hands. ";
+        std::optional<LEAP_HAND> left = std::nullopt;
+        for (int i = 0; i < frame.nHands; i++)
+        {
+            if (frame.pHands[i].type == eLeapHandType_Left && frame.pHands[i].confidence > 0.1)
+            {
+                hasRightHand = true;
+            }
+            if (frame.pHands[i].type == eLeapHandType_Right && frame.pHands[i].confidence > 0.1)
+            {
+                hasRightHand = true;
+            }
+        }
+        static bool left_was_pinched = false;
+        if (left.has_value())
+        {
+            hasLeftHand = true;
+            std::cout << "Left hand velocity: " << left.value().palm.velocity.x << ", " << left.value().palm.velocity.y << ", " << left.value().palm.velocity.z << " with " << left.value().confidence << " confidence. Pinch distance: " << std::floor(left.value().pinch_distance);
+            static glm::quat left_start_rotation;
+            if (left.value().pinch_distance < 25)
+            {
+                const glm::quat palm_orientation = glm::make_quat(left.value().palm.orientation.v);
+                if (!left_was_pinched)
+                {
+                    left_was_pinched = true;
+                    left_start_rotation = palm_orientation;
+                }
+                fractal_position += glm::make_vec3(left.value().palm.velocity.v) * 5e-5f;
+                fractal_rotation = glm::mix(glm::identity<glm::quat>(), palm_orientation * glm::inverse(left_start_rotation) , 0.75f) * fractal_rotation;
+                left_start_rotation = palm_orientation;
+            }
+            else
+            {
+                left_was_pinched = false;
+            }
+        }
+        else
+        {
+            left_was_pinched = false;
+        }
+        hasLeftHand = false;
+        hasRightHand = false;
+        std::cout << "\n";
+    }
