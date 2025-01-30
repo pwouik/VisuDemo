@@ -26,6 +26,7 @@ private:
     void sierpintagon();
     void sierpolygon();
     void barsnley_fern();
+    void romanesco();
     glm::mat4 get_idle_view(float time);
     void update_ubo_matrices(LerpMode mode);
     void transformInit();

@@ -1,4 +1,5 @@
 #include "attractor_renderer.h"
+#include "attractor.h"
 #include "glm/fwd.hpp"
 #include "glm/matrix.hpp"
 #include "imgui/imgui.h"
@@ -259,6 +260,36 @@ void AttractorRenderer::barsnley_fern(){
                     0.0f, 0.0f,  0.0f, 1.0f));
     }
 }
+
+void AttractorRenderer::romanesco(){
+    matrix_per_attractor = 2;
+    allIdentity();
+    Transform** a_funcs = attractorA.attr_funcs;
+    Transform** b_funcs = attractorB.attr_funcs;
+    {//attractor A functions
+        a_funcs[0]->scale_factors = glm::vec3(0.98f,0.98f,0.98f);
+        a_funcs[0]->translation_vector = glm::vec3(0.0f,0.01f,0.0f);
+        a_funcs[0]->rot_axis = glm::vec3(0.0,1,0);
+        a_funcs[0]->rot_angle = PI/(sqrt(5)+1.0)*2.0;
+
+        a_funcs[1]->scale_factors = glm::vec3(0.3f,0.3f,0.3f);
+        a_funcs[1]->rot_axis = glm::vec3(1.0,0.0,0.0);
+        a_funcs[1]->rot_angle = PI/2;
+        a_funcs[1]->translation_vector = glm::vec3(0.0f,1.0f,0.0f);
+
+    }
+    {//attractor B functions
+        b_funcs[0]->scale_factors = glm::vec3(0.9f,0.9f,0.9f);
+        b_funcs[0]->translation_vector = glm::vec3(0.0f,0.001f,0.0f);
+        b_funcs[0]->rot_axis = glm::vec3(0.0,1,0);
+        b_funcs[0]->rot_angle = PI/(sqrt(5)+1)*2;
+
+        b_funcs[1]->scale_factors = glm::vec3(0.2f,0.2f,0.2f);
+        b_funcs[1]->rot_axis = glm::vec3(1.0,0.0,0.0);
+        b_funcs[1]->rot_angle = PI/2;
+        b_funcs[1]->translation_vector = glm::vec3(0.0f,1.0f,0.0f);
+    }
+}
 float smooth_curve(float v){
     return v*v*3-v*v*v*2;
 }
@@ -371,6 +402,7 @@ void AttractorRenderer::draw_ui(float& speed,glm::vec3& pos){
         if(ImGui::Button("Sierpolygon")) sierpolygon(); 
         SL ImGui::SetNextItemWidth(60); ImGui::DragInt("side", &nb_cote, 1, 3, 10, "%d", ImGuiSliderFlags_AlwaysClamp);
         if(ImGui::Button("Barnsley Fern")) barsnley_fern(); 
+        if(ImGui::Button("Romanesco")) romanesco();
     }
 
 

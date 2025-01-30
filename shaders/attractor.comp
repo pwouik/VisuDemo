@@ -88,12 +88,7 @@ void main() {
         }
 
         //jump to a random position
-        for(int i =0; i < matrixPerAttractor; i++){
-            if(fake_rand == i){
-                points[idx] = pts[i];
-                break; //idk if break really optimized in glsl
-            }
-        }
+        points[idx] = pts[fake_rand];
 
     }
     //draw all points
@@ -126,12 +121,7 @@ void main_desac() {
         }
 
         //jump to a random position
-        for(int i =0; i < matrixPerAttractor*matrixPerAttractor; i++){
-            if(fake_rand == i){
-                points[idx] = pts_gen2[i];
-                break; //idk if break really optimized in glsl
-            }
-        }
+        points[idx] = pts_gen2[fake_rand];
     }
     //draw all reachable points form gen1 & gen2.
     for(int i =0; i < matrixPerAttractor; i++){

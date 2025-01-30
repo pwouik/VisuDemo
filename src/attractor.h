@@ -31,7 +31,7 @@ public:
     glm::vec3 Sh_yz_zx_zy;
     glm::vec3 translation_vector;
 
-    void updt_matrix(){
+    void update_matrix(){
         matrix =
                 glm::scale(glm::mat4(1.0f), scale_factors) *
                 glm::rotate(glm::mat4(1.0f), rot_angle, rot_axis) *
@@ -49,7 +49,7 @@ public:
         Sh_xy_xz_yx = glm::vec3(0.0f);
         Sh_yz_zx_zy = glm::vec3(0.0f);
         translation_vector = glm::vec3(0.0f);
-        updt_matrix();
+        update_matrix();
     }
     void setRandom(){
         scale_factors = glm::vec3(
@@ -76,7 +76,7 @@ public:
             (randf()*2-1)*prm.translation
         );
         
-        updt_matrix();
+        update_matrix();
     }
 
     const char* getName(){
@@ -92,7 +92,7 @@ public:
             valf("rota angle", rot_angle, 0.005f, -PI, PI);
             valf("shear xy xz yx", Sh_xy_xz_yx);
             valf("shear yz_zx_zy", Sh_yz_zx_zy);
-            valf("translation", translation_vector);
+            valf("translation", translation_vector,-50.0f,50.0f);
         }
         else{
             valf("raw matrix : ", matrix);
@@ -102,7 +102,7 @@ public:
 
     const glm::mat4& getMatrix(){
         if(!overwriteMatrix)
-            updt_matrix();
+            update_matrix();
         
         return matrix;
     }
