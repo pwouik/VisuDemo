@@ -12,19 +12,12 @@ static float randf(){
     return (float)rand()/RAND_MAX;
 }
 
-namespace prm{ //param for random generation
-    static float scale[2]; //min, max
-    static int angle;
-    static float shearing;
-    static float translation;
-
-    static void defaults(){
-        scale[0] = 0.4f; scale[1] = 0.9f;
-        angle = 180;
-        shearing = 0.2f;
-        translation = 0.8f;
-    }
-}
+static struct RAND_RANGE{
+    float scale[2] = {0.4f, 0.9f}; //min, max
+    int angle = 180;
+    float shearing = 0.2;
+    float translation = 0.8;
+} prm;
 
 class Transform{
 public:
@@ -60,27 +53,27 @@ public:
     }
     void setRandom(){
         scale_factors = glm::vec3(
-            randf()*(prm::scale[1]-prm::scale[0])+prm::scale[0],
-            randf()*(prm::scale[1]-prm::scale[0])+prm::scale[0],
-            randf()*(prm::scale[1]-prm::scale[0])+prm::scale[0]
+            randf()*(prm.scale[1]-prm.scale[0])+prm.scale[0],
+            randf()*(prm.scale[1]-prm.scale[0])+prm.scale[0],
+            randf()*(prm.scale[1]-prm.scale[0])+prm.scale[0]
         );
         glm::vec3 randomVec = glm::ballRand(1.0f);
         rot_axis = glm::normalize(randomVec);
-        rot_angle = glm::radians((randf()*2-1) * (float) prm::angle);
+        rot_angle = glm::radians((randf()*2-1) * (float) prm.angle);
         Sh_xy_xz_yx = glm::vec3(
-            (randf()*2-1)*prm::shearing,
-            (randf()*2-1)*prm::shearing,
-            (randf()*2-1)*prm::shearing
+            (randf()*2-1)*prm.shearing,
+            (randf()*2-1)*prm.shearing,
+            (randf()*2-1)*prm.shearing
         );
         Sh_yz_zx_zy = glm::vec3(
-            (randf()*2-1)*prm::shearing,
-            (randf()*2-1)*prm::shearing,
-            (randf()*2-1)*prm::shearing
+            (randf()*2-1)*prm.shearing,
+            (randf()*2-1)*prm.shearing,
+            (randf()*2-1)*prm.shearing
         );
         translation_vector = glm::vec3(
-            (randf()*2-1)*prm::translation,
-            (randf()*2-1)*prm::translation,
-            (randf()*2-1)*prm::translation
+            (randf()*2-1)*prm.translation,
+            (randf()*2-1)*prm.translation,
+            (randf()*2-1)*prm.translation
         );
         
         updt_matrix();
