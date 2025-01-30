@@ -27,7 +27,7 @@
 
 using namespace std;
 
-#define NBPTS 20000000
+#define NBPTS 20'000'000
 
 
 std::string readShaderSource(const std::string& shaderFile)
