@@ -511,7 +511,7 @@ namespace clr{
     //TODO hardcode most of those value in shader as magic values
 
     //jump distance maprange
-    float JD_FR_MIN = 0.2f;
+    float JD_FR_MIN = 0.1f;
     float JD_FR_MAX = 0.9f;
     float JD_TO_MIN = 0.0f; //useless
     float JD_TO_MAX = 1.0f; //useless
@@ -526,6 +526,7 @@ namespace clr{
     glm::vec3 col_specular = glm::vec3(0.7,0.7,0.7);
 
     float ao_fac = 0.008f;
+    float ao_size = 0.2;
     glm::vec3 col_ao = glm::vec3(0.1,0.2,0.8);
 
     glm::vec3 col_jd_low = glm::vec3(0.9,0.8,0.15);
