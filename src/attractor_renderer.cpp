@@ -282,39 +282,42 @@ glm::mat4 AttractorRenderer::get_idle_view(float time){
 }
 AttractorRenderer::AttractorRenderer(int w,int h){
 
-    //compute_program for attractor
-    attractor_program = glCreateProgram();
-    GLint comp_attractor = loadshader("shaders/attractor.comp", GL_COMPUTE_SHADER);
-    glAttachShader(attractor_program, comp_attractor);
-    glLinkProgram(attractor_program);
-    linkProgram(attractor_program);
+    {//compute_program for attractor
+        attractor_program = glCreateProgram();
+        GLint comp_attractor = loadshader("shaders/attractor.comp", GL_COMPUTE_SHADER);
+        glAttachShader(attractor_program, comp_attractor);
+        glLinkProgram(attractor_program);
+        linkProgram(attractor_program);
 
-    shading_program = glCreateProgram();
-    GLint ssao_shader = loadshader("shaders/attractor_shading.comp", GL_COMPUTE_SHADER);
-    glAttachShader(shading_program, ssao_shader);
-    glLinkProgram(shading_program);
-    linkProgram(shading_program);
+        shading_program = glCreateProgram();
+        GLint ssao_shader = loadshader("shaders/attractor_shading.comp", GL_COMPUTE_SHADER);
+        glAttachShader(shading_program, ssao_shader);
+        glLinkProgram(shading_program);
+        linkProgram(shading_program);
+    }
 
 
-    //depth texture (texture1, binding 1)
-    glGenTextures(1, &depth_texture);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, depth_texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, w, h, 0, GL_RED_INTEGER, GL_INT, nullptr);
-    //required for some reason on my computer
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-    glBindImageTexture(1, depth_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32I); //bind to channel 1
+    {//depth texture (texture1, binding 1)
+        glGenTextures(1, &depth_texture);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, depth_texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, w, h, 0, GL_RED_INTEGER, GL_INT, nullptr);
+        //required for some reason on my computer
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+        glBindImageTexture(1, depth_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32I); //bind to channel 1
+    }
 
-    //distance from last jump texture (texture 2, binding4)
-    glGenTextures(1, &jumpdist_texture);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, jumpdist_texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, w, h, 0, GL_RED_INTEGER, GL_INT, nullptr); 
-    //required for some reason on my computer
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0); 
-    glBindImageTexture(4, jumpdist_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32I); //bind to channel 4
+    {//distance from last jump texture (texture 2, binding4)
+        glGenTextures(1, &jumpdist_texture);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, jumpdist_texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, w, h, 0, GL_RED_INTEGER, GL_INT, nullptr); 
+        //required for some reason on my computer
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0); 
+        glBindImageTexture(4, jumpdist_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32I); //bind to channel 4
+    }
 
 }
 void AttractorRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
@@ -393,17 +396,12 @@ void AttractorRenderer::draw_ui(float& speed,glm::vec3& pos){
             ImGui::ColorEdit3("jd high color", glm::value_ptr(col_jd_high));
             ImGui::DragFloat("from min",&JD_FR_MIN, 0.005f, 0.0f, 2.0f, "%.2f");
             ImGui::DragFloat("from max",&JD_FR_MAX, 0.005f, 0.0f, 2.0f, "%.2f");
-            //goes to 0-1 so useless
-            //ImGui::DragFloat("to min",&JD_TO_MIN, 0.005f, 0.0f, 2.0f, "%.2f");
-            //ImGui::DragFloat("to max",&JD_TO_MAX, 0.005f, 0.0f, 2.0f, "%.2f");
 
             ImGui::TreePop();
         }
         if(ImGui::TreeNode("Phong parameters")){
             ImGui::SliderFloat("k_a##attractor", &k_a, 0.0f, 1.0f);
-            //ImGui::ColorEdit3("ambient##attractor", glm::value_ptr(col_ambient));
             ImGui::SliderFloat("k_d##attractor", &k_d, 0.0f, 1.0f);
-            //ImGui::ColorEdit3("diffuse##attractor", glm::value_ptr(col_diffuse));
             ImGui::SliderFloat("k_s##attractor", &k_s, 0.0f, 1.0f);
             ImGui::SliderFloat("alpha##attractor", &alpha, 0.1f, 20.0f);
             ImGui::ColorEdit3("specular##attractor", glm::value_ptr(col_specular));
