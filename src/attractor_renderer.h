@@ -5,14 +5,18 @@
 #include <glm/ext.hpp>
 #include <vector>
 
+//todo remove below define debug
+#define DEBUG(x) std::cout << x << std::endl;
+
 
 
 //Fuck it this will be a global variable
-struct RAND_RANGE{
-    float scale[2]; //min, max
-    int angle;
-    float shearing;
-    float translation;
+//btw this shouldn't be static this is just a temporary fix for linkage, this will be removed anyway
+static struct RAND_RANGE{
+    float scale[2] = {0.4f, 0.9f}; //min, max
+    int angle = 180;
+    float shearing = 0.2;
+    float translation = 0.8;
 } prm;
 
 
@@ -63,11 +67,16 @@ enum LerpMode{
 class AttractorRenderer{
     public:
         AttractorRenderer();
+        AttractorRenderer(void* temp);
         //void leap_update(const LEAP_TRACKING_EVENT& frame);
         void defaultsValues();
         void draw_ui();
-        void render(float width,float height,glm::vec3 pos,glm::mat4 inv_view, glm::mat4 inv_proj, glm::vec3 light_pos, glm::vec3 fractal_position,glm::quat fractal_rotation);
+        void render(float width,float height,glm::vec3 pos,glm::mat4 inv_view, glm::mat4 old_view, glm::mat4 proj, glm::vec3 light_pos);
     private:
+        void* appptr; //this is a temporary pointer to App until the entire refactoring is done
+
+        GLuint ssbo_pts; //ssbo of points
+        GLuint uboM4; //uniform buffer object of transo matrix sent to gpu
         GLuint compute_program_positions; // compute_program_attractor (anciennement)
         GLuint compute_program_shading; // ssao_attractor; (anciennement)
 
@@ -122,5 +131,7 @@ class AttractorRenderer{
             float ao_size;
             glm::vec3 col_ao;
         } clr;
+
+        void randArray(float* array, int size, float range);
         
 };

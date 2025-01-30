@@ -6,7 +6,9 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <GLFW/glfw3.h>
 
-#include <imgui_util.hpp>
+//#include "imgui_util.hpp"
+
+#include "app.h" //todo must be removed when refactoring done ! Also uncomment above !
 
 #define MAX_FUNC_PER_ATTRACTOR 10
 #define RNDF (float)rand()/RAND_MAX
@@ -181,8 +183,6 @@ glm::mat4 AttractorRenderer::ATR::matrixLerp(int index) {
     glm::mat4 matB = B_tractor.attr_funcs[index]->getMatrix();
     return (1.0f - t) * matA + t * matB;
 }
-
-//fucked up if attractorfucntion aren't all fixed process. I plan on just deleting rawmatrix anyways
 glm::mat4 AttractorRenderer::ATR::componentLerp(int index) {
     float t = lerpFactor;
     AffineTransfo* genA = A_tractor.attr_funcs[index];
@@ -208,21 +208,71 @@ glm::mat4 AttractorRenderer::ATR::componentLerp(int index) {
     return matrix;
 }
 
-AttractorRenderer::AttractorRenderer(){
+AttractorRenderer::AttractorRenderer(){}
+AttractorRenderer::AttractorRenderer(void* temp){
+    {//unholy hack
+        appptr = temp;
+        anim.parent = this; //keep
+    }
+    
     defaultsValues();
 
-    //compute_program for attractor
-    compute_program_positions = glCreateProgram();
-    GLint comp_attractor = loadshader("shaders/render_attractor.comp", GL_COMPUTE_SHADER);
-    glAttachShader(compute_program_positions, comp_attractor);
-    glLinkProgram(compute_program_positions);
-    linkProgram(compute_program_positions);
+    {//compute programs
+        compute_program_positions = glCreateProgram();
+        GLint comp_attractor = loadshader("shaders/render_attractor.comp", GL_COMPUTE_SHADER);
+        glAttachShader(compute_program_positions, comp_attractor);
+        glLinkProgram(compute_program_positions);
+        linkProgram(compute_program_positions);
 
-    compute_program_shading = glCreateProgram();
-    GLint ssao_shader = loadshader("shaders/ssao_attractor.comp", GL_COMPUTE_SHADER);
-    glAttachShader(compute_program_shading, ssao_shader);
-    glLinkProgram(compute_program_shading);
-    linkProgram(compute_program_shading);
+        compute_program_shading = glCreateProgram();
+        GLint ssao_shader = loadshader("shaders/ssao_attractor.comp", GL_COMPUTE_SHADER);
+        glAttachShader(compute_program_shading, ssao_shader);
+        glLinkProgram(compute_program_shading);
+        linkProgram(compute_program_shading);
+    }
+
+
+    
+
+    {//ssbo of points
+        float* data = new float[NBPTS*4];
+        randArray(data, NBPTS, 1);
+        glGenBuffers(1, &ssbo_pts);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_pts);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(float) * 4 * NBPTS, data, GL_DYNAMIC_DRAW); //GL_DYNAMIC_DRAW update occasionel et lecture frequente
+        //glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, size, data); //to update partially
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo_pts);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
+
+        delete[] data; //points memory only needed on GPU
+    }
+
+    {//attractors (a max of 10 matrices stored as UBO)
+        glGenBuffers(1, &uboM4);
+        glBindBuffer(GL_UNIFORM_BUFFER, uboM4);
+        glBufferData(GL_UNIFORM_BUFFER, MAX_FUNC_PER_ATTRACTOR * sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW); // Allocate space for up to 10 matrices
+        glBindBufferBase(GL_UNIFORM_BUFFER, 1, uboM4); // Binding point 0
+        glBindBuffer(GL_UNIFORM_BUFFER, 0); // Unbind
+    }
+
+    { //assign value to UBO matrics
+        DEBUG("starting Attractor assingment ...");
+        atr.ubo_matrices.reserve(MAX_FUNC_PER_ATTRACTOR);
+        AffineTransfo* mga[MAX_FUNC_PER_ATTRACTOR];
+        AffineTransfo* mgb[MAX_FUNC_PER_ATTRACTOR];
+
+        for(int i=0; i<MAX_FUNC_PER_ATTRACTOR; i++){
+            mga[i] = new AffineTransfo();
+            mgb[i] = new AffineTransfo();
+            atr.A_tractor.attr_funcs[i] = mga[i];
+            atr.B_tractor.attr_funcs[i] = mgb[i];
+            atr.ubo_matrices.push_back(glm::mat4(1.0f));
+        }
+        
+        atr.matrixPerAttractor = 3; //can be any value between 3 or 10
+        DEBUG("done");
+    }
+
 }
 
 void AttractorRenderer::draw_ui(){
@@ -323,11 +373,11 @@ void AttractorRenderer::draw_ui(){
     ImGui::End();
 }
 
-void AttractorRenderer::render(float width,float height,glm::vec3 pos,glm::mat4 inv_view, glm::mat4 inv_proj, glm::vec3 light_pos, glm::vec3 fractal_position,glm::quat fractal_rotation){
+void AttractorRenderer::render(float width,float height,glm::vec3 pos,glm::mat4 inv_camera_view, glm::mat4 old_view, glm::mat4 proj, glm::vec3 light_pos){
     if(!anim.no_clear || inv_camera_view!=old_view){
         int depth_clear = INT_MIN;
-        glClearTexImage(depth_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
-        glClearTexImage(jumpdist_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
+        glClearTexImage(((App*)appptr)->depth_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
+        glClearTexImage(((App*)appptr)->jumpdist_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
     }
 
     //overwrite camera view if idling
@@ -341,16 +391,16 @@ void AttractorRenderer::render(float width,float height,glm::vec3 pos,glm::mat4 
 
     glUniformMatrix4fv(glGetUniformLocation(compute_program_positions, "view"),1, GL_FALSE, glm::value_ptr(glm::inverse(inv_camera_view)));
     glUniformMatrix4fv(glGetUniformLocation(compute_program_positions, "proj"),1, GL_FALSE, glm::value_ptr(proj));
-    glUniform2ui(glGetUniformLocation(compute_program_attractor, "screen_size"), width,height);
-    glUniform3fv(glGetUniformLocation(compute_program_attractor, "camera"), 1, glm::value_ptr(pos));
+    glUniform2ui(glGetUniformLocation(compute_program_positions, "screen_size"), width,height);
+    glUniform3fv(glGetUniformLocation(compute_program_positions, "camera"), 1, glm::value_ptr(pos));
     glUniform3fv(glGetUniformLocation(compute_program_positions, "light_pos"), 1, glm::value_ptr(light_pos));
     glUniform1f(glGetUniformLocation(compute_program_positions, "time"), glfwGetTime());
     glUniform1i(glGetUniformLocation(compute_program_positions, "matrixPerAttractor"),atr.matrixPerAttractor);
     glUniform1i(glGetUniformLocation(compute_program_positions, "randInt_seed"),rand()%RAND_MAX);
     
     //send attractor data to compute shader
-    atr.update_ubo_matrices(atr.lerpmode);
-    glBindBuffer(GL_UNIFORM_BUFFER, atr::uboM4);
+    atr.update_ubo_matrices();
+    glBindBuffer(GL_UNIFORM_BUFFER, uboM4);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, atr.matrixPerAttractor * sizeof(glm::mat4), atr.ubo_matrices.data());
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     
@@ -360,27 +410,23 @@ void AttractorRenderer::render(float width,float height,glm::vec3 pos,glm::mat4 
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 
-    glUseProgram(ssao_attractor);
-    glUniform2ui(glGetUniformLocation(ssao_attractor, "screen_size"), width,height);
-    glUniformMatrix4fv(glGetUniformLocation(ssao_attractor, "inv_view"),1, GL_FALSE, glm::value_ptr(inv_camera_view));
-    glUniformMatrix4fv(glGetUniformLocation(ssao_attractor, "inv_proj"),1, GL_FALSE, glm::value_ptr(glm::inverse(proj)));
-    glUniform3fv(glGetUniformLocation(ssao_attractor, "camera"), 1, glm::value_ptr(pos)); //here todo
-    glUniform1f(glGetUniformLocation(ssao_attractor, "JD_FR_MIN"), clr::JD_FR_MIN);
-    glUniform1f(glGetUniformLocation(ssao_attractor, "JD_FR_MAX"), clr::JD_FR_MAX);
-    // glUniform1f(glGetUniformLocation(ssao_attractor, "JD_TO_MIN"), clr::JD_TO_MIN);
-    // glUniform1f(glGetUniformLocation(ssao_attractor, "JD_TO_MAX"), clr::JD_TO_MAX);
-    glUniform3fv(glGetUniformLocation(ssao_attractor, "col_jd_low"), 1, glm::value_ptr(clr::col_jd_low));
-    glUniform3fv(glGetUniformLocation(ssao_attractor, "col_jd_high"), 1, glm::value_ptr(clr::col_jd_high));
-    glUniform1f(glGetUniformLocation(ssao_attractor, "k_a"), clr::k_a);
-    //glUniform3fv(glGetUniformLocation(ssao_attractor, "col_ambient"), 1, glm::value_ptr(clr::col_ambient));
-    glUniform1f(glGetUniformLocation(ssao_attractor, "k_d"), clr::k_d);
-    //glUniform3fv(glGetUniformLocation(ssao_attractor, "col_diffuse"), 1, glm::value_ptr(clr::col_diffuse));
-    glUniform1f(glGetUniformLocation(ssao_attractor, "k_s"), clr::k_s);
-    glUniform1f(glGetUniformLocation(ssao_attractor, "alpha"), clr::alpha);
-    glUniform3fv(glGetUniformLocation(ssao_attractor, "col_specular"), 1, glm::value_ptr(clr::col_specular));
-    glUniform1f(glGetUniformLocation(ssao_attractor, "ao_fac"), clr::ao_fac);
-    glUniform1f(glGetUniformLocation(ssao_attractor, "ao_size"), clr::ao_size);
-    glUniform3fv(glGetUniformLocation(ssao_attractor, "col_ao"), 1, glm::value_ptr(clr::col_ao));
+    glUseProgram(compute_program_shading);
+    glUniform2ui(glGetUniformLocation(compute_program_shading, "screen_size"), width,height);
+    glUniformMatrix4fv(glGetUniformLocation(compute_program_shading, "inv_view"),1, GL_FALSE, glm::value_ptr(inv_camera_view));
+    glUniformMatrix4fv(glGetUniformLocation(compute_program_shading, "inv_proj"),1, GL_FALSE, glm::value_ptr(glm::inverse(proj)));
+    glUniform3fv(glGetUniformLocation(compute_program_shading, "camera"), 1, glm::value_ptr(pos));
+    glUniform1f(glGetUniformLocation(compute_program_shading, "JD_FR_MIN"), clr.JD_FR_MIN);
+    glUniform1f(glGetUniformLocation(compute_program_shading, "JD_FR_MAX"), clr.JD_FR_MAX);
+    glUniform3fv(glGetUniformLocation(compute_program_shading, "col_jd_low"), 1, glm::value_ptr(clr.col_jd_low));
+    glUniform3fv(glGetUniformLocation(compute_program_shading, "col_jd_high"), 1, glm::value_ptr(clr.col_jd_high));
+    glUniform1f(glGetUniformLocation(compute_program_shading, "k_a"), clr.k_a);
+    glUniform1f(glGetUniformLocation(compute_program_shading, "k_d"), clr.k_d);
+    glUniform1f(glGetUniformLocation(compute_program_shading, "k_s"), clr.k_s);
+    glUniform1f(glGetUniformLocation(compute_program_shading, "alpha"), clr.alpha);
+    glUniform3fv(glGetUniformLocation(compute_program_shading, "col_specular"), 1, glm::value_ptr(clr.col_specular));
+    glUniform1f(glGetUniformLocation(compute_program_shading, "ao_fac"), clr.ao_fac);
+    glUniform1f(glGetUniformLocation(compute_program_shading, "ao_size"), clr.ao_size);
+    glUniform3fv(glGetUniformLocation(compute_program_shading, "col_ao"), 1, glm::value_ptr(clr.col_ao));
 
     glDispatchCompute((width-1)/32+1, (height-1)/32+1, 1);
 
@@ -416,3 +462,13 @@ void AttractorRenderer::defaultsValues(){
     clr.ao_size = 0.2f;
     clr.col_ao = glm::vec3(0.1,0.2,0.8);
 }
+
+void AttractorRenderer::randArray(float* array, int size, float range){
+    for(int i=0; i<size; i+=4){
+        array[i] = range * (((float)rand()/RAND_MAX) *2 -1);
+        array[i+1] = range * (((float)rand()/RAND_MAX) *2 -1);
+        array[i+2] = range * (((float)rand()/RAND_MAX) *2 -1);
+        array[i+3] = 1;
+    }
+}
+

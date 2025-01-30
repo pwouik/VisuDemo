@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <vector>
 #include "raymarching_renderer.h"
+#include "attractor_renderer.h"
 #include <mutex>
 
 #include "glm/ext/matrix_transform.hpp"
@@ -22,8 +23,8 @@
 #define FPS_UPDATE_DELAY 1
 
 enum Mode{
-    Raymarching,
-    Attractor
+    RaymarchingMode,
+    AttractorMode
 };
 
 
@@ -141,7 +142,9 @@ public:
     std::mutex leapmotion_mutex;
     glm::quat fractal_rotation = glm::identity<glm::quat>();
     float speed;
+    //pretty sure this could (and should) be stack allocated
     RaymarchingRenderer* raymarching_renderer;
+    AttractorRenderer* attractor_renderer; 
 
     GLuint compute_program_attractor; //torm
     GLuint ssao_attractor;  //torm
@@ -155,7 +158,7 @@ public:
     bool mouse_lock = false;
     glm::mat4 old_view;
 
-    Mode curr_mode = Raymarching;
+    Mode curr_mode = RaymarchingMode;
 
     int frameAcc = 0;
     float prevFpsUpdate = 0 ;

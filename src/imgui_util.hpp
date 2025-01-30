@@ -1,9 +1,19 @@
+/*
+You would be right to notice that there's no reason for function here to static
+
+The point is that for some reason linkage go boom if not
+
+So they'll just stay static for now
+
+*/
+
 #pragma once
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
 
 #include <GLFW/glfw3.h>
+#include <string>
 
 
 //UI util
@@ -69,7 +79,7 @@ namespace utl{
 }
 
 namespace ui{
-    float inputWidth = 45.0f; //width for most input float
+    static float inputWidth = 45.0f; //width for most input float
 
     static void HelpMarker(const char* desc){
         ImGui::SameLine();
@@ -84,17 +94,17 @@ namespace ui{
     }
 
     //editable field for float of float vector
-    void valf(const char* desc, float& v, float speed = 0.005f, float minv = 0.0f, float maxv = 1.0f){
+    static void valf(const char* desc, float& v, float speed = 0.005f, float minv = 0.0f, float maxv = 1.0f){
         ImGui::Text(desc);
         SL CW ImGui::DragFloat(UID(v), &v, speed, minv, maxv, "%.2f");
     }
 
-    void valf(const char* desc, glm::vec3& v, float minv = -1.0f, float maxv = 1.0f){
+    static void valf(const char* desc, glm::vec3& v, float minv = -1.0f, float maxv = 1.0f){
         ImGui::Text(desc);
         SL ImGui::DragFloat3(UID(v),&v.x, 0.005f, minv, maxv);
     }
     
-    void valf(const char* desc, glm::mat4& mat, float speed = 0.005f, float minv = -1.0f, float maxv = 1.0f){
+    static void valf(const char* desc, glm::mat4& mat, float speed = 0.005f, float minv = -1.0f, float maxv = 1.0f){
         ImGui::Text(desc);
         for (int row = 0; row < 4; ++row) {
             //we cannot use dragfloat4 because it would be column first or else it would add some messing with tranpose
