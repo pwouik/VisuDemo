@@ -56,7 +56,7 @@ const uint max_iter = 128;          // Maximum number of iterations for ray cast
 const float EPSILON = 1e-3;         // Epsilon value for early termination
 const float PI = 3.14159265358979;  // Pi constant
 
-vec3 gradient(float i){
+vec3 rainbow(float i){
     return min(vec3(1),max(vec3(0),sin((vec3(0,2.0/3,4.0/3)+i)*PI)+.5));
 }
 
@@ -162,7 +162,7 @@ vec3 fract_color(vec3 position) {
         cos(angles.z), -sin(angles.z), sin(angles.z), cos(angles.z)
      );
   }
-  return gradient(color);
+  return rainbow(color);
 }
 // Phong lighting model for calculating color
 vec3 phong(vec3 pos,vec3 camera,vec3 color, float min_light,float shadow,float ao, float e) {

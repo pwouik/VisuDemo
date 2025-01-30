@@ -2,13 +2,9 @@
 #include <GLFW/glfw3.h>
 #include <LeapC.h>
 #include <climits>
-#include <cstddef>
 #include <cstdlib>
-#include <fstream>
-#include <glm/ext/matrix_transform.hpp>
-#include <glm/fwd.hpp>
-#include <glm/trigonometric.hpp>
 #include <glm/gtx/rotate_vector.hpp>
+#include "attractor.h"
 #include "opengl_util.h"
 
 
@@ -17,104 +13,18 @@
 #include <optional>
 #include <vector>
 
-#include "glm/gtc/quaternion.hpp"
 #include "leap_connection.h"
 #include "glm/gtc/type_ptr.hpp"
-#include "glm/matrix.hpp"
-#include "glm/ext.hpp"
-#include <algorithm> //for std::fill
 #include <mutex>
 
 // #include <thread> //this therad
 // #include <chrono> //sleep
-
-#include "mathracttor.hpp" //utility function for attractors
-#include "raymarching_renderer.h"
 
 
 
 #define BUFFER_OFFSET(offset) ((GLvoid*)(offset))
 
 using namespace std;
-
-#define NBPTS 20'000'000
-
-
-
-namespace gbl{
-    bool paused = false;
-}
-namespace atr{
-    GLfloat* blackData; //need a blackscreen to reset
-    GLuint ssbo_pts; //ssbo of points
-    
-    //glm::mat4 for attractors
-    GLuint uboM4;
-
-
-    void randArray(float* array, int size, float range){
-        for(int i=0; i<size; i+=4){
-            array[i] = range * (((float)rand()/RAND_MAX) *2 -1);
-            array[i+1] = range * (((float)rand()/RAND_MAX) *2 -1);
-            array[i+2] = range * (((float)rand()/RAND_MAX) *2 -1);
-            array[i+3] = 1;
-        }
-    }
-
-    void origindArray(float* array, int size){
-        for(int i=0; i<size; i+=4){
-            //which is x, whihc is y, which is z, which is w ?
-            array[i] = 0.0f; 
-            array[i+1] = 0.0f;
-            array[i+2] = 0.0f;
-            array[i+3] = 1.0f;
-        }
-    }
-
-
-    void init_data(int w, int h){
-        blackData = new GLfloat[w * h * 4];
-        std::fill(blackData, blackData + w * h * 4, 0.0f);
-
-        //generates points SSBO
-        float* data = new float[NBPTS*4];
-        randArray(data, NBPTS, 1);
-        //origindArray(data, NBPTS);
-        glGenBuffers(1, &ssbo_pts);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_pts);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(float) * 4 * NBPTS, data, GL_DYNAMIC_DRAW); //GL_DYNAMIC_DRAW update occasionel et lecture frequente
-        //glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, size, data); //to update partially
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo_pts);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
-
-        delete[] data; //points memory only needed on GPU
-
-        //attractors (a max of 10 matrices stored as UBO)
-        glGenBuffers(1, &uboM4);
-        glBindBuffer(GL_UNIFORM_BUFFER, uboM4);
-        glBufferData(GL_UNIFORM_BUFFER, 10 * sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW); // Allocate space for up to 10 matrices
-        glBindBufferBase(GL_UNIFORM_BUFFER, 1, uboM4); // Binding point 0
-        glBindBuffer(GL_UNIFORM_BUFFER, 0); // Unbind
-
-        //reserve matrices to be pushed to UBO each frame
-        uvl::ubo_matrices.reserve(10);
-        uvl::fixedProcessInit();
-    }
-    void clean_data(){
-        delete[] blackData;
-        uvl::A_tractor.freeAll();
-        uvl::B_tractor.freeAll();
-
-        //todo unbind ssbo
-    }
-
-    //not used anywhere ? must be deleted
-    void clearTexture(int w, int h, GLuint texture){
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGBA, GL_FLOAT, blackData);
-    }
-
-}
 
 
 App::App(int w,int h)
@@ -140,7 +50,7 @@ App::App(int w,int h)
     glfwSetScrollCallback(window, onScroll);
     glfwSetFramebufferSizeCallback(window, onResize);
 
-    utl::initIMGUI(window);
+    initIMGUI(window);
     DEBUG("ImGui initialized");
 
     int version = gladLoadGL(glfwGetProcAddress);
@@ -160,47 +70,6 @@ App::App(int w,int h)
 
     glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
-    //depth texture (texture1, binding 1)
-    glGenTextures(1, &depth_texture);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, depth_texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, w, h, 0, GL_RED_INTEGER, GL_INT, nullptr);
-    //required for some reason on my computer
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0); 
-    /*Ikd what those are are supposed to do
-    
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); //either this or both line above is required for me to not get a white screen
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); //doesnt appear to do anyting
-    //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);  //doesn't appear to do anythin
-    */
-    glBindImageTexture(1, depth_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32I); //bind to channel 1
-
-    //distance from last jump texture (texture 2, binding4)
-    glGenTextures(1, &jumpdist_texture);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, jumpdist_texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, w, h, 0, GL_RED_INTEGER, GL_INT, nullptr); 
-    //required for some reason on my computer
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0); 
-    glBindImageTexture(4, jumpdist_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32I); //bind to channel 4
-
-
-    //compute_program for attractor
-    compute_program_attractor = glCreateProgram();
-    GLint comp_attractor = loadshader("shaders/render_attractor.comp", GL_COMPUTE_SHADER);
-    glAttachShader(compute_program_attractor, comp_attractor);
-    glLinkProgram(compute_program_attractor);
-    linkProgram(compute_program_attractor);
-
-    ssao_attractor = glCreateProgram();
-    GLint ssao_shader = loadshader("shaders/ssao_attractor.comp", GL_COMPUTE_SHADER);
-    glAttachShader(ssao_attractor, ssao_shader);
-    glLinkProgram(ssao_attractor);
-    linkProgram(ssao_attractor);
-
-
     blit_program = glCreateProgram();
     GLint vert = loadshader("shaders/blit.vert", GL_VERTEX_SHADER);
     GLint frag = loadshader("shaders/blit.frag", GL_FRAGMENT_SHADER);
@@ -216,6 +85,7 @@ App::App(int w,int h)
     proj = glm::perspective(glm::radians(70.0f),(float)width/(float)height,0.1f,10000.0f);
 
     raymarching_renderer = new RaymarchingRenderer();
+    attractor_renderer = new AttractorRenderer(w,h);
 
     prm::defaults();
 }
@@ -237,14 +107,12 @@ void App::draw_ui(){
             ImGui::Text("FPS : %.2f", currentFPS);
             const char* items_cb1[] = { "Raymarching", "Attractor"}; //MUST MATCH ENUM IN app.h !
             if(ImGui::Combo("Display type", (int*)&curr_mode, items_cb1, IM_ARRAYSIZE(items_cb1))){
-                gbl::paused = true;
                 if(curr_mode == Attractor){
-                    atr::init_data(width, height);
+                    attractor_renderer->init_data(width, height);
                 }
                 else {
-                    atr::clean_data();
+                    attractor_renderer->reset();
                 }
-                gbl::paused = false;
             }
             
         ImGui::SeparatorText("generic debug info");
@@ -282,111 +150,9 @@ void App::draw_ui(){
     ImGui::End();
 }
 
-
-void App::draw_ui_attractor(){
-    ImGui::Begin("attractor");
-        if(ImGui::CollapsingHeader("Debug & all", ImGuiTreeNodeFlags_DefaultOpen )){
-            ImGui::SliderFloat("##lerpfactor", &uvl::lerpFactor, 0.0f, 1.0f, "lerp : %.3f");
-            ImGui::SliderFloat("##SliderLerpToMin", &uvl::lerpEdgeClamp, 0.0f, 0.5f, "lerp edge clamp: %.2f");
-                ui::HelpMarker("Lerp between [0+x; 1-x] (stop before reaching 0 or 1)"
-                    "relevant when using more than 3 functions per attractors"
-                    "keep it 0 if you don't know what your doing");
-            const char* items_cb2[] = { "per matrix", "per component"}; //MUST MATCH ENUM IN app.h !
-            if(ImGui::Combo("lerping mode", (int*)&lerpmode, items_cb2, IM_ARRAYSIZE(items_cb2))){}
-            
-            ImGui::Checkbox("no clear", &ani::no_clear);
-                ui::HelpMarker("Do not clear previous frame if view didn't changed");
-            ImGui::Checkbox("Idle animation", &ani::idle);
-                ui::HelpMarker("camera enter an idle spinning animation if checked");
-
-            if(ImGui::TreeNode("Idle params")){
-                ImGui::DragFloat("Spin period", &ani::spin_Period, 0.01f, 3.0f,10.0f,"%.2f");
-                ImGui::DragFloat("Lerp period", &ani::lerp_period, 0.01f, 3.0f,10.0f,"%.2f");
-                ImGui::DragFloat2("heigh & distance", ani::height_and_distance, 0.01f,-3.0f,3.0f,"%.2f");
-                ImGui::DragFloat("Lerp stiffness", &ani::lerp_stiffness, 0.01f, 0.5f,20.0f,"%.2f");
-                ui::HelpMarker("The stifness of the smoothing curve"
-                    "The function is a sigmoid mapranged to range 0-1, ie :"
-                    "(1/(1+exp(-k(2x-1))) - mv) * 1/(1-2mv)"
-                    "where mv is the value at 0,  1+(1+exp(k))");
-                ImGui::TreePop();
-            }
-            ui::param_settings();
-
-            if(ImGui::TreeNode("Other Utils")){
-                if(ImGui::Button("pref Speed")) speed = 0.025f;
-                if(ImGui::Button("reset cam")) pos = glm::vec3(0.0,0.0,-0.5);
-
-                ImGui::TreePop();
-            }
-        }
-
-        if(ImGui::CollapsingHeader("Cool preset")){
-            if(ImGui::Button("Sierpinski")) preset::sierpinski();
-            if(ImGui::Button("Sierpintagon")) preset::sierpintagon();
-            if(ImGui::Button("Sierpolygon")) preset::sierpolygon(); 
-            SL ImGui::SetNextItemWidth(60); ImGui::DragInt("side", &preset::nb_cote, 1, 3, 10, "%d", ImGuiSliderFlags_AlwaysClamp);
-            if(ImGui::Button("Barnsley Fern")) preset::barsnley_fern(); 
-        }
-
-
-        if(ImGui::CollapsingHeader("Attractors")){
-            ImGui::SliderInt("nb functions", &uvl::matrixPerAttractor, 3, 10);
-                utl::HelpMarker("The number of different random matrices per attractor. going above ten will crash the program");
-            
-            if (ImGui::TreeNode("Attractor A")){
-                uvl::A_tractor.ui(uvl::matrixPerAttractor);
-
-                ImGui::TreePop();
-            }
-            if (ImGui::TreeNode("Attractor B")){
-                uvl::B_tractor.ui(uvl::matrixPerAttractor);
-
-                ImGui::TreePop();
-            }
-        }
-        if(ImGui::CollapsingHeader("Coloring", ImGuiTreeNodeFlags_DefaultOpen )){
-            ImGui::Text("temporary, must be hardcoded when it'll look nice");
-            if(ImGui::TreeNode("Jump Distance MapRange")){
-                ImGui::ColorEdit3("jd low color", glm::value_ptr(clr::col_jd_low));
-                ImGui::ColorEdit3("jd high color", glm::value_ptr(clr::col_jd_high));
-                ImGui::DragFloat("from min",&clr::JD_FR_MIN, 0.005f, 0.0f, 2.0f, "%.2f");
-                ImGui::DragFloat("from max",&clr::JD_FR_MAX, 0.005f, 0.0f, 2.0f, "%.2f");
-                //goes to 0-1 so useless
-                //ImGui::DragFloat("to min",&clr::JD_TO_MIN, 0.005f, 0.0f, 2.0f, "%.2f");
-                //ImGui::DragFloat("to max",&clr::JD_TO_MAX, 0.005f, 0.0f, 2.0f, "%.2f");
-
-                ImGui::TreePop();
-            }
-            if(ImGui::TreeNode("Phong parameters")){
-                ImGui::SliderFloat("k_a##attractor", &clr::k_a, 0.0f, 1.0f);
-                //ImGui::ColorEdit3("ambient##attractor", glm::value_ptr(clr::col_ambient));
-                ImGui::SliderFloat("k_d##attractor", &clr::k_d, 0.0f, 1.0f);
-                //ImGui::ColorEdit3("diffuse##attractor", glm::value_ptr(clr::col_diffuse));
-                ImGui::SliderFloat("k_s##attractor", &clr::k_s, 0.0f, 1.0f);
-                ImGui::SliderFloat("alpha##attractor", &clr::alpha, 0.1f, 20.0f);
-                ImGui::ColorEdit3("specular##attractor", glm::value_ptr(clr::col_specular));
-
-                ImGui::TreePop();
-            }
-            if(ImGui::TreeNode("Ambient Occlusions")){
-                ImGui::SliderFloat("AO size##attractor", &clr::ao_size, 0.0f, 1.0f);
-                    ui::HelpMarker("The size of the square in witch AO will be sampled");
-                ImGui::SliderFloat("AO factor##attractor", &clr::ao_fac, -0.025f, 0.025f);
-                    ui::HelpMarker("A multiplicative factor applied to ambient occlusion"
-                        "to have darkenning AO, just set color to white and ao_fac to negative");
-                ImGui::ColorEdit3("ao colors##attractor", glm::value_ptr(clr::col_ao));
-
-                ImGui::TreePop();
-            }
-        }
-
-    ImGui::End();
-}
-
 void App::run(){
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
-        if(gbl::paused) continue;
         updateFps();
         
         if(glfwGetKey(window, GLFW_KEY_W)==GLFW_PRESS){
@@ -440,7 +206,7 @@ void App::run(){
                 glm::vec3(0.0, 1.0, 0.0)),
             glm::vec3(-pos.x, -pos.y, -pos.z)));
 
-        utl::newframeIMGUI();
+        newframeIMGUI();
         draw_ui();
         switch (curr_mode) {
         case Raymarching:{
@@ -450,72 +216,8 @@ void App::run(){
             break;
         }
         case Attractor:{
-            draw_ui_attractor();
-
-            
-            if(!ani::no_clear || inv_camera_view!=old_view){
-                int depth_clear = INT_MIN;
-                glClearTexImage(depth_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
-                glClearTexImage(jumpdist_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
-            }
-
-            //overwrite camera view if idling
-            if(ani::idle){
-                //some optimizing could be done about inversing multiples times camera view
-                inv_camera_view = glm::inverse(ani::getIdleView((float)glfwGetTime()));
-            }
-            
-            old_view=inv_camera_view;
-            glUseProgram(compute_program_attractor);
-
-            glUniformMatrix4fv(glGetUniformLocation(compute_program_attractor, "view"),1, GL_FALSE, glm::value_ptr(glm::inverse(inv_camera_view)));
-            glUniformMatrix4fv(glGetUniformLocation(compute_program_attractor, "proj"),1, GL_FALSE, glm::value_ptr(proj));
-            glUniform2ui(glGetUniformLocation(compute_program_attractor, "screen_size"), width,height);
-            glUniform3fv(glGetUniformLocation(compute_program_attractor, "camera"), 1, glm::value_ptr(pos));
-            glUniform3fv(glGetUniformLocation(compute_program_attractor, "light_pos"), 1, glm::value_ptr(light_pos));
-            glUniform1f(glGetUniformLocation(compute_program_attractor, "time"), glfwGetTime());
-            glUniform1i(glGetUniformLocation(compute_program_attractor, "matrixPerAttractor"),uvl::matrixPerAttractor);
-            glUniform1i(glGetUniformLocation(compute_program_attractor, "randInt_seed"),rand()%RAND_MAX);
-            
-            //send attractor data to compute shader
-            uvl::update_ubo_matrices(lerpmode);
-            glBindBuffer(GL_UNIFORM_BUFFER, atr::uboM4);
-            glBufferSubData(GL_UNIFORM_BUFFER, 0, uvl::matrixPerAttractor * sizeof(glm::mat4), uvl::ubo_matrices.data());
-            glBindBuffer(GL_UNIFORM_BUFFER, 0);
-            
-            glDispatchCompute((NBPTS-1)/1024+1, 1, 1);
-
-            // make sure writing to image has finished before read
-            glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-
-            glUseProgram(ssao_attractor);
-            glUniform2ui(glGetUniformLocation(ssao_attractor, "screen_size"), width,height);
-            glUniformMatrix4fv(glGetUniformLocation(ssao_attractor, "inv_view"),1, GL_FALSE, glm::value_ptr(inv_camera_view));
-            glUniformMatrix4fv(glGetUniformLocation(ssao_attractor, "inv_proj"),1, GL_FALSE, glm::value_ptr(glm::inverse(proj)));
-            glUniform3fv(glGetUniformLocation(ssao_attractor, "camera"), 1, glm::value_ptr(pos)); //here todo
-            glUniform1f(glGetUniformLocation(ssao_attractor, "JD_FR_MIN"), clr::JD_FR_MIN);
-            glUniform1f(glGetUniformLocation(ssao_attractor, "JD_FR_MAX"), clr::JD_FR_MAX);
-            // glUniform1f(glGetUniformLocation(ssao_attractor, "JD_TO_MIN"), clr::JD_TO_MIN);
-            // glUniform1f(glGetUniformLocation(ssao_attractor, "JD_TO_MAX"), clr::JD_TO_MAX);
-            glUniform3fv(glGetUniformLocation(ssao_attractor, "col_jd_low"), 1, glm::value_ptr(clr::col_jd_low));
-            glUniform3fv(glGetUniformLocation(ssao_attractor, "col_jd_high"), 1, glm::value_ptr(clr::col_jd_high));
-            glUniform1f(glGetUniformLocation(ssao_attractor, "k_a"), clr::k_a);
-            //glUniform3fv(glGetUniformLocation(ssao_attractor, "col_ambient"), 1, glm::value_ptr(clr::col_ambient));
-            glUniform1f(glGetUniformLocation(ssao_attractor, "k_d"), clr::k_d);
-            //glUniform3fv(glGetUniformLocation(ssao_attractor, "col_diffuse"), 1, glm::value_ptr(clr::col_diffuse));
-            glUniform1f(glGetUniformLocation(ssao_attractor, "k_s"), clr::k_s);
-            glUniform1f(glGetUniformLocation(ssao_attractor, "alpha"), clr::alpha);
-            glUniform3fv(glGetUniformLocation(ssao_attractor, "col_specular"), 1, glm::value_ptr(clr::col_specular));
-            glUniform1f(glGetUniformLocation(ssao_attractor, "ao_fac"), clr::ao_fac);
-            glUniform1f(glGetUniformLocation(ssao_attractor, "ao_size"), clr::ao_size);
-            glUniform3fv(glGetUniformLocation(ssao_attractor, "col_ao"), 1, glm::value_ptr(clr::col_ao));
-
-            glDispatchCompute((width-1)/32+1, (height-1)/32+1, 1);
-
-            glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-
+            attractor_renderer->draw_ui(speed, pos);
+            attractor_renderer->render(width, height, pos, inv_camera_view, proj, light_pos, fractal_position, fractal_rotation);
         }
         }
 
@@ -525,8 +227,8 @@ void App::run(){
         glBindTexture(GL_TEXTURE_2D, texture);
         glDrawArrays(GL_TRIANGLES,0,3);
 
-        utl::enframeIMGUI();
-        utl::multiViewportIMGUI(window);
+        enframeIMGUI();
+        multiViewportIMGUI(window);
         glfwSwapBuffers(window);
     }
 }

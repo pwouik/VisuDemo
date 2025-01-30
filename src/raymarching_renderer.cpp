@@ -10,7 +10,7 @@
 
 RaymarchingRenderer::RaymarchingRenderer(){
     compute_program = glCreateProgram();
-    GLint comp = loadshader("shaders/render.comp", GL_COMPUTE_SHADER);
+    GLint comp = loadshader("shaders/raymarching.comp", GL_COMPUTE_SHADER);
     glAttachShader(compute_program, comp);
     glLinkProgram(compute_program);
     linkProgram(compute_program);

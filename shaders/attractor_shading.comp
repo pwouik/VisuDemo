@@ -36,6 +36,10 @@ uniform float ao_fac;
 uniform float ao_size;
 uniform vec3 col_ao;
 
+vec3 rainbow(float i){
+    return min(vec3(1),max(vec3(0),sin((vec3(0,2.0/3,4.0/3)+i)*PI)+.5));
+}
+
 float sampleDepth(ivec2 pos){
     vec2 prod  = inv_proj_small * vec2(float(imageLoad(depth,pos).r)/(1<<31),1);
     return prod.x / prod.y;
@@ -87,27 +91,7 @@ void computeNormals(){
     normal = -normalize(cross(up,right) + cross(right, down) + cross(down, left) + cross(left, up));
     ssnormal = transpose(mat3(inv_view))*normal;
 }
-#define SSAOSAMPLES 8
-float dubious_ssao(){
-    float size = k_a;
-    float cd = sampleDepth(ivec2(gl_GlobalInvocationID.xy));
-    float acc = 0.1;
-    float range = size*float(screen_size.x)/(inv_proj[0].x*-cd);
-    float s = max(1,range/SSAOSAMPLES);
-    int n=1;
-    for(float dx = -range; dx < range; dx+=s){
-        for(float dy = -range; dy < range; dy+=s){
-            float trueDepth = sampleDepth(ivec2(gl_GlobalInvocationID.xy)+ivec2(dx,dy));
-            vec2 wd = vec2(dx,dy)/range;
-            float dif = trueDepth-cd;//(cd-dot(wd,ssnormal.xy)/ssnormal.z);
-            if(dif > size) continue;
-            float de2 = dot(wd,wd);
-            acc+= max(dif/de2,0);
-            n++;
-        }
-    }
-    return 1.0-acc/n*ao_fac*100;
-}
+#define SSAOSAMPLES 4
 //Most parameter here are highly interdependent. heavy fine tuning requiered if changer a single thing.
 #define SSAORANGE 4
 #define SSAOSTEP 1

@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <vector>
 #include "raymarching_renderer.h"
+#include "attractor_renderer.h"
 #include <mutex>
 
 #include "glm/ext/matrix_transform.hpp"
@@ -18,7 +19,6 @@
 #include "leap_connection.h"
 #define GLM_ENABLE_EXPERIMENTAL
 
-#define PI 3.14159265358979323f
 #define FPS_UPDATE_DELAY 1
 
 enum Mode{
@@ -26,10 +26,6 @@ enum Mode{
     Attractor
 };
 
-enum LerpMode{
-    lerp_Matrix,
-    lerp_PerComponent
-};
 
 #define DEBUG(x) std::cout << x << std::endl;
 //#define DEBUG
@@ -44,7 +40,7 @@ public:
 	~App()
 	{
         if (leap_connection) leap_connection.reset();
-        utl::shutdownIMGUI();
+        shutdownIMGUI();
         delete raymarching_renderer;
         glfwTerminate();
 	}
@@ -80,13 +76,6 @@ public:
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, w, h, 0, GL_RGBA, 
                     GL_FLOAT, NULL);
 
-        glBindTexture(GL_TEXTURE_2D, depth_texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, w, h, 0, GL_RED_INTEGER, 
-                    GL_INT, nullptr);
-
-        glBindTexture(GL_TEXTURE_2D, jumpdist_texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, w, h, 0, GL_RED_INTEGER,
-                    GL_INT, nullptr);
         
         //not requiered but maybe according to chat gpt yapping
         //glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
@@ -146,13 +135,10 @@ public:
     glm::quat fractal_rotation = glm::identity<glm::quat>();
     float speed;
     RaymarchingRenderer* raymarching_renderer;
+    AttractorRenderer* attractor_renderer;
 
-    GLuint compute_program_attractor;
-    GLuint ssao_attractor;
     GLuint blit_program;
     GLuint texture;
-    GLuint depth_texture;
-    GLuint jumpdist_texture;
     GLuint dummy_vbo;
     GLuint dummy_vao;
     glm::mat4 proj;
@@ -160,7 +146,6 @@ public:
     glm::mat4 old_view;
 
     Mode curr_mode = Raymarching;
-    LerpMode lerpmode = lerp_PerComponent;
 
     int frameAcc = 0;
     float prevFpsUpdate = 0 ;
