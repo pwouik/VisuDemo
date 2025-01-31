@@ -563,7 +563,6 @@ void AttractorRenderer::render(float width,float height,glm::vec3& pos,glm::mat4
     update_ubo_matrices();
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, matrix_per_attractor * sizeof(glm::mat4), ubo_matrices.data());
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     float weights[MAX_FUNC_PER_ATTRACTOR*4];
     for(int i = 0;i<matrix_per_attractor;i++)
