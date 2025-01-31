@@ -134,6 +134,7 @@ public:
     std::mutex leapmotion_mutex;
     glm::quat fractal_rotation = glm::identity<glm::quat>();
     float speed;
+    double last_tick = 0;
     //pretty sure this could (and should) be stack allocated
     RaymarchingRenderer* raymarching_renderer;
     AttractorRenderer* attractor_renderer;

@@ -31,7 +31,7 @@ App::App(int w,int h)
 {
     pos = glm::vec3(0.0,0.0,0.0);
     light_pos = glm::vec3(0.0,0.0,0.0);
-    speed = 0.02f;
+    speed = 1.0f;
     width = w;
     height = h;
 
@@ -49,7 +49,6 @@ App::App(int w,int h)
     glfwSetCursorPosCallback (window, onMouse);
     glfwSetScrollCallback(window, onScroll);
     glfwSetFramebufferSizeCallback(window, onResize);
-    glfwSwapInterval(0);
 
     initIMGUI(window);
     DEBUG("ImGui initialized");
@@ -145,50 +144,51 @@ void App::draw_ui(){
 
 void App::run(){
     while (!glfwWindowShouldClose(window)) {
+        double current_tick = glfwGetTime();
+        float motion = speed*(current_tick-last_tick);
+        last_tick=current_tick;
         glfwPollEvents();
         updateFps();
+
         
         if(glfwGetKey(window, GLFW_KEY_W)==GLFW_PRESS){
-            pos+= glm::rotateY(glm::vec3(0.0,0.0,-1.0),yaw * PI / 180.0f) * speed;
+            pos+= glm::rotateY(glm::vec3(0.0,0.0,-1.0),yaw * PI / 180.0f) * motion;
         }
         if(glfwGetKey(window, GLFW_KEY_S)==GLFW_PRESS){
-            pos+= glm::rotateY(glm::vec3(0.0,0.0,1.0),yaw * PI / 180.0f) * speed;
+            pos+= glm::rotateY(glm::vec3(0.0,0.0,1.0),yaw * PI / 180.0f) * motion;
         }
         if(glfwGetKey(window, GLFW_KEY_A)==GLFW_PRESS){
-            pos+= glm::rotateY(glm::vec3(-1.0,0.0,0.0),yaw * PI / 180.0f) * speed;
+            pos+= glm::rotateY(glm::vec3(-1.0,0.0,0.0),yaw * PI / 180.0f) * motion;
         }
         if(glfwGetKey(window, GLFW_KEY_D)==GLFW_PRESS){
-            pos+= glm::rotateY(glm::vec3(1.0,0.0,0.0),yaw * PI / 180.0f) * speed;
+            pos+= glm::rotateY(glm::vec3(1.0,0.0,0.0),yaw * PI / 180.0f) * motion;
         }
         if(glfwGetKey(window, GLFW_KEY_SPACE)==GLFW_PRESS){
-            pos.y += speed;
+            pos.y += motion;
         }
         if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT)==GLFW_PRESS){
-            pos.y -= speed;
+            pos.y -= motion;
         }
         if(glfwGetKey(window, GLFW_KEY_L)==GLFW_PRESS){
             light_pos = pos;
         }
         if(glfwGetKey(window, GLFW_KEY_UP)==GLFW_PRESS){
-            fractal_position += glm::vec3(-1.0f ,0.0f, 0.0f) * speed;
+            fractal_position += glm::vec3(-1.0f ,0.0f, 0.0f) * motion;
         }
         if(glfwGetKey(window, GLFW_KEY_DOWN)==GLFW_PRESS){
-            fractal_position += glm::vec3(1.0f ,0.0f, 0.0f) * speed;
+            fractal_position += glm::vec3(1.0f ,0.0f, 0.0f) * motion;
         }
         if(glfwGetKey(window, GLFW_KEY_LEFT)==GLFW_PRESS){
-            fractal_position += glm::vec3(0.0f ,0.0f, 1.0f) * speed;
+            fractal_position += glm::vec3(0.0f ,0.0f, 1.0f) * motion;
         }
         if(glfwGetKey(window, GLFW_KEY_RIGHT)==GLFW_PRESS){
-            fractal_position += glm::vec3(0.0f ,0.0f, -1.0f) * speed;
+            fractal_position += glm::vec3(0.0f ,0.0f, -1.0f) * motion;
         }
         if(glfwGetKey(window, GLFW_KEY_PAGE_UP)==GLFW_PRESS){
-            fractal_position += glm::vec3(0.0f ,1.0f, 0.0f) * speed;
+            fractal_position += glm::vec3(0.0f ,1.0f, 0.0f) * motion;
         }
         if(glfwGetKey(window, GLFW_KEY_PAGE_DOWN)==GLFW_PRESS){
-            fractal_position += glm::vec3(0.0f ,-1.0f, 0.0f) * speed;
-        }
-        if(glfwGetKey(window, GLFW_KEY_L)==GLFW_PRESS){
-            light_pos = pos;
+            fractal_position += glm::vec3(0.0f ,-1.0f, 0.0f) * motion;
         }
 
         glm::mat4 inv_camera_view = glm::inverse(glm::translate(glm::rotate(
