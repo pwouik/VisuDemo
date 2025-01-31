@@ -10,7 +10,7 @@ layout(std430, binding = 3) buffer PointBuffer {          // SSBO points
 };
 layout(r32i, binding = 4) uniform iimage2D jumpdist; //texture that store jump distances
 uniform int randInt_seed;   //a random value per frame (between 0 and RAND_MAX, WARNING RAND_MAX depends on compiler !)
-uniform int matrixPerAttractor; //number of matrices in array
+uniform int matrix_per_attractor; //number of matrices in array
 
 uniform mat4 proj;
 uniform mat4 view;
@@ -18,9 +18,6 @@ uniform uvec2 screen_size;
 uniform vec3 camera;
 
 
-
-const uint max_iter = 256;
-const float EPSILON = 1e-4;
 const float PI = 3.14159265358979;
 
 //magic values
@@ -77,27 +74,23 @@ void main() {
     vec4 point = points[idx];
     vec4 pts[MAX_FUNC_PER_ATTRACTOR];
 
-    //update point coordinate with attractor
-    if(matrixPerAttractor > 0) {        
-        //get a unique seed per thread. 
 
-        //compute all points to display. Note that 3<matrixPerAttractor<MAX_FUNC_PER_ATTRACTOR = 10
-        for(int i =0; i < matrixPerAttractor; i++){
-            pts[i] = matrixArray[i] * point;
+    //compute all points to display. Note that 2<matrix_per_attractor<MAX_FUNC_PER_ATTRACTOR = 10
+    for(int i =0; i < matrix_per_attractor; i++){
+        pts[i] = matrixArray[i] * point;
+    }
+
+    //get a unique seed per thread. 
+    float fake_rand = float(hash(idx^randInt_seed))/4294967296.0f; 
+    //jump to a random position
+    for(int i = 0;i<matrix_per_attractor;i++){
+        if(weights[i]>fake_rand){
+            points[idx] = pts[i];
+            break;
         }
-
-        float fake_rand = float(hash(idx^randInt_seed)%2048)/2048; 
-        //jump to a random position
-        for(int i = 0;i<matrixPerAttractor;i++){
-            if(weights[i]>fake_rand){
-                points[idx] = pts[i];
-                break;
-            }
-        }
-
     }
     //draw all points
-    for(int i =0; i < matrixPerAttractor; i++){
+    for(int i =0; i < matrix_per_attractor; i++){
         screenWriteCoord(pts[i],distance(pts[i], point));
     }
 }
@@ -113,36 +106,36 @@ void main_v2() {
     vec4 pts_gen2[MAX_FUNC_PER_ATTRACTOR*MAX_FUNC_PER_ATTRACTOR];
 
     //update point coordinate with attractor
-    if(matrixPerAttractor > 0) {
+    if(matrix_per_attractor > 0) {
 
-        //compute all points to display. Note that 3<matrixPerAttractor<MAX_FUNC_PER_ATTRACTOR = 10
-        for(int i =0; i < matrixPerAttractor; i++){
+        //compute all points to display. Note that 3<matrix_per_attractor<MAX_FUNC_PER_ATTRACTOR = 10
+        for(int i =0; i < matrix_per_attractor; i++){
             pts_gen1[i] = matrixArray[i] * point;
-            for(int k=0; k<matrixPerAttractor; k++){
-                pts_gen2[i*matrixPerAttractor+k] = matrixArray[k] * pts_gen1[i];
+            for(int k=0; k<matrix_per_attractor; k++){
+                pts_gen2[i*matrix_per_attractor+k] = matrixArray[k] * pts_gen1[i];
             }
         }
-        float fake_rand = float(hash(idx^randInt_seed)%2048)/2048;
+        float fake_rand = float(hash(idx^randInt_seed))/4294967296.0f;
         int new_pt;
-        for(int i = 0;i<matrixPerAttractor;i++){
+        for(int i = 0;i<matrix_per_attractor;i++){
             if(weights[i]>fake_rand){
                 new_pt;
                 break;
             }
         }
-        fake_rand = float(hash(idx^randInt_seed^0x1F54C5)%2048)/2048;
-        for(int i = 0;i<matrixPerAttractor;i++){
+        fake_rand = float(hash(idx^randInt_seed^0x1F54C5))/4294967296.0f;
+        for(int i = 0;i<matrix_per_attractor;i++){
             if(weights[i]>fake_rand){
-                points[idx] = pts_gen2[new_pt*matrixPerAttractor+i];
+                points[idx] = pts_gen2[new_pt*matrix_per_attractor+i];
                 break;
             }
         }
     }
     //draw all reachable points form gen1 & gen2.
-    for(int i =0; i < matrixPerAttractor; i++){
+    for(int i =0; i < matrix_per_attractor; i++){
         screenWriteCoord(pts_gen1[i],distance(pts_gen1[i], point));
     }
-    for(int i =0; i < matrixPerAttractor*matrixPerAttractor; i++){
+    for(int i =0; i < matrix_per_attractor*matrix_per_attractor; i++){
         screenWriteCoord(pts_gen2[i],distance(pts_gen2[i], point));
     }
 }
