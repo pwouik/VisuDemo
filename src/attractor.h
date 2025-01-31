@@ -80,10 +80,6 @@ public:
         update_matrix();
     }
 
-    //todo REMOVE BELOW
-    const char* getName(){
-        return "Fixed process matrix";
-    }
     void ui(){
         ImGui::Checkbox(UIDT("overwrite matrix", *this), &overwriteMatrix);
         if(ImGui::Button(UIDT("randomize func", *this))) setRandom();
@@ -133,8 +129,6 @@ public:
             char buffer[32];  // Allocate a buffer for the formatted string
             std::snprintf(buffer, sizeof(buffer), "function %zu", i);
             if (ImGui::TreeNode(buffer)){
-                //ImGui::SeparatorText(attr_funcs[i]->getName());
-                //todo pop tree in ui below
                 attr_funcs[i]->ui();
 
                 ImGui::TreePop();
