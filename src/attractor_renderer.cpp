@@ -64,42 +64,9 @@ static glm::mat4 componentLerp(const Attractor& attractorA, const Attractor& att
     return matrix;
 }
 
-void AttractorRenderer::init_data(int w, int h){
 
-    //generates points SSBO
-    float* data = new float[NBPTS*4];
-    randArray(data, NBPTS, 1);
-    //origindArray(data, NBPTS);
-    glGenBuffers(1, &ssbo_pts);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_pts);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(float) * 4 * NBPTS, data, GL_DYNAMIC_DRAW); //GL_DYNAMIC_DRAW update occasionel et lecture frequente
-    //glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, size, data); //to update partially
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo_pts);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
-
-    delete[] data; //points memory only needed on GPU
-
-    //attractors (a max of 10 matrices stored as UBO)
-    glGenBuffers(1, &uboM4);
-    glBindBuffer(GL_UNIFORM_BUFFER, uboM4);
-    glBufferData(GL_UNIFORM_BUFFER, 10 * sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW); // Allocate space for up to 10 matrices
-    glBindBufferBase(GL_UNIFORM_BUFFER, 1, uboM4); // Binding point 0
-    glBindBuffer(GL_UNIFORM_BUFFER, 0); // Unbind
-
-    //reserve matrices to be pushed to UBO each frame
-    ubo_matrices.reserve(10);
-    transformInit();
-}
-
-void AttractorRenderer::reset(){
-    attractorA.freeAll();
-    attractorB.freeAll();
-    ubo_matrices.clear();
-    ubo_matrices.reserve(10);
-}
-
-void AttractorRenderer::update_ubo_matrices(LerpMode mode){
-    switch (mode)
+void AttractorRenderer::update_ubo_matrices(){
+    switch (lerp_mode)
     {
     case Matrix:
         for(int i=0; i < matrix_per_attractor; i++){
@@ -115,20 +82,6 @@ void AttractorRenderer::update_ubo_matrices(LerpMode mode){
         throw std::runtime_error("Unhandled lerping mode");
         break;
     }
-    
-    //debug todo remove
-    // if(matrixPerAttractor == 0) return;
-    // ubo_matrices[0] = A_tractor.attr_funcs[0]->getMatrix();
-    // ubo_matrices[1] = A_tractor.attr_funcs[1]->getMatrix();
-    // ubo_matrices[2] = A_tractor.attr_funcs[2]->getMatrix();
-    
-    //debug todo remove
-    // glm::mat4 mat = A_tractor.attr_funcs[0]->getMatrix();
-    // std::cout << "\n\nfoo\n\n";
-    // for (int row = 0; row < 4; ++row) {
-    //     std::cout << "\t" << mat[row][0]<< "\t" << mat[row][1]<< "\t" << mat[row][2]<< "\t" << mat[row][3] << "\n";
-    // }
-
 }
 
 void AttractorRenderer::transformInit(){
@@ -290,13 +243,18 @@ void AttractorRenderer::romanesco(){
         b_funcs[1]->translation_vector = glm::vec3(0.0f,1.0f,0.0f);
     }
 }
-float smooth_curve(float v){
-    return v*v*3-v*v*v*2;
+
+float smooth_curve(float v, float k, float os = 0.0f){
+    //k=3 by default which is nearly identical to smoothstep
+    const float mv = 1.0f/(1+exp(k));
+    return 0.5 + (1.0f/(1+exp(-k*(2*v-1)) ) - 0.5) * ( (0.5f-os)/(0.5-mv));
+    ///smooth step : //return v*v*3-v*v*v*2;
+    //without edgeclamp : //return (1.0f/(1+exp(-k*(2*v-1)) ) - mv) * (1.0f/(1-2*mv));    
 }
 glm::mat4 AttractorRenderer::get_idle_view(float time){
     float angle = 2*PI*time / spin_period;
     float intpart;
-    lerp_factor = smooth_curve(std::modf(time/lerp_period, &intpart));
+    lerp_factor = smooth_curve(std::modf(time/lerp_period, &intpart), lerp_stiffness); //todo edgeclamp
     if(intpart > (float)iter){ //a little messy but modf takes a pointer to float so ....
         iter = intpart;
         if(iter%2) attractorB.setRandom(matrix_per_attractor);
@@ -327,7 +285,6 @@ AttractorRenderer::AttractorRenderer(int w,int h){
         linkProgram(shading_program);
     }
 
-
     {//depth texture (texture1, binding 1)
         glGenTextures(1, &depth_texture);
         glActiveTexture(GL_TEXTURE1);
@@ -348,6 +305,32 @@ AttractorRenderer::AttractorRenderer(int w,int h){
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0); 
         glBindImageTexture(4, jumpdist_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32I); //bind to channel 4
+    }
+
+    {
+        //generates points SSBO
+        float* data = new float[NBPTS*4];
+        randArray(data, NBPTS, 1);
+        //origindArray(data, NBPTS);
+        glGenBuffers(1, &ssbo_pts);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_pts);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(float) * 4 * NBPTS, data, GL_DYNAMIC_DRAW); //GL_DYNAMIC_DRAW update occasionel et lecture frequente
+        //glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, size, data); //to update partially
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo_pts);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
+
+        delete[] data; //points memory only needed on GPU
+
+        //attractors (a max of 10 matrices stored as UBO)
+        glGenBuffers(1, &uboM4);
+        glBindBuffer(GL_UNIFORM_BUFFER, uboM4);
+        glBufferData(GL_UNIFORM_BUFFER, 10 * sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW); // Allocate space for up to 10 matrices
+        glBindBufferBase(GL_UNIFORM_BUFFER, 1, uboM4); // Binding point 0
+        glBindBuffer(GL_UNIFORM_BUFFER, 0); // Unbind
+
+        //reserve matrices to be pushed to UBO each frame
+        ubo_matrices.reserve(MAX_FUNC_PER_ATTRACTOR);
+        transformInit();
     }
 
 }
@@ -492,7 +475,7 @@ void AttractorRenderer::render(float width,float height,glm::vec3& pos,glm::mat4
     glUniform1i(glGetUniformLocation(attractor_program, "randInt_seed"),rand()%RAND_MAX);
     
     //send attractor data to compute shader
-    update_ubo_matrices(lerp_mode);
+    update_ubo_matrices();
     glBindBuffer(GL_UNIFORM_BUFFER, uboM4);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, matrix_per_attractor * sizeof(glm::mat4), ubo_matrices.data());
     glBindBuffer(GL_UNIFORM_BUFFER, 0);

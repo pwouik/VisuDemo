@@ -18,7 +18,6 @@ public:
     void draw_ui(float& speed,glm::vec3& pos);
     void render(float width,float height,glm::vec3& pos,glm::mat4& inv_view, glm::mat4& proj, glm::vec3& light_pos);
     void resize(float w,float h);
-    void init_data(int w, int h);
     void reset();
 private:
     void allIdentity();
@@ -28,7 +27,7 @@ private:
     void barsnley_fern();
     void romanesco();
     glm::mat4 get_idle_view(float time);
-    void update_ubo_matrices(LerpMode mode);
+    void update_ubo_matrices();
     void transformInit();
     GLuint attractor_program;
     GLuint shading_program;
@@ -68,7 +67,7 @@ private:
     float spin_period = 30.0f; //time in second to make a full circle
     float height_and_distance[2] = {2.0f, 1.75f};
     float lerp_period = 3.0f; //time between 2 seed change
-    float lerp_stiffness = 3.5f; //parmeter k of the function used for lerping curve. Function is (1/(1+exp(-k(2x-1))) - mv) * 1/(1-2mv) where mv =  1+(1+exp(k)) Not used currently
+    float lerp_stiffness = 3.0f; //parmeter k of the function used for lerping curve. Function is (1/(1+exp(-k(2x-1))) - mv) * 1/(1-2mv) where mv =  1+(1+exp(k)) Not used currently.
 
     GLuint ssbo_pts; //ssbo of points
 

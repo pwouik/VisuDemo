@@ -105,12 +105,6 @@ void App::draw_ui(){
             ImGui::Text("FPS : %.2f", currentFPS);
             const char* items_cb1[] = { "Raymarching", "Attractor"}; //MUST MATCH ENUM IN app.h !
             if(ImGui::Combo("Display type", (int*)&curr_mode, items_cb1, IM_ARRAYSIZE(items_cb1))){
-                if(curr_mode == Attractor){
-                    attractor_renderer->init_data(width, height);
-                }
-                else {
-                    attractor_renderer->reset();
-                }
             }
             
         ImGui::SeparatorText("generic debug info");

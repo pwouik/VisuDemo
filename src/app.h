@@ -77,6 +77,9 @@ public:
                     GL_FLOAT, NULL);
 
         
+
+        attractor_renderer->resize(w, h);
+
         //not requiered but maybe according to chat gpt yapping
         //glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
         //glBindImageTexture(1, depth_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32I);

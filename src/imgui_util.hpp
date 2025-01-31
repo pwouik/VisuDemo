@@ -81,12 +81,7 @@ static void valf(const char* desc, float& v, float speed = 0.005f, float minv = 
     SL CW ImGui::DragFloat(UID(v), &v, speed, minv, maxv, "%.2f");
 }
 
-// void valf(const char* desc, glm::vec3& v, float minv = 0.0f, float maxv = 1.0f){
-//     ImGui::Text(desc);
-//     SL CW ImGui::InputFloat(UID(v.x), &v.x, minv, maxv, "%.2f");
-//     SL CW ImGui::InputFloat(UID(v.y), &v.y, minv, maxv, "%.2f");
-//     SL CW ImGui::InputFloat(UID(v.z), &v.z, minv, maxv, "%.2f");
-// }
+
 static void valf(const char* desc, glm::vec3& v, float minv = -1.0f, float maxv = 1.0f){
     ImGui::Text(desc);
     SL ImGui::DragFloat3(UID(v),&v.x, 0.005f, minv, maxv);
