@@ -184,7 +184,7 @@ void main() {
 
     vec3 color = phong(
         col_jd_low*(1-dj)+dj*col_jd_high,    //generate base color gradient from jump distance
-        0.1,                    //min light
+        k_a,                    //min light
         1.0,                    //shadow
         dubious_ssao_v1()   //ambient occlusion
         );
