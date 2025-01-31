@@ -154,6 +154,8 @@ float dubious_ssao_v4(){
 
     float acc = 0;
     
+    float distcam = distance(camera, wco);
+
     vec3 randomVec = normalize(vec3(0,1,0)); //todo use hash or small texture
     vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
     vec3 bitangent = cross(normal, tangent);
@@ -164,18 +166,20 @@ float dubious_ssao_v4(){
         vec3 sample_pos = wco + ao_size * RADIUSRESIZE * TBN * samples[i].xyz;
 
         //get screen space position
-        vec4 sspos = proj * vec4(sample_pos, 1.0);
-        sspos.xyz /= sspos.w;
-        //sspos.xyz =  sspos.xyz * 0.5 + 0.5;
+        // vec4 sspos = proj * vec4(sample_pos, 1.0);
+        // sspos.xyz /= sspos.w;
+        //sspos.xyz =  sspos.xyz * 0.5 + 0.5; //warning ! z is not spaced to 0-1 when we store it to depht texture
         
         //this is just a comparison so no need to convert back to float
-        float depth_of_sample = sspos.z;
-        float depth_true =  float((imageLoad(depth,ivec2(round(sspos.xy))).r)/(1<<31));
+        // float depth_of_sample = sspos.z;
+        // float depth_true =  float((imageLoad(depth,ivec2(round(sspos.xy))).r)/(1<<31));
+        // if(depth_true > depth_of_sample) acc+=1.0;
 
-        if(depth_true > depth_of_sample) acc+=1.0;
+        //why bother doing thos computation above ?
+        if(distance(camera, sample_pos) > distcam) acc+=1.0;
     }
 
-    return acc / HALFSPHERE_SAMPLES;
+    return acc / HALFSPHERE_SAMPLES * ao_fac*50;
 }
 
 //ambient and diffuse are pure white.
@@ -219,7 +223,7 @@ void main() {
         col_jd_low*(1-dj)+dj*col_jd_high,    //generate base color gradient from jump distance
         k_a,                    //min light
         1.0,                    //shadow
-        dubious_ssao_v1()   //ambient occlusion
+        dubious_ssao_v4()   //ambient occlusion
         );
     imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(color,1)); 
 
