@@ -18,7 +18,7 @@ public:
     void draw_ui(float& speed,glm::vec3& pos);
     void render(float width,float height,glm::vec3& pos,glm::mat4& inv_view, glm::mat4& proj, glm::vec3& light_pos);
     void resize(float w,float h);
-    void reset();
+    void default_values();
 private:
     void allIdentity();
     void sierpinski();
@@ -37,37 +37,38 @@ private:
 
 
     //jump distance maprange
-    float JD_FR_MIN = 0.1f;
-    float JD_FR_MAX = 0.9f;
+    float JD_FR_MIN;
+    float JD_FR_MAX;
+    glm::vec3 col_jd_low;
+    glm::vec3 col_jd_high;
 
     //phong param
-    float k_a = 0.2f;
-    float k_d = 0.5f;
-    float k_s = 1.0f;
-    float alpha = 0.9f;
-    glm::vec3 col_specular = glm::vec3(0.7,0.7,0.7);
+    float k_a;
+    float k_d;
+    float k_s;
+    float alpha;
+    glm::vec3 col_specular;
 
-    float ao_fac = 0.015f;
-    float ao_size = 0.2;
-    glm::vec3 col_ao = glm::vec3(1.0,0.3,0.1);
+    //AO
+    float ao_fac;
+    float ao_size;
+    glm::vec3 col_ao;
 
-    glm::vec3 col_jd_low = glm::vec3(0.3,1.0,0.15);
-    glm::vec3 col_jd_high = glm::vec3(0.0,0.8,1.0);
+    //Animation 
+    bool no_clear;
+    bool idle;
+    int iter; //the number of iteration over the animation (counted in lerp)
+    float spin_period = 30.0f; //time in second to make a full circle
+    float height_and_distance[2];
+    float lerp_period; //time between 2 seed change
+    float lerp_stiffness; //parmeter k of the function used for lerping curve. Function is (1/(1+exp(-k(2x-1))) - mv) * 1/(1-2mv) where mv =  1+(1+exp(k)) Not used currently.
 
+    //Attractors
     Attractor attractorA;
     Attractor attractorB;
     std::vector<glm::mat4> ubo_matrices;
     GLuint depth_texture;
     GLuint jumpdist_texture;
-
-    bool no_clear = true;
-    bool idle = false;
-    int iter = 0; //the number of iteration over the animation (counted in lerp)
-
-    float spin_period = 30.0f; //time in second to make a full circle
-    float height_and_distance[2] = {2.0f, 1.75f};
-    float lerp_period = 3.0f; //time between 2 seed change
-    float lerp_stiffness = 3.0f; //parmeter k of the function used for lerping curve. Function is (1/(1+exp(-k(2x-1))) - mv) * 1/(1-2mv) where mv =  1+(1+exp(k)) Not used currently.
 
     GLuint ssbo_pts; //ssbo of points
 

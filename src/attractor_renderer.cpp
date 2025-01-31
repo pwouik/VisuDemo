@@ -269,7 +269,43 @@ glm::mat4 AttractorRenderer::get_idle_view(float time){
     );
     return glm::lookAt(eye,glm::vec3(0.0f),glm::vec3(0.0f,1.0f,0.0f));
 }
+
+void AttractorRenderer::default_values(){
+    //jumpdist
+    JD_FR_MIN = 0.1f;
+    JD_FR_MAX = 0.9f;
+    col_jd_low = glm::vec3(0.3,1.0,0.15);
+    col_jd_high = glm::vec3(0.0,0.8,1.0);
+
+    //phong param
+    k_a = 0.2f;
+    k_d = 0.5f;
+    k_s = 1.0f;
+    alpha = 0.9f;
+    col_specular = glm::vec3(0.7,0.7,0.7);
+
+    //ao
+    ao_fac = 0.015f;
+    ao_size = 0.2f;
+    col_ao = glm::vec3(1.0,0.3,0.1);
+
+    //animation
+    no_clear = true;
+    idle = false;
+    iter = 0;
+    spin_period = 30.0f; //time in second to make a full circle
+    height_and_distance[0] = 2.0f;
+    height_and_distance[1] = 1.75f;
+    lerp_period = 3.0f;
+    lerp_stiffness = 3.0f;
+
+
+}
+
 AttractorRenderer::AttractorRenderer(int w,int h){
+
+    default_values();
+
 
     {//compute_program for attractor
         attractor_program = glCreateProgram();
@@ -307,7 +343,7 @@ AttractorRenderer::AttractorRenderer(int w,int h){
         glBindImageTexture(4, jumpdist_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32I); //bind to channel 4
     }
 
-    {
+    {//points SSBO
         //generates points SSBO
         float* data = new float[NBPTS*4];
         randArray(data, NBPTS, 1);
@@ -320,11 +356,12 @@ AttractorRenderer::AttractorRenderer(int w,int h){
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
 
         delete[] data; //points memory only needed on GPU
+    }
 
-        //attractors (a max of 10 matrices stored as UBO)
+    {//attractors (a max of 10 matrices stored as UBO)
         glGenBuffers(1, &uboM4);
         glBindBuffer(GL_UNIFORM_BUFFER, uboM4);
-        glBufferData(GL_UNIFORM_BUFFER, 10 * sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW); // Allocate space for up to 10 matrices
+        glBufferData(GL_UNIFORM_BUFFER, MAX_FUNC_PER_ATTRACTOR * sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW); // Allocate space for up to 10 matrices
         glBindBufferBase(GL_UNIFORM_BUFFER, 1, uboM4); // Binding point 0
         glBindBuffer(GL_UNIFORM_BUFFER, 0); // Unbind
 
@@ -375,6 +412,7 @@ void AttractorRenderer::draw_ui(float& speed,glm::vec3& pos){
     if(ImGui::TreeNode("Other Utils")){
         if(ImGui::Button("pref Speed")) speed = 0.025f;
         if(ImGui::Button("reset cam")) pos = glm::vec3(0.0,0.0,-0.5);
+        if(ImGui::Button("reset default")) default_values();
 
         ImGui::TreePop();
     }
