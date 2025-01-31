@@ -24,6 +24,7 @@ void randArray(float* array, int size, float range){
     }
 }
 
+//to delete probably
 void origindArray(float* array, int size){
     for(int i=0; i<size; i+=4){
         //which is x, whihc is y, which is z, which is w ?
@@ -93,6 +94,25 @@ void AttractorRenderer::update_ubo_matrices(){
         ubo_weights[i] /= total_weight;
     }
 
+}
+
+void AttractorRenderer::update_ubo_samples(glm::vec4* samples){
+    for(size_t i=0; i <HALFSPHERE_SAMPLES; i++){
+        //random point in halfsphere
+        glm::vec4 sample = (float)rand()/RAND_MAX * glm::normalize(glm::vec4(
+            (float)rand()/RAND_MAX *2 - 1,
+            (float)rand()/RAND_MAX *2 - 1,
+            (float)rand()/RAND_MAX,
+            1.0f
+        ));
+
+        //cluster near origin
+        float scale = float(i) / HALFSPHERE_SAMPLES;
+        sample *= 0.1f+0.9f*scale*scale;
+
+        samples[i] = sample;
+
+    }
 }
 
 void AttractorRenderer::transformInit(){
@@ -379,6 +399,16 @@ AttractorRenderer::AttractorRenderer(int w,int h){
         ubo_matrices.reserve(MAX_FUNC_PER_ATTRACTOR);
         transformInit();
     }
+
+    {//halfpshere samples in UBO
+        //GL_MAX_SHADER_STORAGE_BLOCK_SIZE = 0x90DE = 37086 >>> 64*4*32 = 8192 so it works
+        //uses vec4 for alignement
+        glGenBuffers(1, &ubo_samples);
+        glBindBuffer(GL_UNIFORM_BUFFER, ubo_samples);
+        glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::vec4) * HALFSPHERE_SAMPLES, nullptr, GL_DYNAMIC_DRAW);
+        glBindBufferBase(GL_UNIFORM_BUFFER, 5, ubo_samples);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    }
 }
 
 void AttractorRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
@@ -532,6 +562,8 @@ void AttractorRenderer::render(float width,float height,glm::vec3& pos,glm::mat4
     update_ubo_matrices();
     glBindBuffer(GL_UNIFORM_BUFFER, ubo);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, matrix_per_attractor * sizeof(glm::mat4), ubo_matrices.data());
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
     float weights[MAX_FUNC_PER_ATTRACTOR*4];
     for(int i = 0;i<matrix_per_attractor;i++)
     {
@@ -539,6 +571,15 @@ void AttractorRenderer::render(float width,float height,glm::vec3& pos,glm::mat4
     }
     glBufferSubData(GL_UNIFORM_BUFFER, MAX_FUNC_PER_ATTRACTOR * sizeof(glm::mat4), matrix_per_attractor * sizeof(float)*4, weights);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+    {//update ubo samples in halfsphere
+        glm::vec4 samples[HALFSPHERE_SAMPLES];
+        update_ubo_samples(samples);
+        glBindBuffer(GL_UNIFORM_BUFFER, ubo_samples);
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, HALFSPHERE_SAMPLES * sizeof(glm::vec4), samples);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    }
+
     
     glDispatchCompute((NBPTS-1)/1024+1, 1, 1);
 

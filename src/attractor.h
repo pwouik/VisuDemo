@@ -8,6 +8,7 @@
 
 #define PI 3.14159265358979323846264338327950f
 #define MAX_FUNC_PER_ATTRACTOR 10
+#define HALFSPHERE_SAMPLES 64
 
 static float randf(){
     return (float)rand()/RAND_MAX;

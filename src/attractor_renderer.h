@@ -28,6 +28,7 @@ private:
     void romanesco();
     glm::mat4 get_idle_view(float time);
     void update_ubo_matrices();
+    void update_ubo_samples(glm::vec4* samples);
     void transformInit();
     GLuint attractor_program;
     GLuint shading_program;
@@ -75,5 +76,6 @@ private:
 
     //glm::mat4 for attractors
     GLuint ubo;
+    GLuint ubo_samples;
     glm::mat4 old_view;
 };
