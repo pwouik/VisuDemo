@@ -7,6 +7,7 @@
 #include "imgui_util.hpp"
 #include "opengl_util.h"
 #include <LeapC.h>
+#include <cassert>
 #include <cstdio>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
@@ -348,13 +349,15 @@ AttractorRenderer::AttractorRenderer(int w,int h){
     {//compute_program for attractor
         attractor_program = glCreateProgram();
         GLint comp_attractor = loadshader("shaders/attractor.comp", GL_COMPUTE_SHADER);
+        assert(comp_attractor);
         glAttachShader(attractor_program, comp_attractor);
-        linkProgram(attractor_program);
+        assert(linkProgram(attractor_program));
 
         shading_program = glCreateProgram();
         GLint ssao_shader = loadshader("shaders/attractor_shading.comp", GL_COMPUTE_SHADER);
+        assert(ssao_shader);
         glAttachShader(shading_program, ssao_shader);
-        linkProgram(shading_program);
+        assert(linkProgram(shading_program));
     }
 
     {//depth texture (texture1, binding 1)
@@ -533,6 +536,36 @@ void AttractorRenderer::draw_ui(float& speed,glm::vec3& pos){
         }
     }
 
+    if(ImGui::Button("Hot reload shaders")){
+        GLuint new_program = glCreateProgram();
+        GLint comp = loadshader("shaders/attractor.comp", GL_COMPUTE_SHADER);
+        if(comp>0){
+            glAttachShader(new_program, comp);
+            if(linkProgram(new_program)){
+                attractor_program=new_program;
+            }
+            else{
+                glDeleteProgram(new_program);
+            }
+        }
+        else{
+            glDeleteProgram(new_program);
+        }
+        new_program = glCreateProgram();
+        comp = loadshader("shaders/attractor_shading.comp", GL_COMPUTE_SHADER);
+        if(comp>0){
+            glAttachShader(new_program, comp);
+            if(linkProgram(new_program)){
+                shading_program=new_program;
+            }
+            else{
+                glDeleteProgram(new_program);
+            }
+        }
+        else{
+            glDeleteProgram(new_program);
+        }
+    }
     ImGui::End();
 }
 void AttractorRenderer::resize(float w,float h){

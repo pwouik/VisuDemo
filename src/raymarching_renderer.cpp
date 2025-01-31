@@ -1,8 +1,10 @@
 #include "raymarching_renderer.h"
+#include "app.h"
 #include "glm/fwd.hpp"
 #include "imgui/imgui.h"
 #include "opengl_util.h"
 #include <LeapC.h>
+#include <cassert>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 #include <GLFW/glfw3.h>
@@ -11,11 +13,9 @@
 RaymarchingRenderer::RaymarchingRenderer(){
     compute_program = glCreateProgram();
     GLint comp = loadshader("shaders/raymarching.comp", GL_COMPUTE_SHADER);
+    assert(comp>0);
     glAttachShader(compute_program, comp);
-    linkProgram(compute_program);
-    if(!compute_program){
-        exit(EXIT_FAILURE);
-    }
+    assert(linkProgram(compute_program));
     glUseProgram(compute_program);
 
     offset = glm::vec3( -3.0f, 1.0f, 0.55f );
@@ -67,6 +67,20 @@ void RaymarchingRenderer::draw_ui(){
     ImGui::SliderFloat("occlusion", &occlusion, -10.0f, 10.0f);
     if(ImGui::Button("Hot reload shader")){
         
+        GLuint new_program = glCreateProgram();
+        GLint comp = loadshader("shaders/raymarching.comp", GL_COMPUTE_SHADER);
+        if(comp>0){
+            glAttachShader(new_program, comp);
+            if(linkProgram(new_program)){
+                compute_program=new_program;
+            }
+            else{
+                glDeleteProgram(new_program);
+            }
+        }
+        else{
+            glDeleteProgram(new_program);
+        }
     }
     ImGui::End();
 }

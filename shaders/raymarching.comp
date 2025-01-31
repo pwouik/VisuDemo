@@ -232,7 +232,7 @@ void main() {
         }
     }
     vec3 color =  phong(pos,camera,fract_color(pos),min_light,min(max_aperture*light_dist/light_size,1.0),exp(-float(steps)*exp(-occlusion)), dist*EPSILON);
-    if(de(pos)>1e10){
+    if(de(pos)>1e5){
         color = vec3(1.0);
     }
     imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(color,1));
