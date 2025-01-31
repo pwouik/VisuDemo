@@ -66,14 +66,6 @@ static glm::mat4 componentLerp(const Attractor& attractorA, const Attractor& att
     return matrix;
 }
 
-
-void AttractorRenderer::reset(){
-    attractorA.freeAll();
-    attractorB.freeAll();
-    ubo_matrices.clear();
-}
-
-
 void AttractorRenderer::update_ubo_matrices(){
     switch (lerp_mode)
     {
@@ -370,7 +362,6 @@ AttractorRenderer::AttractorRenderer(int w,int h){
         glGenBuffers(1, &ssbo_pts);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_pts);
         glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(float) * 4 * NBPTS, data, GL_DYNAMIC_DRAW); //GL_DYNAMIC_DRAW update occasionel et lecture frequente
-        //glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, size, data); //to update partially
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo_pts);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
 
@@ -380,7 +371,7 @@ AttractorRenderer::AttractorRenderer(int w,int h){
     {//attractors (a max of 10 matrices stored as UBO)
         glGenBuffers(1, &ubo);
         glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-        glBufferData(GL_UNIFORM_BUFFER, MAX_FUNC_PER_ATTRACTOR * sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW); // Allocate space for up to 10 matrices
+        glBufferData(GL_UNIFORM_BUFFER, MAX_FUNC_PER_ATTRACTOR * (sizeof(glm::mat4)+sizeof(float)*4), nullptr, GL_DYNAMIC_DRAW); // Allocate space for up to 10 matrices
         glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo); // Binding point 0
         glBindBuffer(GL_UNIFORM_BUFFER, 0); // Unbind
 
@@ -535,7 +526,9 @@ void AttractorRenderer::render(float width,float height,glm::vec3& pos,glm::mat4
     glBufferSubData(GL_UNIFORM_BUFFER, 0, matrix_per_attractor * sizeof(glm::mat4), ubo_matrices.data());
     float weights[MAX_FUNC_PER_ATTRACTOR*4];
     for(int i = 0;i<matrix_per_attractor;i++)
+    {
         weights[i*4]=ubo_weights[i];
+    }
     glBufferSubData(GL_UNIFORM_BUFFER, MAX_FUNC_PER_ATTRACTOR * sizeof(glm::mat4), matrix_per_attractor * sizeof(float)*4, weights);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     
