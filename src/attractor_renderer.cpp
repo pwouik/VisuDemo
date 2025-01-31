@@ -86,7 +86,7 @@ void AttractorRenderer::update_ubo_matrices(){
     float total_weight=0.0;
     for(int i=0; i < matrix_per_attractor; i++){
         glm::mat3 m = glm::mat3(ubo_matrices[i]);
-        total_weight+= glm::length2(glm::cross(m[0],m[1]))+glm::length2(glm::cross(m[1],m[2]))+glm::length2(glm::cross(m[2],m[0]));
+        total_weight+= glm::length(glm::cross(m[0],m[1]))+glm::length(glm::cross(m[1],m[2]))+glm::length(glm::cross(m[2],m[0]));
         ubo_weights[i] = total_weight;
     }
     for(int i=0; i < matrix_per_attractor; i++){
