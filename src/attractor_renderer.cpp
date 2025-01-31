@@ -441,6 +441,14 @@ void AttractorRenderer::draw_ui(float& speed,glm::vec3& pos){
         ImGui::SliderInt("nb functions", &matrix_per_attractor, 3, MAX_FUNC_PER_ATTRACTOR);
             HelpMarker("The number of different random matrices per attractor. going above ten will crash the program");
         
+        if (ImGui::TreeNode("Weights")){
+            for(int i=0; i<matrix_per_attractor; i++){
+                ImGui::Text("\t%.3f weight %d",ubo_weights[i], i);
+            }
+            ImGui::TreePop();
+        }
+
+
         if (ImGui::TreeNode("Attractor A")){
             attractorA.ui(matrix_per_attractor);
 
