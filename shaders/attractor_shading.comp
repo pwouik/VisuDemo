@@ -154,7 +154,7 @@ float dubious_ssao_v4(){
 
     float acc = 0;
     
-    vec3 randomVec = vec3(0,1,0); //todo use hash or small texture
+    vec3 randomVec = normalize(vec3(1,1,1)); //todo use hash or small texture
     vec3 tangent = normalize(randomVec- ssnormal * dot(randomVec, ssnormal));
     vec3 bitangent = cross(normal, tangent);
 
@@ -166,13 +166,13 @@ float dubious_ssao_v4(){
         //get screen space position
         vec4 sspos = proj * vec4(sample_pos, 1.0);
         sspos.xyz /= sspos.w;
-        sspos.xyz =  sspos.xyz * 0.5 + 0.5;
+        //sspos.xyz =  sspos.xyz * 0.5 + 0.5;
         
         //this is just a comparison so no need to convert back to float
-        int depth_of_sample = imageLoad(depth,ivec2(sspos)).r;
-        int depth_true =  imageLoad(depth,ivec2(sspos)).r;
+        int depth_of_sample = int(sspos.z*(1<<31));
+        int depth_true =  imageLoad(depth,ivec2(sspos.xy)).r;
 
-        if(depth_true < depth_of_sample) acc+=1.0;
+        if(depth_true > depth_of_sample) acc+=1.0;
     }
 
     return acc / HALFSPHERE_SAMPLES;
