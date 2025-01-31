@@ -392,7 +392,7 @@ AttractorRenderer::AttractorRenderer(int w,int h){
         glGenBuffers(1, &ubo);
         glBindBuffer(GL_UNIFORM_BUFFER, ubo);
         glBufferData(GL_UNIFORM_BUFFER, MAX_FUNC_PER_ATTRACTOR * (sizeof(glm::mat4)+sizeof(float)*4), nullptr, GL_DYNAMIC_DRAW); // Allocate space for up to 10 matrices
-        glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo); // Binding point 0
+        glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo); // Binding point 1
         glBindBuffer(GL_UNIFORM_BUFFER, 0); // Unbind
 
         //reserve matrices to be pushed to UBO each frame
@@ -407,7 +407,7 @@ AttractorRenderer::AttractorRenderer(int w,int h){
         glBindBuffer(GL_UNIFORM_BUFFER, ubo_samples);
         glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::vec4) * HALFSPHERE_SAMPLES, nullptr, GL_DYNAMIC_DRAW);
         glBindBufferBase(GL_UNIFORM_BUFFER, 5, ubo_samples);
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0); //Unbind
     }
 }
 

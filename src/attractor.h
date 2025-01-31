@@ -17,8 +17,8 @@ static float randf(){
 static struct RAND_RANGE{
     float scale[2] = {0.4f, 0.9f}; //min, max
     int angle = 180;
-    float shearing = 0.2;
-    float translation = 0.8;
+    float shearing = 0.2f;
+    float translation = 0.8f;
 } prm;
 
 class Transform{
