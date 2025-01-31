@@ -18,8 +18,9 @@ public:
     void draw_ui(float& speed,glm::vec3& pos);
     void render(float width,float height,glm::vec3& pos,glm::mat4& inv_view, glm::mat4& proj, glm::vec3& light_pos);
     void resize(float w,float h);
-    void default_values();
 private:
+    void default_values();
+    void ssaoOnlyValues();
     void allIdentity();
     void sierpinski();
     void sierpintagon();

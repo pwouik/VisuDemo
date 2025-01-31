@@ -334,6 +334,13 @@ void AttractorRenderer::default_values(){
 
 }
 
+void AttractorRenderer::ssaoOnlyValues(){
+    k_d =0.0f;
+    k_s = 0.0f;
+    col_jd_low = glm::vec3(1.0f);
+    col_jd_high = glm::vec3(1.0f);
+    col_ao = glm::vec3(1.0f);
+}
 AttractorRenderer::AttractorRenderer(int w,int h){
 
     default_values();
@@ -493,6 +500,13 @@ void AttractorRenderer::draw_ui(float& speed,glm::vec3& pos){
     }
     if(ImGui::CollapsingHeader("Coloring", ImGuiTreeNodeFlags_DefaultOpen )){
         ImGui::Text("temporary, must be hardcoded when it'll look nice");
+        
+        if(ImGui::TreeNode("Presets & debugs")){
+            if(ImGui::Button("show only ssao")) ssaoOnlyValues();
+
+            ImGui::TreePop();
+        }
+
         if(ImGui::TreeNode("Jump Distance MapRange")){
             ImGui::ColorEdit3("jd low color", glm::value_ptr(col_jd_low));
             ImGui::ColorEdit3("jd high color", glm::value_ptr(col_jd_high));
