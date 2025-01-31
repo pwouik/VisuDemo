@@ -82,7 +82,7 @@ App::App(int w,int h)
     glBindVertexArray(dummy_vao);
     glGenBuffers(1, &dummy_vbo);
 
-    proj = glm::perspective(glm::radians(70.0f),(float)width/(float)height,0.1f,10000.0f);
+    proj = glm::perspective(glm::radians(70.0f),(float)width/(float)height,0.01f,1000.0f);
 
     raymarching_renderer = new RaymarchingRenderer();
     attractor_renderer = new AttractorRenderer(w,h);

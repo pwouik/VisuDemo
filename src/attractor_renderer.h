@@ -67,12 +67,13 @@ private:
     Attractor attractorA;
     Attractor attractorB;
     std::vector<glm::mat4> ubo_matrices;
+    std::vector<float> ubo_weights;
     GLuint depth_texture;
     GLuint jumpdist_texture;
 
     GLuint ssbo_pts; //ssbo of points
 
     //glm::mat4 for attractors
-    GLuint uboM4;
+    GLuint ubo;
     glm::mat4 old_view;
 };

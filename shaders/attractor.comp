@@ -3,6 +3,7 @@ layout (local_size_x = 1024, local_size_y = 1, local_size_z = 1) in;
 layout(r32i, binding = 1) uniform iimage2D depth;
 layout(std140, binding = 1) uniform Matrices { // the list of mat4 attractors
     mat4 matrixArray[10];
+    float weights[10];
 };
 layout(std430, binding = 3) buffer PointBuffer {          // SSBO points
     vec4 points[];
@@ -15,8 +16,6 @@ uniform mat4 proj;
 uniform mat4 view;
 uniform uvec2 screen_size;
 uniform vec3 camera;
-uniform vec3 light_pos; //not used currently
-uniform float time; //not used currently
 
 
 
@@ -58,6 +57,7 @@ void screenWriteCoord(vec4 pt, float dist_jump){
         //other metadata
     }
 }
+
 uint hash(uint x){
     x ^= x >> 17;
     x *= 0xed5ad4bbU;
@@ -80,15 +80,20 @@ void main() {
     //update point coordinate with attractor
     if(matrixPerAttractor > 0) {        
         //get a unique seed per thread. 
-        uint fake_rand = hash(idx^randInt_seed)%(matrixPerAttractor); 
 
         //compute all points to display. Note that 3<matrixPerAttractor<MAX_FUNC_PER_ATTRACTOR = 10
         for(int i =0; i < matrixPerAttractor; i++){
             pts[i] = matrixArray[i] * point;
         }
 
+        float fake_rand = float(hash(idx^randInt_seed)%2048)/2048; 
         //jump to a random position
-        points[idx] = pts[fake_rand];
+        for(int i = 0;i<matrixPerAttractor;i++){
+            if(weights[i]>fake_rand){
+                points[idx] = pts[i];
+                break;
+            }
+        }
 
     }
     //draw all points
@@ -99,7 +104,7 @@ void main() {
 
 //MAIN VERSION 2 : draw 2 generation (all points reachable point from the first generation)
 //tends to be way more laggy. Draws 4 times more points (with arguably better dispersion because it's consecutive generation ?). Consider lowering NBPTS when using this main
-void main_desac() {
+void main_v2() {
     uint idx = gl_GlobalInvocationID.x;
     if(idx >= NBPTS) return;
 
@@ -109,8 +114,6 @@ void main_desac() {
 
     //update point coordinate with attractor
     if(matrixPerAttractor > 0) {
-        //get a unique seed per thread. 
-        uint fake_rand = hash(idx^randInt_seed)%(matrixPerAttractor*matrixPerAttractor); 
 
         //compute all points to display. Note that 3<matrixPerAttractor<MAX_FUNC_PER_ATTRACTOR = 10
         for(int i =0; i < matrixPerAttractor; i++){
@@ -119,9 +122,21 @@ void main_desac() {
                 pts_gen2[i*matrixPerAttractor+k] = matrixArray[k] * pts_gen1[i];
             }
         }
-
-        //jump to a random position
-        points[idx] = pts_gen2[fake_rand];
+        float fake_rand = float(hash(idx^randInt_seed)%2048)/2048;
+        int new_pt;
+        for(int i = 0;i<matrixPerAttractor;i++){
+            if(weights[i]>fake_rand){
+                new_pt;
+                break;
+            }
+        }
+        fake_rand = float(hash(idx^randInt_seed^0x1F54C5)%2048)/2048;
+        for(int i = 0;i<matrixPerAttractor;i++){
+            if(weights[i]>fake_rand){
+                points[idx] = pts_gen2[new_pt*matrixPerAttractor+i];
+                break;
+            }
+        }
     }
     //draw all reachable points form gen1 & gen2.
     for(int i =0; i < matrixPerAttractor; i++){

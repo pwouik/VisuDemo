@@ -1,12 +1,14 @@
 #include "attractor_renderer.h"
 #include "attractor.h"
 #include "glm/fwd.hpp"
+#include "glm/geometric.hpp"
 #include "glm/matrix.hpp"
 #include "imgui/imgui.h"
 #include "imgui_util.hpp"
 #include "opengl_util.h"
 #include <LeapC.h>
 #include <cstdio>
+#include <iostream>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 #include <GLFW/glfw3.h>
@@ -65,6 +67,13 @@ static glm::mat4 componentLerp(const Attractor& attractorA, const Attractor& att
 }
 
 
+void AttractorRenderer::reset(){
+    attractorA.freeAll();
+    attractorB.freeAll();
+    ubo_matrices.clear();
+}
+
+
 void AttractorRenderer::update_ubo_matrices(){
     switch (lerp_mode)
     {
@@ -73,15 +82,25 @@ void AttractorRenderer::update_ubo_matrices(){
             ubo_matrices[i] = (matrixLerp(attractorA, attractorB, i,  lerp_factor));
         }
         break;
-    case PerComponent:    
+    case PerComponent:
         for(int i=0; i < matrix_per_attractor; i++){
             ubo_matrices[i] = (componentLerp(attractorA, attractorB, i,  lerp_factor));
         }
-        break;     
+        break;
     default:
         throw std::runtime_error("Unhandled lerping mode");
         break;
     }
+    float total_weight=0.0;
+    for(int i=0; i < matrix_per_attractor; i++){
+        glm::mat3 m = glm::mat3(ubo_matrices[i]);
+        total_weight+= glm::length2(glm::cross(m[0],m[1]))+glm::length2(glm::cross(m[1],m[2]))+glm::length2(glm::cross(m[2],m[0]));
+        ubo_weights[i] = total_weight;
+    }
+    for(int i=0; i < matrix_per_attractor; i++){
+        ubo_weights[i] /= total_weight;
+    }
+
 }
 
 void AttractorRenderer::transformInit(){
@@ -96,6 +115,7 @@ void AttractorRenderer::transformInit(){
         attractorA.attr_funcs[i] = mga[i];
         attractorB.attr_funcs[i] = mgb[i];
         ubo_matrices.push_back(glm::mat4(1.0f));
+        ubo_weights.push_back(1.0);
     }
     
     matrix_per_attractor = 3; //can be any value between 3 or 10
@@ -220,15 +240,15 @@ void AttractorRenderer::romanesco(){
     Transform** a_funcs = attractorA.attr_funcs;
     Transform** b_funcs = attractorB.attr_funcs;
     {//attractor A functions
-        a_funcs[0]->scale_factors = glm::vec3(0.98f,0.98f,0.98f);
+        a_funcs[0]->scale_factors = glm::vec3(0.975f,0.98f,0.975f);
         a_funcs[0]->translation_vector = glm::vec3(0.0f,0.01f,0.0f);
-        a_funcs[0]->rot_axis = glm::vec3(0.0,1,0);
+        a_funcs[0]->rot_axis = glm::vec3(0.0,1,0.145);
         a_funcs[0]->rot_angle = PI/(sqrt(5)+1.0)*2.0;
 
         a_funcs[1]->scale_factors = glm::vec3(0.3f,0.3f,0.3f);
-        a_funcs[1]->rot_axis = glm::vec3(1.0,0.0,0.0);
+        a_funcs[1]->rot_axis = glm::vec3(0.6,0.98,0.185);
         a_funcs[1]->rot_angle = PI/2;
-        a_funcs[1]->translation_vector = glm::vec3(0.0f,1.0f,0.0f);
+        a_funcs[1]->translation_vector = glm::vec3(0.0f,0.69f,0.0f);
 
     }
     {//attractor B functions
@@ -342,7 +362,6 @@ AttractorRenderer::AttractorRenderer(int w,int h){
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0); 
         glBindImageTexture(4, jumpdist_texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32I); //bind to channel 4
     }
-
     {//points SSBO
         //generates points SSBO
         float* data = new float[NBPTS*4];
@@ -359,18 +378,18 @@ AttractorRenderer::AttractorRenderer(int w,int h){
     }
 
     {//attractors (a max of 10 matrices stored as UBO)
-        glGenBuffers(1, &uboM4);
-        glBindBuffer(GL_UNIFORM_BUFFER, uboM4);
+        glGenBuffers(1, &ubo);
+        glBindBuffer(GL_UNIFORM_BUFFER, ubo);
         glBufferData(GL_UNIFORM_BUFFER, MAX_FUNC_PER_ATTRACTOR * sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW); // Allocate space for up to 10 matrices
-        glBindBufferBase(GL_UNIFORM_BUFFER, 1, uboM4); // Binding point 0
+        glBindBufferBase(GL_UNIFORM_BUFFER, 1, ubo); // Binding point 0
         glBindBuffer(GL_UNIFORM_BUFFER, 0); // Unbind
 
         //reserve matrices to be pushed to UBO each frame
         ubo_matrices.reserve(MAX_FUNC_PER_ATTRACTOR);
         transformInit();
     }
-
 }
+
 void AttractorRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
 
 }
@@ -428,7 +447,7 @@ void AttractorRenderer::draw_ui(float& speed,glm::vec3& pos){
 
 
     if(ImGui::CollapsingHeader("Attractors")){
-        ImGui::SliderInt("nb functions", &matrix_per_attractor, 3, 10);
+        ImGui::SliderInt("nb functions", &matrix_per_attractor, 3, MAX_FUNC_PER_ATTRACTOR);
             HelpMarker("The number of different random matrices per attractor. going above ten will crash the program");
         
         if (ImGui::TreeNode("Attractor A")){
@@ -507,15 +526,17 @@ void AttractorRenderer::render(float width,float height,glm::vec3& pos,glm::mat4
     glUniformMatrix4fv(glGetUniformLocation(attractor_program, "proj"),1, GL_FALSE, glm::value_ptr(proj));
     glUniform2ui(glGetUniformLocation(attractor_program, "screen_size"), width,height);
     glUniform3fv(glGetUniformLocation(attractor_program, "camera"), 1, glm::value_ptr(pos));
-    glUniform3fv(glGetUniformLocation(attractor_program, "light_pos"), 1, glm::value_ptr(light_pos));
-    glUniform1f(glGetUniformLocation(attractor_program, "time"), glfwGetTime());
     glUniform1i(glGetUniformLocation(attractor_program, "matrixPerAttractor"),matrix_per_attractor);
     glUniform1i(glGetUniformLocation(attractor_program, "randInt_seed"),rand()%RAND_MAX);
     
     //send attractor data to compute shader
     update_ubo_matrices();
-    glBindBuffer(GL_UNIFORM_BUFFER, uboM4);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
     glBufferSubData(GL_UNIFORM_BUFFER, 0, matrix_per_attractor * sizeof(glm::mat4), ubo_matrices.data());
+    float weights[MAX_FUNC_PER_ATTRACTOR*4];
+    for(int i = 0;i<matrix_per_attractor;i++)
+        weights[i*4]=ubo_weights[i];
+    glBufferSubData(GL_UNIFORM_BUFFER, MAX_FUNC_PER_ATTRACTOR * sizeof(glm::mat4), matrix_per_attractor * sizeof(float)*4, weights);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
     
     glDispatchCompute((NBPTS-1)/1024+1, 1, 1);
@@ -541,6 +562,8 @@ void AttractorRenderer::render(float width,float height,glm::vec3& pos,glm::mat4
     glUniform1f(glGetUniformLocation(shading_program, "ao_fac"), ao_fac);
     glUniform1f(glGetUniformLocation(shading_program, "ao_size"), ao_size);
     glUniform3fv(glGetUniformLocation(shading_program, "col_ao"), 1, glm::value_ptr(col_ao));
+    glUniform3fv(glGetUniformLocation(shading_program, "light_pos"), 1, glm::value_ptr(light_pos));
+    glUniform1f(glGetUniformLocation(shading_program, "time"), glfwGetTime());
 
     glDispatchCompute((width-1)/32+1, (height-1)/32+1, 1);
 

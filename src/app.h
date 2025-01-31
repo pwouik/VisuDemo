@@ -30,9 +30,6 @@ enum Mode{
 #define DEBUG(x) std::cout << x << std::endl;
 //#define DEBUG
 
-#define DEBUG(x) std::cout << x << std::endl;
-//#define DEBUG
-
 class App
 {
 public:
@@ -87,7 +84,7 @@ public:
 
 
         glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-        proj = glm::perspective(70.0f * PI / 180.0f,(float)width/(float)height,0.1f,10000.0f);
+        proj = glm::perspective(70.0f * PI / 180.0f,(float)width/(float)height,0.01f,1000.0f);
     }
 
     //getter. Maybe put everything public so we don't have those ?

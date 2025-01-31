@@ -1,6 +1,7 @@
 #pragma once
 #include "glm/glm.hpp"
 #include "glm/ext.hpp"
+#include "glm/matrix.hpp"
 #include "imgui/imgui.h"
 #include "imgui_util.hpp"
 
@@ -145,6 +146,7 @@ public:
     const glm::mat4& getMatrix(size_t index) const {            
         return attr_funcs[index]->getMatrix();
     }
+
 
     void freeAll(){
         for(size_t i=0; i < MAX_FUNC_PER_ATTRACTOR; i++){
