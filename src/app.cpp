@@ -49,6 +49,7 @@ App::App(int w,int h)
     glfwSetCursorPosCallback (window, onMouse);
     glfwSetScrollCallback(window, onScroll);
     glfwSetFramebufferSizeCallback(window, onResize);
+    glfwSwapInterval(0);
 
     initIMGUI(window);
     DEBUG("ImGui initialized");

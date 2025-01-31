@@ -526,7 +526,7 @@ void AttractorRenderer::render(float width,float height,glm::vec3& pos,glm::mat4
     glUniform2ui(glGetUniformLocation(attractor_program, "screen_size"), width,height);
     glUniform3fv(glGetUniformLocation(attractor_program, "camera"), 1, glm::value_ptr(pos));
     glUniform1i(glGetUniformLocation(attractor_program, "matrix_per_attractor"),matrix_per_attractor);
-    glUniform1i(glGetUniformLocation(attractor_program, "randInt_seed"),rand()%RAND_MAX);
+    glUniform1ui(glGetUniformLocation(attractor_program, "rand_seed"),rand()%RAND_MAX);
     
     //send attractor data to compute shader
     update_ubo_matrices();

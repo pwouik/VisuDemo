@@ -9,7 +9,7 @@ layout(std430, binding = 3) buffer PointBuffer {          // SSBO points
     vec4 points[];
 };
 layout(r32i, binding = 4) uniform iimage2D jumpdist; //texture that store jump distances
-uniform int randInt_seed;   //a random value per frame (between 0 and RAND_MAX, WARNING RAND_MAX depends on compiler !)
+uniform uint rand_seed;   //a random value per frame (between 0 and RAND_MAX, WARNING RAND_MAX depends on compiler !)
 uniform int matrix_per_attractor; //number of matrices in array
 
 uniform mat4 proj;
@@ -57,12 +57,12 @@ void screenWriteCoord(vec4 pt, float dist_jump){
 
 uint hash(uint x){
     x ^= x >> 17;
-    x *= 0xed5ad4bbU;
-    x ^= x >> 11;
-    x *= 0xac4c1b51U;
-    x ^= x >> 15;
-    x *= 0x31848babU;
-    x ^= x >> 14;
+    x *= 0xed5ad4bbU;//seems to be enough
+    //x ^= x >> 11;
+    //x *= 0xac4c1b51U;
+    //x ^= x >> 15;
+    //x *= 0x31848babU;
+    //x ^= x >> 14;
     return x;
 }
 
@@ -81,10 +81,10 @@ void main() {
     }
 
     //get a unique seed per thread. 
-    float fake_rand = float(hash(idx^randInt_seed))/4294967296.0f; 
+    float frand = float(hash(idx^rand_seed))/4294967296.0f; 
     //jump to a random position
     for(int i = 0;i<matrix_per_attractor;i++){
-        if(weights[i]>fake_rand){
+        if(weights[i]>frand){
             points[idx] = pts[i];
             break;
         }
@@ -115,17 +115,19 @@ void main_v2() {
                 pts_gen2[i*matrix_per_attractor+k] = matrixArray[k] * pts_gen1[i];
             }
         }
-        float fake_rand = float(hash(idx^randInt_seed))/4294967296.0f;
+        uint rand = hash(idx^rand_seed);
+        float frand = float(rand)/4294967296.0f;
         int new_pt;
         for(int i = 0;i<matrix_per_attractor;i++){
-            if(weights[i]>fake_rand){
-                new_pt;
+            if(weights[i]>frand){
+                new_pt=i;
                 break;
             }
         }
-        fake_rand = float(hash(idx^randInt_seed^0x1F54C5))/4294967296.0f;
+        rand = hash(rand);
+        frand = rand/4294967296.0f;
         for(int i = 0;i<matrix_per_attractor;i++){
-            if(weights[i]>fake_rand){
+            if(weights[i]>frand){
                 points[idx] = pts_gen2[new_pt*matrix_per_attractor+i];
                 break;
             }
