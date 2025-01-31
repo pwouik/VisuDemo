@@ -3,9 +3,9 @@ layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 layout(rgba32f, binding = 0) uniform image2D target;
 layout(r32i, binding = 1) uniform iimage2D depth;
 layout(r32i, binding = 4) uniform iimage2D jumpdist; //texture that store jump distances
-layout(std140, binding = 5) uniform Ubo_samples {
-    vec4 samples[64]; //MUST MATCH define HALFSPHERE_SAMPLES in attractor.h
-};
+// layout(std140, binding = 5) uniform Ubo_samples {
+//     vec4 samples[64]; //MUST MATCH define HALFSPHERE_SAMPLES in attractor.h
+// };
 
 uniform mat4 inv_view;
 uniform mat4 inv_proj;
@@ -146,7 +146,8 @@ float dubious_ssao_v3(){
     }
     return acc*5; //times 5 to somewhat match v1 values
 }
-//actually true SSAO
+//actually true SSAO (not working. requiers the samples ubo but for some reasons adding this ubo introce memory management mistakes)
+/*
 #define HALFSPHERE_SAMPLES 64
 #define RADIUSRESIZE 0.5
 float dubious_ssao_v4(){
@@ -180,7 +181,7 @@ float dubious_ssao_v4(){
     }
 
     return acc / HALFSPHERE_SAMPLES * ao_fac*50;
-}
+}*/
 
 //ambient and diffuse are pure white.
 vec3 phong(vec3 color, float min_light,float shadow,float ao) {
@@ -223,7 +224,7 @@ void main() {
         col_jd_low*(1-dj)+dj*col_jd_high,    //generate base color gradient from jump distance
         k_a,                    //min light
         1.0,                    //shadow
-        dubious_ssao_v4()   //ambient occlusion
+        dubious_ssao_v1()   //ambient occlusion
         );
     imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(color,1)); 
 
