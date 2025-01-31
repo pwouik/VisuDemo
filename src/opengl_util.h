@@ -35,12 +35,12 @@ static GLuint loadshader(const char* file,GLuint type)
         glGetShaderInfoLog(shader, logSize, nullptr, logMsg);
         printf("%s\n", logMsg);
         delete[] logMsg;
-        exit(EXIT_FAILURE);
     }
     return shader;
 }
 
 static void linkProgram(GLuint program){
+    glLinkProgram(program);
     GLint linked;
     glGetProgramiv(program, GL_LINK_STATUS, &linked);
     if (!linked) {
@@ -51,6 +51,5 @@ static void linkProgram(GLuint program){
         glGetProgramInfoLog(program, logSize, nullptr, logMsg);
         printf("%s\n", logMsg);
         delete[] logMsg;
-        exit(EXIT_FAILURE);
     }
 }

@@ -8,7 +8,6 @@
 #include "opengl_util.h"
 #include <LeapC.h>
 #include <cstdio>
-#include <iostream>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 #include <GLFW/glfw3.h>
@@ -350,13 +349,11 @@ AttractorRenderer::AttractorRenderer(int w,int h){
         attractor_program = glCreateProgram();
         GLint comp_attractor = loadshader("shaders/attractor.comp", GL_COMPUTE_SHADER);
         glAttachShader(attractor_program, comp_attractor);
-        glLinkProgram(attractor_program);
         linkProgram(attractor_program);
 
         shading_program = glCreateProgram();
         GLint ssao_shader = loadshader("shaders/attractor_shading.comp", GL_COMPUTE_SHADER);
         glAttachShader(shading_program, ssao_shader);
-        glLinkProgram(shading_program);
         linkProgram(shading_program);
     }
 

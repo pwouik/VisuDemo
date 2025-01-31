@@ -12,8 +12,10 @@ RaymarchingRenderer::RaymarchingRenderer(){
     compute_program = glCreateProgram();
     GLint comp = loadshader("shaders/raymarching.comp", GL_COMPUTE_SHADER);
     glAttachShader(compute_program, comp);
-    glLinkProgram(compute_program);
     linkProgram(compute_program);
+    if(!compute_program){
+        exit(EXIT_FAILURE);
+    }
     glUseProgram(compute_program);
 
     offset = glm::vec3( -3.0f, 1.0f, 0.55f );
@@ -63,6 +65,9 @@ void RaymarchingRenderer::draw_ui(){
     ImGui::SliderFloat("alpha", &alpha, 1.0f, 5.0f);
     ImGui::ColorEdit3("specular", glm::value_ptr(specular));
     ImGui::SliderFloat("occlusion", &occlusion, -10.0f, 10.0f);
+    if(ImGui::Button("Hot reload shader")){
+        
+    }
     ImGui::End();
 }
 void RaymarchingRenderer::render(float width,float height,glm::vec3 pos,glm::mat4 inv_view, glm::mat4 inv_proj, glm::vec3 light_pos, glm::vec3 fractal_position,glm::quat fractal_rotation){
