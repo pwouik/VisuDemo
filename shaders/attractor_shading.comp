@@ -3,9 +3,9 @@ layout (local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
 layout(rgba32f, binding = 0) uniform image2D target;
 layout(r32i, binding = 1) uniform iimage2D depth;
 layout(r32i, binding = 4) uniform iimage2D jumpdist; //texture that store jump distances
-// layout(std140, binding = 5) uniform Ubo_samples {
-//     vec4 samples[64]; //MUST MATCH define HALFSPHERE_SAMPLES in attractor.h
-// };
+layout(std140, binding = 5) uniform Ubo_samples {
+    vec4 samples[64]; //MUST MATCH define HALFSPHERE_SAMPLES in attractor.h
+};
 
 uniform mat4 inv_view;
 uniform mat4 inv_proj;
@@ -96,9 +96,9 @@ void computeNormals(){
 }
 #define SSAOSAMPLES 4
 //Most parameter here are highly interdependent. heavy fine tuning requiered if changer a single thing.
-#define SSAORANGE 4
-#define SSAOSTEP 1
-#define SSAOSKIP 5 //magic value found by experimentation. Tied to the widht of "edges"
+// #define SSAORANGE 4
+// #define SSAOSTEP 1
+// #define SSAOSKIP 5 //magic value found by experimentation. Tied to the widht of "edges"
 float dubious_ssao_v1(){
     float cd = sampleDepth(ivec2(gl_GlobalInvocationID.xy));
     float acc = 0.1;
@@ -116,14 +116,15 @@ float dubious_ssao_v1(){
             n++;
         }
     }
-    return acc/n*ao_fac*100; //times 100 to match somewhat coherent values with others dubious_ssao_v1 and _v2 implementation
+    return acc/n*ao_fac*100; //times 100 to keep somewhat coehrent between different versions
 }
 //Magic values. Most parameter here are highly interdependent. heavy fine tuning requiered if changer a single thing.
-#define SSAORANGE 4 //square of size 9x9
+#define SSAORANGEBASE 20 //square of size 9x9
 #define SSAOSTEP 1  //evaluate every pixel on the square
 #define SSAOSKIP 5  //distance requiered to considere it's too far
 float dubious_ssao_v2(){
-    float d = sampleDepth(ivec2(gl_GlobalInvocationID.xy)) * inv_proj[0].x * screen_size.x/2;
+    float d = sampleDepth(ivec2(gl_GlobalInvocationID.xy));// * inv_proj[0].x * screen_size.x/2;
+    int SSAORANGE = int(round(SSAORANGEBASE * ao_size));
     float acc = 0;
     for(int dx = -SSAORANGE; dx <= SSAORANGE; dx+=SSAOSTEP){
         for(int dy = -SSAORANGE; dy <= SSAORANGE; dy+=SSAOSTEP){
@@ -133,10 +134,11 @@ float dubious_ssao_v2(){
             acc+= max(dif,0);
         }
     }
-    return acc;
+    return acc*50*ao_fac;
 }
 float dubious_ssao_v3(){
     float acc = 0;
+    int SSAORANGE = int(round(SSAORANGEBASE * ao_size));
     for(int dx = -SSAORANGE; dx <= SSAORANGE; dx+=SSAOSTEP){
         for(int dy = -SSAORANGE; dy <= SSAORANGE; dy+=SSAOSTEP){
             vec3 o_wco = getWorldPosition(ivec2(gl_GlobalInvocationID.xy)-ivec2(dx,dy));
@@ -144,10 +146,9 @@ float dubious_ssao_v3(){
             acc+= max(val,0);
         }
     }
-    return acc*5; //times 5 to somewhat match v1 values
+    return acc*2*ao_fac; //times 2 to keep somewhat coehrent between different versions
 }
-//actually true SSAO (not working. requiers the samples ubo but for some reasons adding this ubo introce memory management mistakes)
-/*
+//actually somewhat trueish ssao but looks bad)
 #define HALFSPHERE_SAMPLES 64
 #define RADIUSRESIZE 0.5
 float dubious_ssao_v4(){
@@ -181,7 +182,7 @@ float dubious_ssao_v4(){
     }
 
     return acc / HALFSPHERE_SAMPLES * ao_fac*50;
-}*/
+}
 
 //ambient and diffuse are pure white.
 vec3 phong(vec3 color, float min_light,float shadow,float ao) {
@@ -224,7 +225,7 @@ void main() {
         col_jd_low*(1-dj)+dj*col_jd_high,    //generate base color gradient from jump distance
         k_a,                    //min light
         1.0,                    //shadow
-        dubious_ssao_v1()   //ambient occlusion
+        dubious_ssao_v3()   //ambient occlusion
         );
     imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(color,1)); 
 

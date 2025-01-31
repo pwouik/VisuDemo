@@ -404,11 +404,11 @@ AttractorRenderer::AttractorRenderer(int w,int h){
         //GL_MAX_SHADER_STORAGE_BLOCK_SIZE = 0x90DE = 37086 >>> 64*4*32 = 8192 so it works
         //uses vec4 for alignement
         
-        // glGenBuffers(1, &ubo_samples);
-        // glBindBuffer(GL_UNIFORM_BUFFER, ubo_samples);
-        // glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::vec4) * HALFSPHERE_SAMPLES, nullptr, GL_DYNAMIC_DRAW);
-        // glBindBufferBase(GL_UNIFORM_BUFFER, 5, ubo_samples);
-        // glBindBuffer(GL_UNIFORM_BUFFER, 0); //Unbind
+        glGenBuffers(1, &ubo_samples);
+        glBindBuffer(GL_UNIFORM_BUFFER, ubo_samples);
+        glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::vec4) * HALFSPHERE_SAMPLES, nullptr, GL_DYNAMIC_DRAW);
+        glBindBufferBase(GL_UNIFORM_BUFFER, 5, ubo_samples);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0); //Unbind
     }
 }
 
@@ -573,11 +573,11 @@ void AttractorRenderer::render(float width,float height,glm::vec3& pos,glm::mat4
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
     {//update ubo samples in halfsphere
-        // glm::vec4 samples[HALFSPHERE_SAMPLES];
-        // update_ubo_samples(samples);
-        // glBindBuffer(GL_UNIFORM_BUFFER, ubo_samples);
-        // glBufferSubData(GL_UNIFORM_BUFFER, 0, HALFSPHERE_SAMPLES * sizeof(glm::vec4), samples);
-        // glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        glm::vec4 samples[HALFSPHERE_SAMPLES];
+        update_ubo_samples(samples);
+        glBindBuffer(GL_UNIFORM_BUFFER, ubo_samples);
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, HALFSPHERE_SAMPLES * sizeof(glm::vec4), samples);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
 
     
