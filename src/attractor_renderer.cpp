@@ -13,8 +13,6 @@
 #include <glm/gtx/quaternion.hpp>
 #include <GLFW/glfw3.h>
 
-#define NBPTS 20'000'000
-
 void randArray(float* array, int size, float range){
     for(int i=0; i<size; i+=4){
         array[i] = range * (((float)rand()/RAND_MAX) *2 -1);

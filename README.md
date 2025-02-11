@@ -107,3 +107,7 @@ acheiving world peace
 ## known issue
 
 - `assert` macro expansion dependant on compiler
+
+## other random consideration
+
+- rng relies on the old `<cstdlib>` We should switch to `<random>` or smth else in order to access the seed at any given point in time (esp when generating knew attractors so we caneasily store a seed for attractory manually randomly generated after the program started). Or we could simply store attractor state differently (~~how about importing a some JS library to export and parse json ?~~)
