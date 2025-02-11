@@ -52,6 +52,7 @@ private:
     glm::vec3 col_specular;
 
     //AO
+    int ssao_version;
     float ao_fac;
     float ao_size;
     glm::vec3 col_ao;

@@ -35,6 +35,8 @@ uniform float k_s;
 uniform float alpha;
 uniform vec3 col_specular; //still used (why ?)
 
+
+uniform int ssao_version;
 uniform float ao_fac;
 uniform float ao_size;
 uniform vec3 col_ao;
@@ -124,7 +126,7 @@ float dubious_ssao_v1(){
 #define SSAOSKIP 5  //distance requiered to considere it's too far
 float dubious_ssao_v2(){
     float d = sampleDepth(ivec2(gl_GlobalInvocationID.xy));// * inv_proj[0].x * screen_size.x/2;
-    int SSAORANGE = int(round(SSAORANGEBASE * ao_size));
+    int SSAORANGE = int(round(SSAORANGEBASE * ao_size * 0.75));
     float acc = 0;
     for(int dx = -SSAORANGE; dx <= SSAORANGE; dx+=SSAOSTEP){
         for(int dy = -SSAORANGE; dy <= SSAORANGE; dy+=SSAOSTEP){
@@ -138,7 +140,7 @@ float dubious_ssao_v2(){
 }
 float dubious_ssao_v3(){
     float acc = 0;
-    int SSAORANGE = int(round(SSAORANGEBASE * ao_size));
+    int SSAORANGE = int(round(SSAORANGEBASE * ao_size * 1.5));
     for(int dx = -SSAORANGE; dx <= SSAORANGE; dx+=SSAOSTEP){
         for(int dy = -SSAORANGE; dy <= SSAORANGE; dy+=SSAOSTEP){
             vec3 o_wco = getWorldPosition(ivec2(gl_GlobalInvocationID.xy)-ivec2(dx,dy));
@@ -146,7 +148,7 @@ float dubious_ssao_v3(){
             acc+= max(val,0);
         }
     }
-    return acc*2*ao_fac; //times 2 to keep somewhat coehrent between different versions
+    return acc*ao_fac*2/5;
 }
 //actually somewhat trueish ssao but looks bad)
 #define HALFSPHERE_SAMPLES 64
@@ -183,6 +185,21 @@ float dubious_ssao_v4(){
 
     return acc / HALFSPHERE_SAMPLES * ao_fac*50;
 }
+
+float dubious_ssao(){
+    //there's a lot of magic values inside, mostly to keep constant cpu side coherent
+    switch(ssao_version){
+        case 0:
+            return dubious_ssao_v1();
+        case 1:
+            return dubious_ssao_v2();
+        case 2:
+            return dubious_ssao_v3();
+        case 3:
+            return dubious_ssao_v4();
+    }
+}
+
 
 //ambient and diffuse are pure white.
 vec3 phong(vec3 color, float min_light,float shadow,float ao) {
@@ -225,7 +242,7 @@ void main() {
         col_jd_low*(1-dj)+dj*col_jd_high,    //generate base color gradient from jump distance
         k_a,                    //min light
         1.0,                    //shadow
-        dubious_ssao_v1()   //ambient occlusion
+        dubious_ssao()   //ambient occlusion
         );
     imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(color,1)); 
 

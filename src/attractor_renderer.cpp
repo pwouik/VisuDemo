@@ -315,6 +315,7 @@ void AttractorRenderer::default_values(){
     col_specular = glm::vec3(0.7,0.7,0.7);
 
     //ao
+    ssao_version = 0;
     ao_fac = 0.015f;
     ao_size = 0.2f;
     col_ao = glm::vec3(1.0,0.3,0.1);
@@ -511,7 +512,10 @@ void AttractorRenderer::draw_ui(float& speed,glm::vec3& pos){
         
         if(ImGui::TreeNode("Presets & debugs")){
             if(ImGui::Button("show only ssao")) ssaoOnlyValues();
-
+            const char* items_cb3[] = { "v1", "v2", "v3", "v4"};
+            ImGui::Combo("SSAO shading version", &ssao_version, items_cb3, IM_ARRAYSIZE(items_cb3));
+                HelpMarker("One of the few SSAO~ish implementation we've done");
+                
             ImGui::TreePop();
         }
 
@@ -653,6 +657,7 @@ void AttractorRenderer::render(float width,float height,glm::vec3& pos,glm::mat4
     glUniform1f(glGetUniformLocation(shading_program, "k_s"), k_s);
     glUniform1f(glGetUniformLocation(shading_program, "alpha"), alpha);
     glUniform3fv(glGetUniformLocation(shading_program, "col_specular"), 1, glm::value_ptr(col_specular));
+    glUniform1i(glGetUniformLocation(shading_program, "ssao_version"), ssao_version);
     glUniform1f(glGetUniformLocation(shading_program, "ao_fac"), ao_fac);
     glUniform1f(glGetUniformLocation(shading_program, "ao_size"), ao_size);
     glUniform3fv(glGetUniformLocation(shading_program, "col_ao"), 1, glm::value_ptr(col_ao));
