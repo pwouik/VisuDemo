@@ -103,3 +103,7 @@ All math and assumption aside we can simply observe a decent result.
 ## Leap Motion Integration
 
 acheiving world peace
+
+## known issue
+
+- `assert` macro expansion dependant on compiler

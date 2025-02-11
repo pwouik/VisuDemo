@@ -353,11 +353,21 @@ AttractorRenderer::AttractorRenderer(int w,int h){
         glAttachShader(attractor_program, comp_attractor);
         assert(linkProgram(attractor_program));
 
+        //ugly fix bc my compiler ignore aserts :(
+        #ifdef FORCE_ASSERT
+        linkProgram(attractor_program);
+        #endif
+
         shading_program = glCreateProgram();
         GLint ssao_shader = loadshader("shaders/attractor_shading.comp", GL_COMPUTE_SHADER);
         assert(ssao_shader);
         glAttachShader(shading_program, ssao_shader);
         assert(linkProgram(shading_program));
+
+        //ugly fix bc my compiler ignore aserts :(
+        #ifdef FORCE_ASSERT
+        linkProgram(shading_program);
+        #endif
     }
 
     {//depth texture (texture1, binding 1)

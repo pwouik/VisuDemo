@@ -16,6 +16,10 @@ RaymarchingRenderer::RaymarchingRenderer(){
     assert(comp>0);
     glAttachShader(compute_program, comp);
     assert(linkProgram(compute_program));
+    //ugly fix bc my compiler ignore aserts :(
+    #ifdef FORCE_ASSERT
+    linkProgram(compute_program);
+    #endif
     glUseProgram(compute_program);
 
     offset = glm::vec3( -3.0f, 1.0f, 0.55f );
