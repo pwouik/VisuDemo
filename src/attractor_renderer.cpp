@@ -512,7 +512,7 @@ void AttractorRenderer::draw_ui(float& speed,glm::vec3& pos){
         
         if(ImGui::TreeNode("Presets & debugs")){
             if(ImGui::Button("show only ssao")) ssaoOnlyValues();
-            const char* items_cb3[] = { "v1", "v2", "v3", "v4"};
+            const char* items_cb3[] = { "v1", "v2", "v3", "v4","v5"};
             ImGui::Combo("SSAO shading version", &ssao_version, items_cb3, IM_ARRAYSIZE(items_cb3));
                 HelpMarker("One of the few SSAO~ish implementation we've done");
                 

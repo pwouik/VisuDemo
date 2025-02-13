@@ -168,19 +168,39 @@ float dubious_ssao_v4(){
     for(int i=0; i < HALFSPHERE_SAMPLES; i++){
         //sample pos in world space
         vec3 sample_pos = wco + ao_size * RADIUSRESIZE * TBN * samples[i].xyz;
+        if(distance(camera, sample_pos) > distcam) acc+=1.0;
+    }
+
+    return acc / HALFSPHERE_SAMPLES * ao_fac*50;
+}
+
+float dubious_ssao_v5(){
+    mat4 proj = inverse(inv_proj);
+
+    float acc = 0;
+    
+    float distcam = distance(camera, wco);
+
+    vec3 randomVec = normalize(vec3(0,1,0)); //todo use hash or small texture
+    vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
+    vec3 bitangent = cross(normal, tangent);
+
+    mat3 TBN =  mat3(tangent, bitangent, normal);
+    for(int i=0; i < HALFSPHERE_SAMPLES; i++){
+        //sample pos in world space
+        vec3 sample_pos = wco + ao_size * RADIUSRESIZE * TBN * samples[i].xyz;
 
         //get screen space position
-        // vec4 sspos = proj * vec4(sample_pos, 1.0);
-        // sspos.xyz /= sspos.w;
+        vec4 sspos = proj * vec4(sample_pos, 1.0);
+        sspos.xyz /= sspos.w;
         //sspos.xyz =  sspos.xyz * 0.5 + 0.5; //warning ! z is not spaced to 0-1 when we store it to depht texture
         
         //this is just a comparison so no need to convert back to float
-        // float depth_of_sample = sspos.z;
-        // float depth_true =  float((imageLoad(depth,ivec2(round(sspos.xy))).r)/(1<<31));
-        // if(depth_true > depth_of_sample) acc+=1.0;
+        float depth_of_sample = sspos.z;
+        float depth_true =  float((imageLoad(depth,ivec2(round(sspos.xy))).r)/(1<<31));
+        if(depth_true > depth_of_sample) acc+=1.0;
 
-        //why bother doing thos computation above ?
-        if(distance(camera, sample_pos) > distcam) acc+=1.0;
+
     }
 
     return acc / HALFSPHERE_SAMPLES * ao_fac*50;
@@ -197,6 +217,8 @@ float dubious_ssao(){
             return dubious_ssao_v3();
         case 3:
             return dubious_ssao_v4();
+        case 4:
+            return dubious_ssao_v5();
     }
 }
 
