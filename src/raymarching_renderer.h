@@ -17,6 +17,8 @@ class RaymarchingRenderer{
         glm::vec3 start_rotation;
         glm::vec3 offset;
         glm::vec3 rotation;
+        float scale;
+        float color_freq;
         float min_light;
         float k_d;
         float k_s;
