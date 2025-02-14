@@ -41,8 +41,45 @@ uniform float ao_fac;
 uniform float ao_size;
 uniform vec3 col_ao;
 
+//what ?
 vec3 rainbow(float i){
     return min(vec3(1),max(vec3(0),sin((vec3(0,2.0/3,4.0/3)+i)*PI)+.5));
+}
+
+//shamelessly taken from chatGPT hopefully his trainning data were good
+vec3 hash3(uint x) {
+    x = (x ^ 61) ^ (x >> 16);
+    x *= 9;
+    x = x ^ (x >> 4);
+    x *= 0x27d4eb2d;
+    x = x ^ (x >> 15);
+
+    return vec3(
+        float(x) / float(0xFFFFFFFFU),
+        float(x * 48271U) / float(0xFFFFFFFFU),
+        float(x * 65497U) / float(0xFFFFFFFFU)
+    );
+}
+
+// taken from https://www.shadertoy.com/view/ttc3zr
+uvec3 murmurHash31(uint src) {
+    const uint M = 0x5bd1e995u;
+    uvec3 h = uvec3(1190494759u, 2147483647u, 3559788179u);
+    src *= M; src ^= src>>24u; src *= M;
+    h *= M; h ^= src;
+    h ^= h>>13u; h *= M; h ^= h>>15u;
+    return h;
+}
+vec3 hash31(float src) {
+    uvec3 h = murmurHash31(floatBitsToUint(src));
+    return uintBitsToFloat(h & 0x007fffffu | 0x3f800000u) - 1.0;
+}
+
+//tbf it doesn't seem like it has any impact at all on the result visually so maybe just ignore this and used a fix value or whatever
+vec3 getRandomVector(){
+    return normalize(vec3(0,1,0));
+    //return normalize(hash3(gl_GlobalInvocationID.x)-0.5);
+    //return normalize(hash31(float(gl_GlobalInvocationID.x))-0.5);
 }
 
 float sampleDepth(ivec2 pos){
@@ -153,7 +190,7 @@ float dubious_ssao_v3(){
     }
     return acc*ao_fac*2/5;
 }
-//actually somewhat trueish ssao but looks bad)
+//compare distance between actual points and samples. Can be interpreted as a spherical from camera.
 #define HALFSPHERE_SAMPLES 64
 #define RADIUSRESIZE 0.5
 float dubious_ssao_v4(){
@@ -163,7 +200,8 @@ float dubious_ssao_v4(){
     
     float distcam = distance(camera, wco);
 
-    vec3 randomVec = normalize(vec3(0,1,0)); //todo use hash or small texture
+    //get a random vec to get a randomly rotated tangent/bitangent
+    vec3 randomVec = getRandomVector();
     vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
     vec3 bitangent = cross(normal, tangent);
 
@@ -177,15 +215,16 @@ float dubious_ssao_v4(){
     return acc / HALFSPHERE_SAMPLES * ao_fac*50;
 }
 
+//this is strictly SSAO as defined in litterature (probably)
 float dubious_ssao_v5(){
     mat4 view = inverse(inv_view);
     mat4 proj = inverse(inv_proj);
 
     float acc = 0;
-    
-    float distcam = distance(camera, wco);
 
-    vec3 randomVec = normalize(vec3(0,1,0)); //todo use hash or small texture
+    //a random vector to get a randomly rotated tangent
+    vec3 randomVec = getRandomVector();
+
     vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
     vec3 bitangent = cross(normal, tangent);
 
@@ -194,24 +233,17 @@ float dubious_ssao_v5(){
         //find sample position in world space
         vec3 sample_pos = wco + ao_size * RADIUSRESIZE * TBN * samples[i].xyz;
 
-        //get screen space position
-        // vec4 sspos = proj * vec4(sample_pos, 1.0);
-        // sspos.xyz /= sspos.w;
-        //sspos.xyz =  sspos.xyz * 0.5 + 0.5; //warning ! z is not spaced to 0-1 when we store it to depht texture
-
+        //project sample to screen (same process than screenWriteCoord in attractor.comp)
         vec4 projected_point = proj * view * vec4(sample_pos,1.0);
         if (projected_point.w != 0.0) {
-            projected_point.xyz /= projected_point.w; // Perspective divide
+            projected_point.xyz /= projected_point.w;
         }
         vec2 screen_coord = (projected_point.xy + 1.0) * 0.5; // [-1,1] to [0,1]
         screen_coord *= vec2(screen_size); // Map to screen space (pixels)
-        int true_sample_depth = int(projected_point.z*(1<<31)); 
+        
+        //compare the depth of the sample, and the depth on depth map at its position (we can directly compare 32bit int)
+        int true_sample_depth = int(projected_point.z*(1<<31));
         int expected_sample_depth = imageLoad(depth,ivec2(screen_coord)).r;
-        
-        
-        //this is just a comparison so no need to convert back to float
-        // float depth_of_sample = sspos.z;
-        // float depth_true =  float((imageLoad(depth,ivec2(round(sspos.xy))).r)/(1<<31));
         if(true_sample_depth > expected_sample_depth) acc+=1.0;
 
 
