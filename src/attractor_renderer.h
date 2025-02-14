@@ -81,6 +81,7 @@ private:
     GLuint depth_texture;
     GLuint jumpdist_texture;
 
+    bool skipSampleUpdt;
     GLuint ssbo_pts; //ssbo of points
 
     //glm::mat4 for attractors

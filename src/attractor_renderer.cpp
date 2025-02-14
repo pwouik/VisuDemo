@@ -99,6 +99,7 @@ void AttractorRenderer::update_ubo_matrices(){
 }
 
 void AttractorRenderer::update_ubo_samples(glm::vec4* samples){
+    if(skipSampleUpdt) return;
     for(size_t i=0; i <HALFSPHERE_SAMPLES; i++){
         //random point in halfsphere
         glm::vec4 sample = (float)rand()/RAND_MAX * glm::normalize(glm::vec4(
@@ -336,6 +337,9 @@ void AttractorRenderer::default_values(){
     lerp_period = 3.0f;
     lerp_stiffness = 3.0f;
 
+    //other 
+    skipSampleUpdt = false;
+
 
 }
 
@@ -521,6 +525,8 @@ void AttractorRenderer::draw_ui(float& speed,glm::vec3& pos){
             const char* items_cb3[] = { "v1", "v2", "v3", "v4","v5"};
             ImGui::Combo("SSAO shading version", &ssao_version, items_cb3, IM_ARRAYSIZE(items_cb3));
                 HelpMarker("One of the few SSAO~ish implementation we've done");
+            ImGui::Checkbox("skip update samples", &skipSampleUpdt);
+                HelpMarker("if checked, do not generate new random samples position in halfsphere for v4 and v5");
                 
             ImGui::TreePop();
         }
