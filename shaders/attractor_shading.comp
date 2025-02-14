@@ -178,6 +178,7 @@ float dubious_ssao_v4(){
 }
 
 float dubious_ssao_v5(){
+    mat4 view = inverse(inv_view);
     mat4 proj = inverse(inv_proj);
 
     float acc = 0;
@@ -190,18 +191,28 @@ float dubious_ssao_v5(){
 
     mat3 TBN =  mat3(tangent, bitangent, normal);
     for(int i=0; i < HALFSPHERE_SAMPLES; i++){
-        //sample pos in world space
+        //find sample position in world space
         vec3 sample_pos = wco + ao_size * RADIUSRESIZE * TBN * samples[i].xyz;
 
         //get screen space position
-        vec4 sspos = proj * vec4(sample_pos, 1.0);
-        sspos.xyz /= sspos.w;
+        // vec4 sspos = proj * vec4(sample_pos, 1.0);
+        // sspos.xyz /= sspos.w;
         //sspos.xyz =  sspos.xyz * 0.5 + 0.5; //warning ! z is not spaced to 0-1 when we store it to depht texture
+
+        vec4 projected_point = proj * view * vec4(sample_pos,1.0);
+        if (projected_point.w != 0.0) {
+            projected_point.xyz /= projected_point.w; // Perspective divide
+        }
+        vec2 screen_coord = (projected_point.xy + 1.0) * 0.5; // [-1,1] to [0,1]
+        screen_coord *= vec2(screen_size); // Map to screen space (pixels)
+        int true_sample_depth = int(projected_point.z*(1<<31)); 
+        int expected_sample_depth = imageLoad(depth,ivec2(screen_coord)).r;
+        
         
         //this is just a comparison so no need to convert back to float
-        float depth_of_sample = sspos.z;
-        float depth_true =  float((imageLoad(depth,ivec2(round(sspos.xy))).r)/(1<<31));
-        if(depth_true > depth_of_sample) acc+=1.0;
+        // float depth_of_sample = sspos.z;
+        // float depth_true =  float((imageLoad(depth,ivec2(round(sspos.xy))).r)/(1<<31));
+        if(true_sample_depth > expected_sample_depth) acc+=1.0;
 
 
     }
