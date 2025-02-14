@@ -44,6 +44,10 @@ static glm::mat4 matrixLerp(const Attractor& attractorA, const Attractor& attrac
 static glm::mat4 componentLerp(const Attractor& attractorA, const Attractor& attractorB, int index, float t) {
     Transform* genA = attractorA.attr_funcs[index];
     Transform* genB = attractorB.attr_funcs[index];
+    
+    //if overwrite matrix mode can't lerp by component
+    if(genA->overwriteMatrix || genB->overwriteMatrix)
+        return matrixLerp(attractorA, attractorB, index, t);
 
     
     glm::vec3 l_scale_factors = (1.0f-t)*genA->scale_factors + t * genB->scale_factors;
@@ -136,7 +140,9 @@ void AttractorRenderer::transformInit(){
 void AttractorRenderer::allIdentity(){
     for(int i=0; i<MAX_FUNC_PER_ATTRACTOR; i++){
         attractorA.attr_funcs[i]->setIdentity();
+        attractorA.attr_funcs[i]->overwriteMatrix = false;
         attractorB.attr_funcs[i]->setIdentity();
+        attractorB.attr_funcs[i]->overwriteMatrix = false;
     }
 }
 

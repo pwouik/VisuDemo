@@ -82,7 +82,8 @@ public:
     }
 
     void ui(){
-        ImGui::Checkbox(UIDT("overwrite matrix", *this), &overwriteMatrix);
+        if(ImGui::Checkbox(UIDT("overwrite matrix", *this), &overwriteMatrix))
+            update_matrix();
         if(ImGui::Button(UIDT("randomize func", *this))) setRandom();
         SL if(ImGui::Button(UIDT("set identity", *this))) setIdentity();
         if(!overwriteMatrix){
