@@ -73,6 +73,7 @@ vec3 getWorldPosition(ivec2 pos) {
     return worldSpacePos.xyz; // Return the 3D world position
 }
 
+//this function isn't used anymore
 void computeNormals2(){
     float d = sampleDepth(ivec2(gl_GlobalInvocationID.xy))/screen_size.x*inv_proj[0].x*4;
     float nx = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(1,0));
@@ -97,10 +98,6 @@ void computeNormals(){
     ssnormal = transpose(mat3(inv_view))*normal;
 }
 #define SSAOSAMPLES 4
-//Most parameter here are highly interdependent. heavy fine tuning requiered if changer a single thing.
-// #define SSAORANGE 4
-// #define SSAOSTEP 1
-// #define SSAOSKIP 5 //magic value found by experimentation. Tied to the widht of "edges"
 float dubious_ssao_v1(){
     float cd = sampleDepth(ivec2(gl_GlobalInvocationID.xy));
     float acc = 0.1;
@@ -118,15 +115,18 @@ float dubious_ssao_v1(){
             n++;
         }
     }
-    return acc/n*ao_fac*100; //times 100 to keep somewhat coehrent between different versions
+    return acc/n*ao_fac*100;
 }
-//Magic values. Most parameter here are highly interdependent. heavy fine tuning requiered if changer a single thing.
-#define SSAORANGEBASE 20 //square of size 9x9
+
 #define SSAOSTEP 1  //evaluate every pixel on the square
-#define SSAOSKIP 5  //distance requiered to considere it's too far
+#define SSAOSKIP 0.03  //distance requiered to considere it's too far. This can control the glow on edge if hight value like 1 or 2
+
+/** 
+This version computes an AO factor based on how its neighbors point in a grid are closer to the camera
+*/
 float dubious_ssao_v2(){
     float d = sampleDepth(ivec2(gl_GlobalInvocationID.xy));// * inv_proj[0].x * screen_size.x/2;
-    int SSAORANGE = int(round(SSAORANGEBASE * ao_size * 0.75));
+    int SSAORANGE = int(round(15 * ao_size));
     float acc = 0;
     for(int dx = -SSAORANGE; dx <= SSAORANGE; dx+=SSAOSTEP){
         for(int dy = -SSAORANGE; dy <= SSAORANGE; dy+=SSAOSTEP){
@@ -138,9 +138,12 @@ float dubious_ssao_v2(){
     }
     return acc*50*ao_fac;
 }
+/** 
+This version computes an AO factor based on how its neighbors point in a grid are far from the tangent plane (uses dot product with normals)
+*/
 float dubious_ssao_v3(){
     float acc = 0;
-    int SSAORANGE = int(round(SSAORANGEBASE * ao_size * 1.5));
+    int SSAORANGE = int(round(30 * ao_size));
     for(int dx = -SSAORANGE; dx <= SSAORANGE; dx+=SSAOSTEP){
         for(int dy = -SSAORANGE; dy <= SSAORANGE; dy+=SSAOSTEP){
             vec3 o_wco = getWorldPosition(ivec2(gl_GlobalInvocationID.xy)-ivec2(dx,dy));
@@ -207,7 +210,7 @@ float dubious_ssao_v5(){
 }
 
 float dubious_ssao(){
-    //there's a lot of magic values inside, mostly to keep constant cpu side coherent
+    //Most parameter here are highly interdependent. heavy fine tuning requiered if changer a single thing. Also there's a a lot of magic value to somewhat keepthings in the sames ranges because we use the same uniform values
     switch(ssao_version){
         case 0:
             return dubious_ssao_v1();
