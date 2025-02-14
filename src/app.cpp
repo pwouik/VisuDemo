@@ -27,7 +27,7 @@
 using namespace std;
 
 
-App::App(int w,int h)
+App::App(int w,int h, AttractorRenderArgs args_attractor)
 {
     pos = glm::vec3(0.0,0.0,0.0);
     light_pos = glm::vec3(0.0,0.0,0.0);
@@ -85,7 +85,7 @@ App::App(int w,int h)
     proj = glm::perspective(glm::radians(70.0f),(float)width/(float)height,0.01f,1000.0f);
 
     raymarching_renderer = new RaymarchingRenderer();
-    attractor_renderer = new AttractorRenderer(w,h);
+    attractor_renderer = new AttractorRenderer(w,h, args_attractor);
 }
 
 void App::updateFps(){

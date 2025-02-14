@@ -340,9 +340,10 @@ void AttractorRenderer::ssaoOnlyValues(){
     col_jd_high = glm::vec3(1.0f);
     col_ao = glm::vec3(1.0f);
 }
-AttractorRenderer::AttractorRenderer(int w,int h){
+AttractorRenderer::AttractorRenderer(int w,int h, AttractorRenderArgs construction_args){
 
     default_values();
+    nbpts_gpu = construction_args.nbpts;
 
 
     {//compute_program for attractor
@@ -392,12 +393,11 @@ AttractorRenderer::AttractorRenderer(int w,int h){
     }
     {//points SSBO
         //generates points SSBO
-        float* data = new float[NBPTS*4];
-        randArray(data, NBPTS, 1);
-        //origindArray(data, NBPTS);
+        float* data = new float[nbpts_gpu*4];
+        randArray(data, nbpts_gpu, 1);
         glGenBuffers(1, &ssbo_pts);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo_pts);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(float) * 4 * NBPTS, data, GL_DYNAMIC_DRAW); //GL_DYNAMIC_DRAW update occasionel et lecture frequente
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(float) * 4 * nbpts_gpu, data, GL_DYNAMIC_DRAW); //GL_DYNAMIC_DRAW update occasionel et lecture frequente
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo_pts);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
 
@@ -590,7 +590,7 @@ void AttractorRenderer::resize(float w,float h){
                 GL_INT, nullptr);
 }
 
-void AttractorRenderer::render(float width,float height,glm::vec3& pos,glm::mat4& inv_view, glm::mat4& proj, glm::vec3& light_pos){
+void AttractorRenderer::render(float width,float height, glm::vec3& pos,glm::mat4& inv_view, glm::mat4& proj, glm::vec3& light_pos){
 
     if(!no_clear || inv_view!=old_view){
         int depth_clear = INT_MIN;
@@ -614,6 +614,7 @@ void AttractorRenderer::render(float width,float height,glm::vec3& pos,glm::mat4
     glUniform3fv(glGetUniformLocation(attractor_program, "camera"), 1, glm::value_ptr(pos));
     glUniform1i(glGetUniformLocation(attractor_program, "matrix_per_attractor"),matrix_per_attractor);
     glUniform1ui(glGetUniformLocation(attractor_program, "rand_seed"),rand()%RAND_MAX);
+    glUniform1ui(glGetUniformLocation(attractor_program, "NBPTS"),nbpts_gpu);
     
     //send attractor data to compute shader
     update_ubo_matrices();
@@ -637,7 +638,7 @@ void AttractorRenderer::render(float width,float height,glm::vec3& pos,glm::mat4
     }
 
     
-    glDispatchCompute((NBPTS-1)/1024+1, 1, 1);
+    glDispatchCompute((nbpts_gpu-1)/1024+1, 1, 1);
 
     // make sure writing to image has finished before read
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);

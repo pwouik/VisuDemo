@@ -28,12 +28,12 @@ enum Mode{
 
 
 #define DEBUG(x) std::cout << x << std::endl;
-//#define DEBUG
+
 
 class App
 {
 public:
-    App(int w,int h);
+    App(int w,int h, AttractorRenderArgs args_attractor);
 	~App()
 	{
         if (leap_connection) leap_connection.reset();
@@ -99,6 +99,8 @@ public:
 
 public:
     GLFWwindow* window;
+
+    AttractorRenderArgs args_attractor;
 
     static void onKey(GLFWwindow* window, int key, int scancode, int actions, int mods)
     {

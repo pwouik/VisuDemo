@@ -6,6 +6,11 @@
 #include <vector>
 #include "attractor.h"
 
+
+struct AttractorRenderArgs {
+    unsigned int nbpts;
+};
+
 enum LerpMode{
     Matrix,
     PerComponent
@@ -13,10 +18,10 @@ enum LerpMode{
 
 class AttractorRenderer{
 public:
-    AttractorRenderer(int w,int h);
+    AttractorRenderer(int w,int h, AttractorRenderArgs construction_args);
     void leap_update(const LEAP_TRACKING_EVENT& frame);
     void draw_ui(float& speed,glm::vec3& pos);
-    void render(float width,float height,glm::vec3& pos,glm::mat4& inv_view, glm::mat4& proj, glm::vec3& light_pos);
+    void render(float width,float height, glm::vec3& pos,glm::mat4& inv_view, glm::mat4& proj, glm::vec3& light_pos);
     void resize(float w,float h);
 private:
     void default_values();
@@ -33,6 +38,8 @@ private:
     void transformInit();
     GLuint attractor_program;
     GLuint shading_program;
+
+    unsigned int nbpts_gpu; //number of point sent to gpu at instantiation AND dispatch compute count each frame
     int matrix_per_attractor = 0;
     float lerp_factor = 0.0f;
     LerpMode lerp_mode = PerComponent;
