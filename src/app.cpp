@@ -244,5 +244,5 @@ void App::onFrame(const LEAP_TRACKING_EVENT& frame)
                 hasRightHand = true;
             }
         }
-        std::cout << "\n";
+        //std::cout << "\n";
     }

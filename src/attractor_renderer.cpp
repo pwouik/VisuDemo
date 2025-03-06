@@ -497,7 +497,7 @@ void AttractorRenderer::leap_update(const LEAP_TRACKING_EVENT& frame, glm::vec3&
     static glm::quat left_start_rotation;
 
     for (int i = 0; i < frame.nHands; i++){
-        if (frame.pHands[i].type == eLeapHandType_Left && frame.pHands[i].confidence > 0.1){
+        if (frame.pHands[i].type == eLeapHandType_Right && frame.pHands[i].confidence > 0.1){
             LEAP_HAND& hand = frame.pHands[i];
 
             if (hand.pinch_distance < 25){
