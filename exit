@@ -1,0 +1,1461 @@
+[33mcommit 413a0b0071d28237df08fba75fb2c6e521294e91[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m
+Merge: 822559f ed729e5
+Author: alj <alexisjust@gmail.com>
+Date:   Thu Mar 6 11:36:41 2025 +0100
+
+    Merge branch 'save_leap_att'
+
+[33mcommit 822559f9f5a8fb9501deaab23897aa4823a9f5b9[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Merge: 32c52d7 d63d2f8
+Author: alj <alexisjust@gmail.com>
+Date:   Thu Mar 6 11:34:41 2025 +0100
+
+    Merge branch 'main' of https://github.com/pwouik/VisuDemo
+
+[33mcommit ed729e539ac03dcd100a18288bfb0cbc210d5583[m[33m ([m[1;31morigin/save_leap_att[m[33m, [m[1;32msave_leap_att[m[33m)[m
+Author: alj <alexisjust@gmail.com>
+Date:   Thu Mar 6 11:34:13 2025 +0100
+
+    save
+    
+    saaevqdfqd
+
+[33mcommit d63d2f87c5d0b4d0bde02c0c46286bab6f7091a4[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Mar 6 11:31:17 2025 +0100
+
+    temp
+
+[33mcommit 1aff1dbb4a5277c3668560ac64e9a3a4239bbddc[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Fri Feb 14 15:26:01 2025 +0100
+
+    raymarching tweaks
+
+[33mcommit 4c8ac2a9dc915899b71d8df0a4e87e8ed296f0ad[m
+Author: zelie <zelie.leydert@gmail.com>
+Date:   Thu Mar 6 11:30:44 2025 +0100
+
+    Fix leap movement
+
+[33mcommit 32c52d7a6ecbf29ab6355ff2a64386a264d7845b[m
+Author: alj <alexisjust@gmail.com>
+Date:   Thu Mar 6 11:06:04 2025 +0100
+
+    base archi leap for attractors
+
+[33mcommit 95131d9b0b60c87e12c817598b672f16fbc4ed79[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Feb 14 14:42:51 2025 +0100
+
+    ❌ no flickering
+
+[33mcommit 8db02f9999659019ae983d3f86dbc8dcfa990bd8[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Feb 14 14:36:43 2025 +0100
+
+    SSAO (the ture one for real no fake)
+
+[33mcommit 3f63aea80102b549590566f96bf91dee35177dd5[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Feb 14 14:01:54 2025 +0100
+
+    TRUE SSAO* (* : read cgu)
+    
+    almost, just one random vector away
+
+[33mcommit 4d73950fa1cf3f16dae1b5856d6d84fe188f677e[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Feb 14 12:33:11 2025 +0100
+
+    yapping in the shader
+
+[33mcommit b98b8221f42d0d52226927f498fadd09403c9ff4[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Feb 14 12:13:22 2025 +0100
+
+    🗿somewhat fix the overwrite matrix mess
+
+[33mcommit bad7091a30987e103e93317c462c19100594daa5[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Feb 14 11:20:47 2025 +0100
+
+    change NBPTS via CLI
+
+[33mcommit a685bd4c177c5ae6dc0f52a9653f575275cffead[m
+Author: alj <alexisjust@gmail.com>
+Date:   Thu Feb 13 11:07:55 2025 +0100
+
+    ssao v5 wip
+
+[33mcommit 84bf3c4ba988c66e52e65c22da33d11d0a76e83a[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Feb 11 15:01:52 2025 +0100
+
+    ssao switch in UI
+    
+    seed 1739282183 looks fun
+    also tweaded some default ssao param
+
+[33mcommit 2a8f1285e6f09e3b19595a04c848dd06e6133350[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Feb 11 14:08:47 2025 +0100
+
+    force seed 🌲 from CLI
+
+[33mcommit f7bf604c2a16cfa68803c190a5b00ac10b2cb10b[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Feb 11 13:37:37 2025 +0100
+
+    ugly assert fixes 😿
+    
+    assert are somewhat ignored with MSVC or I don't really what is happening. Anyway I just forced it but it could be an issue with other compiler
+
+[33mcommit 04e47d266aeaffc5735b315d62a8faeb3bffbb6f[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Fri Jan 31 19:06:45 2025 +0100
+
+    hot reloading
+
+[33mcommit 0f8a1010f6fb82c09d0a434293d91fcc5174c3ad[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Fri Jan 31 18:12:32 2025 +0100
+
+    hot reload wip
+
+[33mcommit 59fd605738522771f0f38059a920e713557e84fe[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Jan 31 18:00:20 2025 +0100
+
+    btn to debug only ssao light
+
+[33mcommit 03c2823bb3b07ae59e8714123944152705423339[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Jan 31 17:54:00 2025 +0100
+
+    coherent values between 4 ssao versions
+
+[33mcommit 7e31f4800243eeb3ffb24c059c74c26cbe75244e[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Jan 31 17:30:24 2025 +0100
+
+    I did an oopsie
+
+[33mcommit 5d7bedcb221dbc4bf32be7f3d7b79f11b3c419b5[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Jan 31 17:18:22 2025 +0100
+
+    commented out ssao v4
+
+[33mcommit 8e6a188277cb741df871d80605e241b5c3ade41b[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Jan 31 17:10:39 2025 +0100
+
+    working*
+    
+    working except that there's some really bad memory management somewhere that randomly causes black screen. Also the screen flickers for some reasons
+
+[33mcommit 06eb9fdba348bc476f36d48155ab2382850e1176[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Jan 31 16:53:57 2025 +0100
+
+    trying
+
+[33mcommit c8e94c69afd075f94ca94ba1973aaf1f3d9f5aec[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Fri Jan 31 16:51:10 2025 +0100
+
+    frame independant speed
+
+[33mcommit f8e94a63d5417027c0493db87652ffd9d032bd32[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Jan 31 16:17:42 2025 +0100
+
+    smth's wrong with memory
+
+[33mcommit c00a7c92682ca5bc8ad9607f6fd218c27ad45dcb[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Jan 31 15:58:24 2025 +0100
+
+    YAS (yet another ssao) work in progress
+
+[33mcommit 1eafe128cdf8f5017199280225f2f8db1e65ebbf[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Fri Jan 31 14:57:10 2025 +0100
+
+    tweaks
+
+[33mcommit 45931039b94a93fd1eb619e860572294a16d1b5d[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Fri Jan 31 14:26:44 2025 +0100
+
+    slight perf opt
+
+[33mcommit 98ce5fe49402c2a50992831c888446c766fc071c[m
+Merge: dcbca74 659e592
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Jan 31 11:51:33 2025 +0100
+
+    Merge branch 'main' of https://github.com/pwouik/VisuDemo
+
+[33mcommit dcbca7419a203364ff29726f17e23e636d6ac889[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Jan 31 11:51:19 2025 +0100
+
+    displays weights in UI
+
+[33mcommit 659e592756aed8b53aae7ae31d95ef2a4c9bb72b[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Fri Jan 31 11:50:02 2025 +0100
+
+    euclidian distance of cross
+
+[33mcommit a70e9fc8edfbd6337910b04e5a167ad42f2f38b1[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Jan 31 11:27:52 2025 +0100
+
+    removed unused func
+
+[33mcommit 2bcb444942482ff275f160fdbfe7a23e3e9f4728[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Jan 31 11:25:53 2025 +0100
+
+    uses k_a as minlight in shading
+
+[33mcommit 11fc2bded3be0446fa32d5f053a5bf54a6b7057e[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Fri Jan 31 11:07:56 2025 +0100
+
+    fix
+
+[33mcommit c7f7217c08dfcf734e7af676e81d32216569c07f[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Fri Jan 31 10:36:04 2025 +0100
+
+    weights
+
+[33mcommit 95535471eb7051f31699f008025e0c6d0785ed2e[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Jan 31 10:50:45 2025 +0100
+
+    defaults param
+    
+    & other
+
+[33mcommit 6cb544af63e78876f3bebd4e3a7fca59e4dec5a6[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Jan 31 10:34:03 2025 +0100
+
+    bunch of fixes
+
+[33mcommit 60077870a2d5142b879da2377900662998bfd39a[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Jan 30 21:48:17 2025 +0100
+
+    romanesco
+
+[33mcommit cd0cc7b9f446dc32c7d26405ea3b841b665538b8[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 30 20:46:04 2025 +0100
+
+    index, deleted comment, and default colors
+
+[33mcommit b955e70dc312ddcf2f6e4643d2497bca7d331a45[m
+Merge: a30a41d 8fcabbd
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 30 20:32:04 2025 +0100
+
+    Merge branch 'main' of https://github.com/pwouik/VisuDemo
+
+[33mcommit a30a41d23f8a1e68b6d9906f04050ed1460e283b[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 30 20:32:02 2025 +0100
+
+    few fixes
+
+[33mcommit 8fcabbd632e2a5ae6ebd322b60c19aca3ee158cd[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Jan 30 20:20:42 2025 +0100
+
+    fix random param
+
+[33mcommit 516ef413559e48dbb5021bd9efda092317487da5[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Jan 30 19:47:10 2025 +0100
+
+    fix
+
+[33mcommit 27dd70753b1574ab1d002f1db6a5e74914ad148d[m
+Merge: be4bff6 1091e37
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Jan 30 19:34:19 2025 +0100
+
+    Merge remote-tracking branch 'origin/attractor'
+
+[33mcommit be4bff6a40c2774dbfef8b6c9f2dbb75e418a078[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Jan 30 19:29:54 2025 +0100
+
+    refactor
+
+[33mcommit 1091e37fcc705c3f5a4138104ae5bc00ee78a485[m[33m ([m[1;31morigin/attractor[m[33m, [m[1;32mattractor[m[33m)[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 30 18:04:47 2025 +0100
+
+    default colors
+
+[33mcommit b046aff918ad73f4f677638fba013c3779d508c4[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 30 17:42:03 2025 +0100
+
+    en passant par ref c'est mieux
+
+[33mcommit 7f2e5ebba188f7ceff6553d6a1c5488c4d9c50b7[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 30 17:20:22 2025 +0100
+
+    compiling 🎪
+
+[33mcommit 00d82a1c4402208b07fe657e6b309ad561731a8c[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 30 16:03:27 2025 +0100
+
+    🔥pretty sure I will got to hell for this
+    
+    I really hope this will compile first time when I finished refactoring bc this is an absolute mess
+
+[33mcommit dfc888d0dc9898d7bd92288587ea9a9ca79beb88[m
+Merge: 7e8413a c0ab73b
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Jan 30 15:35:07 2025 +0100
+
+    Merge remote-tracking branch 'origin/attractor'
+
+[33mcommit 42e0293f5178aaa0bdf6f5a2f3230bd6c943a415[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 30 15:20:41 2025 +0100
+
+    refactoring en cours ...
+
+[33mcommit c0ab73b84c2d52312a4d68c89355f46c6cf3eeda[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 30 12:39:54 2025 +0100
+
+    tweaked AO
+
+[33mcommit 77d2c7e35e00ea9cb25e26c36c68905d16c89e67[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 30 12:11:01 2025 +0100
+
+    fixes
+
+[33mcommit 4bb55a2bc711cb65a86f11e616b4fe562695cd8e[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 30 12:06:29 2025 +0100
+
+    save random seed at launch
+
+[33mcommit 32992757177b68da60be1e5e1a8147ad5cabe89a[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 30 11:57:17 2025 +0100
+
+    sync attractor with main
+    
+    senior dev HATE this simple trick ! ask chat gpt a bunch of git command and run them !
+
+[33mcommit 7e8413ae284df565a0ad812200d6bae3acd07e9d[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 30 11:40:06 2025 +0100
+
+    we love windows yay ^^
+    
+    irony (noum) : the expression of one's meaning by using language that normally signifies the opposite, typically for humorous or emphatic effect.
+
+[33mcommit bbf0f8865815483ce1c7b9ae5bba78bab56024bc[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Jan 30 10:46:46 2025 +0100
+
+    raymarching refactor
+
+[33mcommit b35a008ae19d76588c0c30c89a1c9055e8e3d576[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 30 09:58:19 2025 +0100
+
+    digit separator
+
+[33mcommit b97869ce4b407c5aa55f28e91365614c07c79a78[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 30 09:56:41 2025 +0100
+
+    fixed main v2 in render_attractor
+
+[33mcommit 94de258db19162ab17fd63eafc9df63670fe2f19[m
+Merge: a1ec132 a3e0c7c
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Jan 30 00:36:04 2025 +0100
+
+    Merge remote-tracking branch 'origin/attractor'
+
+[33mcommit a1ec13258e96d03dc87cf5aae15a63c955179d33[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Jan 30 00:33:57 2025 +0100
+
+    better ssao
+
+[33mcommit a3e0c7c9498b3707d4b9ec48b2aaec942ef69397[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 28 16:15:29 2025 +0100
+
+    mukhkjlmhjk
+
+[33mcommit 2a0837c23a0b0a052cb27b7c279f9558dfd4e784[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 28 16:03:39 2025 +0100
+
+    🕶
+
+[33mcommit fe15c3b3fbfb2352224e8459b337662e18384f78[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 28 15:58:42 2025 +0100
+
+    fixed resizing
+
+[33mcommit b8dcea7d7a15dd8a546999c4fb27c1b2d8aa6378[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 28 15:09:24 2025 +0100
+
+    commented out (useless ?) code
+
+[33mcommit 6e7691f774b126af3a0536ab5700bc79d2f41538[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 28 13:55:39 2025 +0100
+
+    SSAO NO FAKE with some useless compute
+
+[33mcommit 463d2895f08bf928dcaeb3df610207aa8fe34441[m
+Merge: 6b399b7 61145ad
+Author: pwouik <pwouick@gmail.com>
+Date:   Tue Jan 28 12:47:47 2025 +0100
+
+    Merge remote-tracking branch 'origin/attractor'
+
+[33mcommit 6b399b7757ccc73c8e360fcaeb82db1e66275f34[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Tue Jan 28 12:47:44 2025 +0100
+
+    temp2
+
+[33mcommit 61145ad56962a70d4b1f8307c7f803365554650d[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 28 12:46:21 2025 +0100
+
+    tweaking
+
+[33mcommit 88b539d698b5be81dffbda87918e6d6d1d69a7aa[m
+Merge: a75c3b1 17d261b
+Author: pwouik <pwouick@gmail.com>
+Date:   Tue Jan 28 12:36:37 2025 +0100
+
+    Merge remote-tracking branch 'origin/attractor'
+
+[33mcommit a75c3b1f9981222346f379f8351f7df323241e2f[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Tue Jan 28 12:34:03 2025 +0100
+
+    temp
+
+[33mcommit 17d261b08176895efffca1c1fcd7bec9aa7a669f[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 28 12:32:49 2025 +0100
+
+    negative AO cuz why not
+
+[33mcommit 302763d37c08f85bc654a1a72ebfb214e585e0c2[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 28 12:22:45 2025 +0100
+
+    still ain't ssao but lgtm ╰(*°▽°*)╯
+
+[33mcommit 80b6948e9dc7b2efa5fa54baf0c8c36cbb93f3be[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 28 12:00:53 2025 +0100
+
+    this ain't AO but looks good
+
+[33mcommit b5c9105edfac313a217d5dccf6e1e813253a8498[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 28 11:09:29 2025 +0100
+
+    bunch of changes
+    
+    default values. Support for jump distance color. weird edge clamp in smoothing function
+
+[33mcommit 4c5e8095a9b89a3f2fbc4833e2d9c443871d7759[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 28 10:11:43 2025 +0100
+
+    bring phonk from main
+
+[33mcommit 0765d7664506151ab3b6f9f588ffc57820bd3775[m[33m ([m[1;33mtag: [m[1;33m0.1[m[33m)[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Tue Jan 28 01:27:41 2025 +0100
+
+    fix rotation control
+
+[33mcommit 4098c797ca2fe2e6f692342e001b19673b079583[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Mon Jan 27 20:09:36 2025 +0100
+
+    fix attractors normals
+
+[33mcommit c6abb93fed9fb2280b4e95437072b103041512e3[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Mon Jan 27 17:08:19 2025 +0100
+
+    oopsie2
+
+[33mcommit bfce7145338f7c3d99e7c4ca5c839e3fae1215e6[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Mon Jan 27 17:07:34 2025 +0100
+
+    oopsie
+
+[33mcommit 16a0adfeba1369f260939f17c8f99ac627649774[m
+Merge: f0c38e7 0fde388
+Author: pwouik <pwouick@gmail.com>
+Date:   Mon Jan 27 17:06:42 2025 +0100
+
+    Merge remote-tracking branch 'origin/attractor'
+
+[33mcommit f0c38e7830df0c79a2626593878da190a07b4eb3[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Mon Jan 27 17:01:08 2025 +0100
+
+    PHONK2
+
+[33mcommit 4e26a7a5cfcbe21d22197cb6d5a605477e2eeee4[m
+Author: alj <alexisjust@gmail.com>
+Date:   Mon Jan 27 14:01:27 2025 +0100
+
+    jumpdist texture  r32f to r32i
+
+[33mcommit 437ec17d1a12767d139332dd139e4e6b6a87fe55[m
+Author: alj <alexisjust@gmail.com>
+Date:   Mon Jan 27 13:52:59 2025 +0100
+
+    fixed jump distance
+
+[33mcommit 93f90bb730ba2b26848dd70fe1f68887bf7b70b6[m
+Author: alj <alexisjust@gmail.com>
+Date:   Mon Jan 27 12:02:18 2025 +0100
+
+    fixed lighting
+
+[33mcommit 8de847280be0a2fed1d5ebe1e014c50960ced431[m
+Author: alj <alexisjust@gmail.com>
+Date:   Mon Jan 27 10:10:48 2025 +0100
+
+    broke a few things related to coloring
+    
+    one must destroy to rebuild anew
+
+[33mcommit e0321c62244c517712ce094f72c180abaf922473[m
+Author: zelie <zelie.leydert@gmail.com>
+Date:   Mon Jan 27 16:36:17 2025 +0100
+
+    Visuals for hands
+
+[33mcommit c47b362ba23a7220f4cd7c2fcec26733682fb855[m
+Author: zelie <zelie.leydert@gmail.com>
+Date:   Mon Jan 27 16:20:44 2025 +0100
+
+    refactor
+
+[33mcommit 8c11feb259a6d00b19e075774ab99a8d3dfe7bd6[m
+Author: zelie <zelie.leydert@gmail.com>
+Date:   Mon Jan 27 15:38:21 2025 +0100
+
+    Fixes
+
+[33mcommit 0fde388120fd2ae80268717cc02304db10e594c6[m
+Author: alj <alexisjust@gmail.com>
+Date:   Mon Jan 27 15:06:49 2025 +0100
+
+    bunch of default parameters
+
+[33mcommit 33425f4f0fb31a8e0720c490fd5142cf4f82d776[m
+Author: alj <alexisjust@gmail.com>
+Date:   Mon Jan 27 14:46:59 2025 +0100
+
+    jump distance support
+    
+    for some reson set k_d to 5 to get good result
+
+[33mcommit 66a2326eb0d3cb8db9525edbde688d406bfd98c2[m
+Author: zelie <zelie.leydert@gmail.com>
+Date:   Mon Jan 27 14:46:33 2025 +0100
+
+    Fixed params and rotation
+
+[33mcommit 415c157942b054ccc3ba04b10a87e8050a88acbb[m
+Author: alj <alexisjust@gmail.com>
+Date:   Mon Jan 27 14:01:27 2025 +0100
+
+    jumpdist texture  r32f to r32i
+
+[33mcommit 5651ef86b93d0d270c18f6c6e8756cb51878b9b7[m
+Author: alj <alexisjust@gmail.com>
+Date:   Mon Jan 27 13:52:59 2025 +0100
+
+    fixed jump distance
+
+[33mcommit 002759c80b28ef0634570bf9a5fe13672d7cff61[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Mon Jan 27 12:29:19 2025 +0100
+
+    leapmotion stuff
+
+[33mcommit bc4a6ef6478cd89f44add91edcb51d7ad15762ec[m
+Author: zelie <zelie.leydert@gmail.com>
+Date:   Mon Jan 27 12:28:41 2025 +0100
+
+    Added pinch for rotation
+
+[33mcommit f6974b09a5e143838b4d8827341abfc4c32b35c1[m
+Author: zelie <zelie.leydert@gmail.com>
+Date:   Mon Jan 27 12:12:13 2025 +0100
+
+    Fixed default callback
+
+[33mcommit 1eb54f93e8d0e08a87be77cff6b05ac1f8307857[m
+Author: alj <alexisjust@gmail.com>
+Date:   Mon Jan 27 12:02:18 2025 +0100
+
+    fixed lighting
+
+[33mcommit bd82538d8e612f76bb370e85f70b42535c8ea7a6[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Mon Jan 27 10:36:48 2025 +0100
+
+    Fixed leap integration
+
+[33mcommit f11fe3a28e90a9f4960a15eede8abf291c464eb7[m
+Author: alj <alexisjust@gmail.com>
+Date:   Mon Jan 27 10:10:48 2025 +0100
+
+    broke a few things related to coloring
+    
+    one must destroy to rebuild anew
+
+[33mcommit 1633d901825256e4bac914d8ad20f5d296947e35[m
+Merge: 1e0d91c 8d3f98b
+Author: pwouik <pwouick@gmail.com>
+Date:   Mon Jan 27 09:38:10 2025 +0100
+
+    Merge remote-tracking branch 'origin/leap-integration'
+
+[33mcommit 1e0d91c14a87f116e510040e6e4219c8b2057e76[m
+Merge: 65342bd ed16985
+Author: pwouik <pwouick@gmail.com>
+Date:   Sat Jan 25 19:43:06 2025 +0100
+
+    Merge remote-tracking branch 'origin/attractor'
+
+[33mcommit 65342bd8f9c83559ff55f938644289bde705b4e7[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Sat Jan 25 14:54:48 2025 +0100
+
+    shadows
+
+[33mcommit 8d3f98b5e4bcaa9c4e207297d23b687b9d7301aa[m[33m ([m[1;31morigin/leap-integration[m[33m)[m
+Author: lZelie <zelie.leydert@gmail.com>
+Date:   Fri Jan 24 17:15:10 2025 +0100
+
+    Added left hand movement
+
+[33mcommit d1feb64a05806afaff69926ed7407d6ebf4f68c4[m
+Author: lZelie <zelie.leydert@gmail.com>
+Date:   Fri Jan 24 16:47:57 2025 +0100
+
+    small refactor
+
+[33mcommit 775179b2f2ce8a1606f8c0f6992f4376c3f6a22e[m
+Author: lZelie <zelie.leydert@gmail.com>
+Date:   Fri Jan 24 16:30:15 2025 +0100
+
+    Fixed app crashing after starting another playback
+
+[33mcommit e2104beda96c8c39994eff4cb6909d363d04b2eb[m
+Merge: 494b74f 243a13a
+Author: lZelie <zelie.leydert@gmail.com>
+Date:   Fri Jan 24 15:45:24 2025 +0100
+
+    Merge branch 'refs/heads/main' into leap-integration
+    
+    # Conflicts:
+    #       src/app.h
+
+[33mcommit 494b74f5e1aed69a8456930267b23f90aa950052[m
+Author: lZelie <zelie.leydert@gmail.com>
+Date:   Fri Jan 24 15:43:25 2025 +0100
+
+    Added buttons for leap integration
+
+[33mcommit 99b50824e3e774982bba2f7e2fa70f29226459d2[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Wed Jan 22 02:21:29 2025 +0100
+
+    fix motion and colors
+
+[33mcommit 6074526d087110890692f9b67c16ac0f0ea3bcf3[m
+Author: lZelie <zelie.leydert@gmail.com>
+Date:   Fri Jan 10 17:14:47 2025 +0100
+
+    Added dummy leap motion integration
+
+[33mcommit dbdca54ed51d8e3a5924e5d2f0f3eb15eb9987a5[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 21 19:34:59 2025 +0100
+
+    updated readme
+
+[33mcommit b02abb7ed2b8931edd4ac2db801ddc743bacef3c[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 21 19:06:52 2025 +0100
+
+    lowered explosion probability by a lot
+    
+    tldr having scaling close to 1 tends to produce uninterresting point cloud. Source : intuition and some experimenting
+
+[33mcommit 4804df353b24a6289c8488c080992c03b7664306[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 21 18:37:53 2025 +0100
+
+    done things 👍
+
+[33mcommit 75b4aa95cecf9debb103df3399d3f8b89226b8ea[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 21 18:07:40 2025 +0100
+
+    default param 🤷‍♂️✌✔
+    
+    still the coordinate space are different somehow
+
+[33mcommit 5dfa2c3adc985af15ae4bca4ad81c8d6838c939d[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 21 17:13:16 2025 +0100
+
+    aside from specular works fine
+    
+    for some reasons specular light is fucked up. Probably because camera is in a different coordinate system or idk it's rly weird
+
+[33mcommit e90b1abb995af40061e406ff59b05ae6f60921af[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 21 15:57:06 2025 +0100
+
+    normals for attractor (kinda) 📈
+
+[33mcommit 0ad4c993bd9f48f3eae06624e73518a0e3bc73b7[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 21 11:49:12 2025 +0100
+
+    maprange on jump dist (sorta)
+
+[33mcommit b24dad517e284af8642262518a010cf7b0e30adc[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Mon Jan 20 20:13:49 2025 +0100
+
+    added jump distance to coloring process
+    
+    i wanted to use r16f but apparently it's non writable or smth like that
+
+[33mcommit ff1c9caef5df848cd3fa6ce89b622e93d9479649[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Mon Jan 20 17:44:29 2025 +0100
+
+    cleaned UI
+
+[33mcommit 43ff3dddfc9bb2815719619fb9b6ca99080682dc[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Mon Jan 20 17:05:59 2025 +0100
+
+    removed immobile count and changed NBPTS to 5M
+
+[33mcommit 4bc69e0c8673f12044d5f5085b5f0d5aea04b81b[m
+Author: alj <alexisjust@gmail.com>
+Date:   Fri Jan 17 17:37:51 2025 +0100
+
+    multiple generation
+
+[33mcommit ed1698570a57f78d6c6ebd39d223b0cfc8635688[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 21 19:34:59 2025 +0100
+
+    updated readme
+
+[33mcommit 467b0c38ae5367666353e21e3db997ce41c6465d[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 21 19:06:52 2025 +0100
+
+    lowered explosion probability by a lot
+    
+    tldr having scaling close to 1 tends to produce uninterresting point cloud. Source : intuition and some experimenting
+
+[33mcommit d87eee61050b8ab9049d150f967b1ae186551a78[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 21 18:37:53 2025 +0100
+
+    done things 👍
+
+[33mcommit c5606a9032b0db7dea1fc2b6328bcf74773a3bdd[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 21 18:07:40 2025 +0100
+
+    default param 🤷‍♂️✌✔
+    
+    still the coordinate space are different somehow
+
+[33mcommit 0422778cf6bacbeaf1c4d5f5c809c65d6b0e948f[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 21 17:13:16 2025 +0100
+
+    aside from specular works fine
+    
+    for some reasons specular light is fucked up. Probably because camera is in a different coordinate system or idk it's rly weird
+
+[33mcommit 2d5df81e2cd823be3f718348da1eda5ec690a81e[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 21 15:57:06 2025 +0100
+
+    normals for attractor (kinda) 📈
+
+[33mcommit d43b518d57c19ad86cca38005438aaf30d9fd356[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 21 11:49:12 2025 +0100
+
+    maprange on jump dist (sorta)
+
+[33mcommit 0ae614f036736155b154ee8e35f7fefc1e2748b3[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Mon Jan 20 20:13:49 2025 +0100
+
+    added jump distance to coloring process
+    
+    i wanted to use r16f but apparently it's non writable or smth like that
+
+[33mcommit 44e142ee2e6563fe71eb621faa6f6a602c326f49[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Mon Jan 20 17:44:29 2025 +0100
+
+    cleaned UI
+
+[33mcommit 2436d815e4e7f801bcfaee07fe145e16c880ae3f[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Mon Jan 20 17:05:59 2025 +0100
+
+    removed immobile count and changed NBPTS to 5M
+
+[33mcommit 52f3e139ee034877e2efaf09224de27dc905bce2[m
+Author: alj <alexisjust@gmail.com>
+Date:   Fri Jan 17 17:37:51 2025 +0100
+
+    multiple generation
+
+[33mcommit 243a13a5bd59bcda0375d07047719128d1990c69[m
+Merge: 765607b db745d7
+Author: pwouik <pwouick@gmail.com>
+Date:   Fri Jan 17 14:46:44 2025 +0100
+
+    Merge remote-tracking branch 'origin/leap-integration'
+
+[33mcommit 765607b2735cb8231d99bca0df103ad3ea7b3ce1[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Fri Jan 17 14:35:30 2025 +0100
+
+    colors
+
+[33mcommit db745d788b7863ed7e3d7a8288dc3c36e5544f59[m
+Author: zelie <zelie.leydert@gmail.com>
+Date:   Fri Jan 17 13:48:45 2025 +0100
+
+    Added replay function for leap
+
+[33mcommit 19905e7dee31946a20f0ae26b95617d4ad2b6eb2[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Mon Jan 13 15:27:59 2025 +0100
+
+    fix compilation
+
+[33mcommit 5c1ef0d9a9ec2be99593c9a41cb0c080a91ffdc2[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Sat Jan 11 19:14:01 2025 +0100
+
+    cool default preset
+
+[33mcommit 88e70a78595d31da058dc43ba510d5c4ef142ca2[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Sat Jan 11 19:07:53 2025 +0100
+
+    there was indeed a bug
+
+[33mcommit b656b1cd2cc22c1c982f66773245cb27bc8c3b34[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Sat Jan 11 18:45:59 2025 +0100
+
+    the idle is idling
+    
+    still a small bug when changing not sure why
+
+[33mcommit abcadffaa054d88bccf8d7106a39ea2e81733655[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Sat Jan 11 17:55:16 2025 +0100
+
+    idk
+
+[33mcommit b4ec5dc0c0246d35dd4f74d1e6a0adb895952a76[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Sat Jan 11 17:52:32 2025 +0100
+
+    this fixed on my computer for reasons
+
+[33mcommit 2444af9c95b613cb49c96d8b5a428eb6c990045e[m
+Author: lZelie <zelie.leydert@gmail.com>
+Date:   Fri Jan 10 17:14:47 2025 +0100
+
+    Added dummy leap motion integration
+
+[33mcommit 2a85700b6232655e0653768b14dc6075ca1167ff[m
+Author: lZelie <zelie.leydert@gmail.com>
+Date:   Fri Jan 10 16:12:20 2025 +0100
+
+    Fixed compilation
+
+[33mcommit 2a2f36c5749db67f63e3c8876985df0c9a248db8[m
+Merge: 1fd1c81 ee8aa6b
+Author: lZelie <zelie.leydert@gmail.com>
+Date:   Fri Jan 10 16:07:03 2025 +0100
+
+    Merge remote-tracking branch 'origin/leap-integration' into leap-integration
+
+[33mcommit 1fd1c81f3c5778a3bd362d0bc7afd62c098111d3[m
+Author: lZelie <zelie.leydert@gmail.com>
+Date:   Fri Jan 10 16:06:08 2025 +0100
+
+    Added class to handle leap connection
+
+[33mcommit a717d3edb72cedf2085837f3acb8a61431864671[m
+Author: lZelie <zelie.leydert@gmail.com>
+Date:   Tue Jan 7 11:08:27 2025 +0100
+
+    Added LeapSDK to CMakeLists.txt
+
+[33mcommit 693820dc25e925266c8de193583c43b853fd195b[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Fri Jan 10 12:45:40 2025 +0100
+
+    non atomic
+
+[33mcommit a2c8639a6f4a0419c28e01ef075901e24a05b0b0[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Fri Jan 10 12:07:36 2025 +0100
+
+    typo at peace
+
+[33mcommit c729c331f083a32de49f2d13aa3499de4d0bd72f[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Fri Jan 10 12:02:04 2025 +0100
+
+    hbao meh
+
+[33mcommit 726c0be15c46cb79d38f9b3016427d012d80e0f4[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Jan 9 19:23:21 2025 +0100
+
+    ssao wip
+
+[33mcommit 0f0ee1e68741ccca781925beaaa648bbaf2800ac[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Jan 10 12:02:23 2025 +0100
+
+    util idle
+
+[33mcommit 1d0c2453fcac3d9923cbe4411c351d1efa21c56f[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Jan 10 11:21:26 2025 +0100
+
+    corporate 😎
+
+[33mcommit 3c1b93a40283abb1ce0c4f83f54d0d4bdc8f9093[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Jan 10 11:14:08 2025 +0100
+
+    fps counter
+
+[33mcommit 499db39197433a1096ff7988db748638137273a3[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Fri Jan 10 11:01:58 2025 +0100
+
+    clean up comments and ugly coloring
+
+[33mcommit 7ca844ec18e082727eb961be0ff50e8db3113063[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 9 19:20:44 2025 +0100
+
+    Barnsley fern
+
+[33mcommit 40391a0f7f7c69f57f9ef0476417e4a8e121b615[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 9 19:09:32 2025 +0100
+
+    edit directly matrix
+
+[33mcommit f10a5666e85bed5a6b2f3690d4f6389439a0387d[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 9 18:30:25 2025 +0100
+
+    added support sierpolygon
+    
+    uninterresting result unfortunately
+
+[33mcommit 5ab492d732c3b8286360a935bda54a87b134829a[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 9 17:48:38 2025 +0100
+
+    preset support
+
+[33mcommit 1d009a478ec61dfd9c3bcc6ec9976d7344fc1659[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 9 17:23:07 2025 +0100
+
+    cleaner debug info
+
+[33mcommit 6797733fecaf0adccdfb378be5b983f2de0c9d95[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 9 17:10:40 2025 +0100
+
+    refactoring archi, no more abstract classes
+    
+    see comment at FixedProcess class definition
+
+[33mcommit 84ce3d00de53837b22db8139fe06716e4d45d36e[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 9 16:17:06 2025 +0100
+
+    up to 10 function per attractor !
+
+[33mcommit ea03547d87280579730770c0054f2cad215de007[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 9 15:19:31 2025 +0100
+
+    ui
+    
+    mvoed ranodomize all button above because it was confusing
+
+[33mcommit de0fe5941a44ad532b27dc77c51464ae99c1329a[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 9 15:14:49 2025 +0100
+
+    per component Lerp
+    
+    also called PCLERP, PRETTYLERP, or PLERP (non contractuall naming convention)
+
+[33mcommit 926a36c7b9be2bed8eca68d32ae9d020c3fde6f2[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 9 13:32:34 2025 +0100
+
+    no freeze for exploring config
+
+[33mcommit 95dc051537256ea5fe2d8daf8cb621f49d3fdeef[m
+Merge: b9e3849 83fcc0b
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 9 13:20:30 2025 +0100
+
+    Merge branch 'attractor' of https://github.com/pwouik/VisuDemo into attractor
+
+[33mcommit b9e384992e19caffc68c88ec49115e14d85c145f[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Thu Jan 9 12:58:59 2025 +0100
+
+    shear & fine tuning params
+
+[33mcommit 83fcc0b4d9c28279ede4327c120ee9ef5b6ad76b[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Jan 9 12:20:51 2025 +0100
+
+    am stupid
+
+[33mcommit 967ae53883ef39ecae8a6338029943615b343acb[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Jan 9 10:48:56 2025 +0100
+
+    disable clear when still
+
+[33mcommit e6dc39647d4516c09dfd87115e06ba0918e4a13f[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Jan 9 10:29:30 2025 +0100
+
+    fix rand
+
+[33mcommit 536a64359738ecb4f16bd506eb225854ac4cbf4e[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Jan 9 10:21:48 2025 +0100
+
+    typo at "fuck"
+
+[33mcommit f64de1526bc43bc7459a2254035cd06bdd4da037[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Jan 9 00:39:08 2025 +0100
+
+    fix build
+
+[33mcommit 0506c53804cd804ff090f413c7e30abc37220c8a[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Jan 9 00:30:29 2025 +0100
+
+    fix projection stuff
+
+[33mcommit 15771413cbfa01ece4bf9aa2358514ba4e4884a6[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Wed Jan 8 16:31:11 2025 +0100
+
+    working save
+
+[33mcommit c6415a8f7a6758e859f320061ab66d1e6c3f69ae[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Wed Jan 8 15:33:24 2025 +0100
+
+    lerping between random attractor
+
+[33mcommit 9c21bdb4edaf60d7c32905f58383f8bf86170cb9[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Wed Jan 8 13:03:36 2025 +0100
+
+    the lerp is lerping
+
+[33mcommit 10ec58ad6e3207a2bf2b2a9d703a4cacd2c21e27[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Wed Jan 8 11:33:34 2025 +0100
+
+    version qui compile
+
+[33mcommit 08e226252a83bf8e8fb5faa1a9bffb176fb95207[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Wed Jan 8 11:28:09 2025 +0100
+
+    a program taht crashes before entering main
+
+[33mcommit 78aa0026ad173680aa772c4d000a0f4e40a40abb[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 7 19:09:35 2025 +0100
+
+    1984
+    
+    les colonne sont des lignes, et les lignes sont des colonne
+
+[33mcommit e6ba5f1761503c8b424aaaee5dbecef919f5c1f6[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 7 17:27:56 2025 +0100
+
+    save qui marche
+    
+    mais pas quand j'utilise l'attracteur sierpinski
+
+[33mcommit 6cd0aecded8ccaf4961fa9fe2315b1c91cdd4189[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 7 16:44:10 2025 +0100
+
+    the attroctor is not attracting
+
+[33mcommit 846faa41db88299cf293d6402bfa7d4e3e5a0a39[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 7 16:16:58 2025 +0100
+
+    almost
+
+[33mcommit db4ce93fb194868bb3e334ce4b5a9ef75fbf269f[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 7 15:11:30 2025 +0100
+
+    fixed camera
+    
+    also removed "the floor is made out floor" comment from ia generated code
+
+[33mcommit 568e247f470591302cf5503e7ce370a7008acaad[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 7 14:49:50 2025 +0100
+
+    A CUBE
+    
+    a lot of things are completely borken but at the very least we can see a cube using the BSRPMOFOPSN (bullshit rendering pipeline made only for our project specials need)
+
+[33mcommit 8ed2e5c0217d963f16adb4750d54f89612dba877[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Jan 9 10:48:56 2025 +0100
+
+    disable clear when still
+
+[33mcommit e0cd3812995a21045722d969c74d4aa97ebf077e[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Jan 9 10:29:30 2025 +0100
+
+    fix rand
+
+[33mcommit 0d525d289110744ae68e6ab1281877faaf9d8bfa[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Jan 9 10:21:48 2025 +0100
+
+    typo at "fuck"
+
+[33mcommit ef2a5830757257bad7885dc0ac9fc649b6564dfb[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Jan 9 00:39:08 2025 +0100
+
+    fix build
+
+[33mcommit 3c99e097ad18480b7d13ffc689a033d6d8a15637[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Jan 9 00:30:29 2025 +0100
+
+    fix projection stuff
+
+[33mcommit 7ba2123ea1226f381522085ecf21f620f399a673[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Thu Jan 9 00:08:48 2025 +0100
+
+    fix background
+
+[33mcommit af5ba5171d0134504b40c1546444ddd9387a46d8[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Wed Jan 8 16:31:11 2025 +0100
+
+    working save
+
+[33mcommit 0186671e88e89ae2fd41fd75675a5e6582b0b8db[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Wed Jan 8 15:33:24 2025 +0100
+
+    lerping between random attractor
+
+[33mcommit 6e92fcbe2f7f67f4e7765e62cf3076c7e35e64e7[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Wed Jan 8 13:03:36 2025 +0100
+
+    the lerp is lerping
+
+[33mcommit f0f2d7559a45055093b70941132a8a07bb224f6f[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Wed Jan 8 11:33:34 2025 +0100
+
+    version qui compile
+
+[33mcommit 363c136c36ddf249a81998894d85b349d051903a[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Wed Jan 8 11:28:09 2025 +0100
+
+    a program taht crashes before entering main
+
+[33mcommit ff14dec87ab1c6bfe844dd9f403d5d5b871c1b99[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 7 19:09:35 2025 +0100
+
+    1984
+    
+    les colonne sont des lignes, et les lignes sont des colonne
+
+[33mcommit b500315fe99eb1bc6f0353ab599a45e4ee437afe[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 7 17:27:56 2025 +0100
+
+    save qui marche
+    
+    mais pas quand j'utilise l'attracteur sierpinski
+
+[33mcommit 3f40f9aa20cf684bda5d1309e1ef63255060842b[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Tue Jan 7 17:17:26 2025 +0100
+
+    refactors
+
+[33mcommit b2b8dcb71f14fdee9bbe3ea38adf2bb8d98bef5d[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 7 16:44:10 2025 +0100
+
+    the attroctor is not attracting
+
+[33mcommit 57b84e2eae66b490cea79d2a439f9c7cfac3c2a2[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 7 16:16:58 2025 +0100
+
+    almost
+
+[33mcommit 7a91e50cb624e21205bad08e82723f09a4fa0037[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Tue Jan 7 15:25:27 2025 +0100
+
+    6dof fractal
+
+[33mcommit b5d22aea99a63a833d708453d848de6a47ca9d68[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 7 15:11:30 2025 +0100
+
+    fixed camera
+    
+    also removed "the floor is made out floor" comment from ia generated code
+
+[33mcommit f687a5d36e3e2b2841433ff0b45238606f5c0ec5[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 7 14:49:50 2025 +0100
+
+    A CUBE
+    
+    a lot of things are completely borken but at the very least we can see a cube using the BSRPMOFOPSN (bullshit rendering pipeline made only for our project specials need)
+
+[33mcommit 1d9a3bde6553ee5296a8e89472c177066601e8c1[m
+Author: lZelie <zelie.leydert@gmail.com>
+Date:   Tue Jan 7 14:19:44 2025 +0100
+
+    Added fractal translation and rotation
+
+[33mcommit 0fbbbcd976289a23aadb1ebcda42211d642b92df[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Tue Jan 7 14:06:35 2025 +0100
+
+    fixed ambient occlusion
+
+[33mcommit 1a304dc14a8c5570c379c0889a54b4bb730a0524[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Tue Jan 7 13:00:14 2025 +0100
+
+    moar parameters
+
+[33mcommit b7a5380d8d43412c9de55ef87439a7367c6a1192[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Tue Jan 7 11:28:24 2025 +0100
+
+    ao
+
+[33mcommit 33d830b2ea585f677f05ec5865605ad7ddfeeeb5[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Tue Jan 7 11:25:56 2025 +0100
+
+    seperate code for easier merge later
+    
+    clean _attroctor render in while loop
+
+[33mcommit ee8aa6b784786e2923c2503e1f75fbbd11f9cdb4[m
+Author: lZelie <zelie.leydert@gmail.com>
+Date:   Tue Jan 7 11:08:27 2025 +0100
+
+    Added LeapSDK to CMakeLists.txt
+
+[33mcommit 49de1225b8c5e4a63b6e3dbc1b4b72985c775063[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Tue Jan 7 11:03:23 2025 +0100
+
+    parameters
+
+[33mcommit 9c18db52a07bdd61af37e41d5c39c2ac6efb8ec4[m
+Author: lZelie <zelie.leydert@gmail.com>
+Date:   Tue Jan 7 09:52:54 2025 +0100
+
+    Fixed CMakeLists.txt and readShaderSource
+
+[33mcommit 162b564a7eb1f5a8bbed4e62f7ae9873ecb6ae9d[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Tue Jan 7 00:15:41 2025 +0100
+
+    refactor + controls
+
+[33mcommit 05d3a3ec16b047c3cd9157406929d79b4f5d49ee[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Mon Jan 6 23:10:34 2025 +0100
+
+    fix phong
+
+[33mcommit 9b03671d4bb9bccc32863911987b915479a4f92b[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Mon Jan 6 19:45:11 2025 +0100
+
+    phong
+
+[33mcommit a493c98a84dd9656a5f8c8a2d3970bc7a9e9829d[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Mon Jan 6 19:39:07 2025 +0100
+
+    debug window to display camera pos
+
+[33mcommit 5bcf90f16ab7e54e1fbbd83ab5ffab4938b7120e[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Mon Jan 6 19:38:51 2025 +0100
+
+    slower camera + vs code or git auto converts to CRLF fix
+    
+    idk why but I get autoconversion to CRLF for some reasons. Also changed default func and lower camera speed
+
+[33mcommit d577c3fa13ea778c083f5426ccc24b3fb7ee8708[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Mon Jan 6 19:37:50 2025 +0100
+
+    ingored more warning
+
+[33mcommit 591faac88b784a0a1b8cfb52a98a8a6c43e6e299[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Mon Jan 6 18:06:49 2025 +0100
+
+    fractals!!!
+
+[33mcommit e7605e1152245c823063237c4f476775bfc221d8[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Mon Jan 6 16:21:58 2025 +0100
+
+    support resize
+
+[33mcommit c1cae8269e34dfb45a98deaf463c6dd304aee611[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Mon Jan 6 16:19:40 2025 +0100
+
+    fix render
+
+[33mcommit 0b8f1d9fe8c157730ae00b031308f5e82535f4f9[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Mon Jan 6 15:33:07 2025 +0100
+
+    basic compute wip
+
+[33mcommit 7863bc4585a43db5fff41d5e2ba0822acd0d39d3[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Mon Jan 6 15:30:00 2025 +0100
+
+    fixed compiler specific args
+
+[33mcommit 443ba32d7d5fe4d9ef47bba1d42597b66aedbf34[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Mon Jan 6 15:22:07 2025 +0100
+
+    intégration IMGUI
+
+[33mcommit 3020429d2d38b6d5a4a83788608abbf9dec781f6[m
+Author: Sixelayo <66423373+Sixelayo@users.noreply.github.com>
+Date:   Mon Jan 6 14:32:29 2025 +0100
+
+    fixed CMakeLists.txt and got rid of annoying warning
+    
+    (told the compiler to ignore warning. It's actually fine to ignore warning. Most people don't know it but you can actually completely ignore warning without any consequence and the people telling you that you'll regret ignoring warning later are wrong)
+
+[33mcommit 7ac8111db989e114b9c9258841d663b7681707bd[m
+Author: lZelie <luc.leydert@gmail.com>
+Date:   Mon Jan 6 13:26:53 2025 +0100
+
+    Update gitignore and CMakeLists.txt
+
+[33mcommit b118a726eb9e82a8203f994d000a8587d04247a4[m
+Author: pwouik <pwouick@gmail.com>
+Date:   Mon Jan 6 12:18:33 2025 +0100
+
+    init
+
+[33mcommit b16c871b9c04c08340022e4e134e0c4ad8a4580b[m
+Author: pwouik <62726872+pwouik@users.noreply.github.com>
+Date:   Mon Jan 6 11:48:31 2025 +0100
+
+    Create README.md

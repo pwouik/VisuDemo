@@ -19,6 +19,7 @@ enum LerpMode{
 
 struct LeapToAttractorModifier{
     glm::vec3 ofs_translate;
+    glm::vec3 ofs_axis;
     float ofs_rotate_angle;
 
     void default_init(){
