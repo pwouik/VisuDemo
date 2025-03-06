@@ -13,7 +13,18 @@ struct AttractorRenderArgs {
 
 enum LerpMode{
     Matrix,
-    PerComponent
+    PerComponent,
+    FromLeapLerp //this has nothing do with a lerp but this is here for architectural purposes
+};
+
+struct LeapToAttractorModifier{
+    glm::vec3 ofs_translate;
+    float ofs_rotate_angle;
+
+    void default_init(){
+        ofs_translate =  glm::vec3(0.0f);
+        ofs_rotate_angle = ofs_rotate_angle;
+    }
 };
 
 class AttractorRenderer{
@@ -80,6 +91,9 @@ private:
     std::vector<float> ubo_weights;
     GLuint depth_texture;
     GLuint jumpdist_texture;
+
+    //from leap
+    LeapToAttractorModifier leapInfos[10]; //hardcoed 10 function per attractor max. Consider using a define but warning other magic number 10 in code
 
     bool skipSampleUpdt;
     GLuint ssbo_pts; //ssbo of points

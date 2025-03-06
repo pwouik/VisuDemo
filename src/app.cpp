@@ -245,6 +245,7 @@ void App::setupLeapMotion()
 void App::onFrame(const LEAP_TRACKING_EVENT& frame)
     {
         raymarching_renderer->leap_update(frame);
+        attractor_renderer->leap_update(frame);
         std::cout << "Frame " << frame.info.frame_id << " with " << frame.nHands << " hands. ";
         std::optional<LEAP_HAND> left = std::nullopt;
         for (int i = 0; i < frame.nHands; i++)

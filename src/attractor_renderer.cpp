@@ -33,6 +33,8 @@ void origindArray(float* array, int size){
     }
 }
 
+//todo : all those Lerp function should not take an Attractor but a transform
+
 //lerp - per matrix coefficient on 2 matrix genned by attractors A and B
 static glm::mat4 matrixLerp(const Attractor& attractorA, const Attractor& attractorB, int index, float t) {
     glm::mat4 matA = attractorA.attr_funcs[index]->getMatrix();
@@ -69,6 +71,30 @@ static glm::mat4 componentLerp(const Attractor& attractorA, const Attractor& att
     return matrix;
 }
 
+static glm::mat4 leapLerp(const Attractor& attractorA, const LeapToAttractorModifier& leapInfo, int index, float fac) {
+    //uses fac to control how strong the influence of the hand is.
+    Transform* genA = attractorA.attr_funcs[index];
+
+
+    glm::vec3 l_scale_factors = genA->scale_factors;
+    glm::vec3 l_rot_axis = genA->rot_axis; //glm::normalize((1.0f-t)*genA->rot_axis + t *genB->rot_axis);
+    float l_rot_angle = genA->rot_angle + fac * leapInfo.ofs_rotate_angle;
+    glm::vec3 l_Sh_xy_xz_yx = genA->Sh_xy_xz_yx;
+    glm::vec3 l_Sh_yz_zx_zy = genA->Sh_yz_zx_zy;
+    glm::vec3 l_translation_vector = genA->translation_vector + fac * leapInfo.ofs_translate;
+
+    glm::mat4 matrix =
+        glm::scale(glm::mat4(1.0f), l_scale_factors) *
+        glm::rotate(glm::mat4(1.0f), l_rot_angle, l_rot_axis) *
+        glm::transpose(glm::mat4(
+            1.0f, l_Sh_xy_xz_yx.x,  l_Sh_xy_xz_yx.y, 0.0f,  //     1.0f, Shxy,  Shxz, 0.0f,
+            l_Sh_xy_xz_yx.z, 1.0f,  l_Sh_yz_zx_zy.x, 0.0f,  //     Shyx, 1.0f,  Shyz, 0.0f,
+            l_Sh_yz_zx_zy.y, l_Sh_yz_zx_zy.z,  1.0f, 0.0f,  //     Shzx, Shzy,  1.0f, 0.0f,
+            0.0f, 0.0f,  0.0f, 1.0f)) *                 //     0.0f, 0.0f,  0.0f, 1.0f))
+        glm::translate(glm::mat4(1.0f), l_translation_vector);
+    return matrix;
+}
+
 void AttractorRenderer::update_ubo_matrices(){
     switch (lerp_mode)
     {
@@ -80,6 +106,11 @@ void AttractorRenderer::update_ubo_matrices(){
     case PerComponent:
         for(int i=0; i < matrix_per_attractor; i++){
             ubo_matrices[i] = (componentLerp(attractorA, attractorB, i,  lerp_factor));
+        }
+        break;
+    case FromLeapLerp:
+        for(int i=0; i < matrix_per_attractor; i++){
+            ubo_matrices[i] = (leapLerp(attractorA, leapInfos[i], i,  lerp_factor));
         }
         break;
     default:
@@ -337,7 +368,13 @@ void AttractorRenderer::default_values(){
     lerp_period = 3.0f;
     lerp_stiffness = 3.0f;
 
-    //other 
+    //leap Motion
+    for(int i=0; i<10; i++){ //todo hardcoded max func per attractor
+        leapInfos[i].default_init();
+    }
+    
+    
+    //other
     skipSampleUpdt = false;
 
 
@@ -439,7 +476,30 @@ AttractorRenderer::AttractorRenderer(int w,int h, AttractorRenderArgs constructi
 }
 
 void AttractorRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
+    //todo voyage arround the seed
+    //TODO here modifié info !!!
+    for (int i = 0; i < frame.nHands; i++){
+        if (frame.pHands[i].type == eLeapHandType_Right && frame.pHands[i].confidence > 0.1){
+            LEAP_HAND& hand = frame.pHands[i];
 
+            if (hand.pinch_distance < 25){
+                // if (!right_was_pinched)
+                // {
+                //     right_was_pinched = true;
+                //     start_offset = glm::make_quat(hand.palm.orientation.v);
+                //     start_rotation = glm::make_vec3(hand.palm.position.v);
+                // }
+                // offset += glm::eulerAngles(glm::make_quat(hand.palm.orientation.v) * glm::inverse(start_offset));
+                // rotation += (start_rotation - glm::make_vec3(hand.palm.position.v)) / 1e2f;
+                // start_offset = glm::make_quat(hand.palm.orientation.v);
+                // start_rotation = glm::make_vec3(hand.palm.position.v);
+            }
+            else
+            {
+                //right_was_pinched = false;
+            }
+        }
+    }
 }
 void AttractorRenderer::draw_ui(float& speed,glm::vec3& pos){
     ImGui::Begin("attractor");
@@ -448,7 +508,7 @@ void AttractorRenderer::draw_ui(float& speed,glm::vec3& pos){
             HelpMarker("Lerp between [0+x; 1-x] (stop before reaching 0 or 1)"
                 "relevant when using more than 3 functions per attractors"
                 "keep it 0 if you don't know what your doing");
-        const char* items_cb2[] = { "per matrix", "per component"}; //MUST MATCH ENUM !
+        const char* items_cb2[] = { "per matrix", "per component", "leapMotion & hand"}; //MUST MATCH ENUM "LerpMode" !
         if(ImGui::Combo("lerping mode", (int*)&lerp_mode, items_cb2, IM_ARRAYSIZE(items_cb2))){}
         
         ImGui::Checkbox("no clear", &no_clear);

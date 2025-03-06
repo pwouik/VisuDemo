@@ -114,7 +114,7 @@ public:
 
 class Attractor{
 public:
-    Transform* attr_funcs[10];
+    Transform* attr_funcs[10]; //todo hardcoded a max of 10 per attracotr use define
 
     Attractor() {}
 
