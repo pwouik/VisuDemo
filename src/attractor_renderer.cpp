@@ -495,46 +495,45 @@ void AttractorRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
         if (frame.pHands[i].type == eLeapHandType_Left && frame.pHands[i].confidence > 0.1){
             LEAP_HAND& hand = frame.pHands[i];
 
-            glm::vec3 vec_thumb = glm::normalize(
-                glm::make_vec3(hand.thumb.distal.next_joint.v)
-                - glm::make_vec3(hand.thumb.metacarpal.prev_joint.v)
-            );
-            glm::vec3 vec_index = glm::normalize(
-                glm::make_vec3(hand.index.distal.next_joint.v)
-                - glm::make_vec3(hand.index.metacarpal.prev_joint.v)
-            );
-            glm::vec3 vec_middle = glm::normalize(
-                glm::make_vec3(hand.middle.distal.next_joint.v)
-                -glm::make_vec3(hand.middle.metacarpal.prev_joint.v)
-            );
-            glm::vec3 vec_ring = glm::normalize(
-                glm::make_vec3(hand.ring.distal.next_joint.v)
-                - glm::make_vec3(hand.ring.metacarpal.prev_joint.v)
-            );
-            glm::vec3 vec_pinky = glm::normalize(
-                glm::make_vec3(hand.pinky.distal.next_joint.v)
-                - glm::make_vec3(hand.pinky.metacarpal.prev_joint.v)
-            );
+            if (hand.pinch_distance < 25){
+                //move parameter only if pinch
+                glm::vec3 vec_thumb = glm::normalize(
+                    glm::make_vec3(hand.thumb.distal.next_joint.v)
+                    - glm::make_vec3(hand.thumb.metacarpal.prev_joint.v)
+                );
+                // glm::vec3 vec_index = glm::normalize(
+                //     glm::make_vec3(hand.index.distal.next_joint.v)
+                //     - glm::make_vec3(hand.index.metacarpal.prev_joint.v)
+                // );
+                glm::vec3 vec_middle = glm::normalize(
+                    glm::make_vec3(hand.middle.distal.next_joint.v)
+                    -glm::make_vec3(hand.middle.metacarpal.prev_joint.v)
+                );
+                glm::vec3 vec_ring = glm::normalize(
+                    glm::make_vec3(hand.ring.distal.next_joint.v)
+                    - glm::make_vec3(hand.ring.metacarpal.prev_joint.v)
+                );
+                glm::vec3 vec_pinky = glm::normalize(
+                    glm::make_vec3(hand.pinky.distal.next_joint.v)
+                    - glm::make_vec3(hand.pinky.metacarpal.prev_joint.v)
+                );
+                glm::vec3 vec_arm = glm::normalize(
+                    glm::make_vec3(hand.arm.next_joint.v)
+                    - glm::make_vec3(hand.arm.prev_joint.v)
+                );
 
-            leapInfos[0].ofs_axis = glm::normalize(vec_index- vec_middle);
-            leapInfos[1].ofs_axis = glm::normalize(vec_middle - vec_ring);
-            leapInfos[2].ofs_axis = glm::normalize(vec_ring - vec_index);
+                leapInfos[0].ofs_axis = glm::normalize(vec_middle- vec_ring);
+                leapInfos[1].ofs_axis = glm::normalize(vec_ring - vec_pinky);
+                leapInfos[2].ofs_axis = glm::normalize(vec_pinky - vec_middle);
 
-            leapInfos[0].ofs_translate = maprange(abs(vec_thumb.x),0,1,0.7,1.3);
-            leapInfos[1].ofs_translate = maprange(abs(vec_thumb.y),0,1,0.7,1.3);
-            leapInfos[2].ofs_translate = maprange(abs(vec_thumb.z),0,1,0.7,1.3);
+                leapInfos[0].ofs_translate = maprange(abs(vec_thumb.x),0,1,0.7,1.3);
+                leapInfos[1].ofs_translate = maprange(abs(vec_thumb.y),0,1,0.7,1.3);
+                leapInfos[2].ofs_translate = maprange(abs(vec_thumb.z),0,1,0.7,1.3);
 
-            leapInfos[0].ofs_rotate_angle = maprange(abs(vec_pinky.x),0,1,-2,2);
-            leapInfos[1].ofs_rotate_angle = maprange(abs(vec_pinky.y),0,1,-2,2);
-            leapInfos[2].ofs_rotate_angle = maprange(abs(vec_pinky.z),0,1,-2,2);
-
-            // leapInfos[0].ofs_translate = glm::normalize(
-            //     glm::make_vec3(hand.thumb.metacarpal.next_joint.v) - glm::make_vec3(hand.thumb.metacarpal.prev_joint.v));
-            // leapInfos[1].ofs_translate = glm::normalize(
-            //     glm::make_vec3(hand.index.metacarpal.next_joint.v) - glm::make_vec3(hand.index.metacarpal.prev_joint.v));
-            // leapInfos[2].ofs_translate = glm::normalize(
-            //     glm::make_vec3(hand.middle.metacarpal.next_joint.v) - glm::make_vec3(hand.middle.metacarpal.prev_joint.v));
-
+                leapInfos[0].ofs_rotate_angle = maprange(abs(vec_arm.x),0,1,-2,2);
+                leapInfos[1].ofs_rotate_angle = maprange(abs(vec_arm.y),0,1,-2,2);
+                leapInfos[2].ofs_rotate_angle = maprange(abs(vec_arm.z),0,1,-2,2);
+            }  
         }
     }
 }
