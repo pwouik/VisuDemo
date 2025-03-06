@@ -95,7 +95,7 @@ static glm::mat4 leapLerp(const Attractor& attractorA, const LeapToAttractorModi
     float l_rot_angle = genA->rot_angle + leapInfo.ofs_rotate_angle * facs.fac_angle;
     glm::vec3 l_Sh_xy_xz_yx = genA->Sh_xy_xz_yx;
     glm::vec3 l_Sh_yz_zx_zy = genA->Sh_yz_zx_zy;
-    glm::vec3 l_translation_vector = genA->translation_vector * pow(leapInfo.ofs_translate, facs.fac_tr);
+    glm::vec3 l_translation_vector = genA->translation_vector * glm::pow(leapInfo.ofs_translate, facs.fac_tr);
     
 
     glm::mat4 matrix =
