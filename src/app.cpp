@@ -244,6 +244,8 @@ void App::setupLeapMotion()
 
 void App::onFrame(const LEAP_TRACKING_EVENT& frame)
     {
+        hasLeftHand = false;
+        hasRightHand = false;
         raymarching_renderer->leap_update(frame);
         std::cout << "Frame " << frame.info.frame_id << " with " << frame.nHands << " hands. ";
         std::optional<LEAP_HAND> left = std::nullopt;
@@ -251,7 +253,8 @@ void App::onFrame(const LEAP_TRACKING_EVENT& frame)
         {
             if (frame.pHands[i].type == eLeapHandType_Left && frame.pHands[i].confidence > 0.1)
             {
-                hasRightHand = true;
+                hasLeftHand = true;
+                left = frame.pHands[i];
             }
             if (frame.pHands[i].type == eLeapHandType_Right && frame.pHands[i].confidence > 0.1)
             {
@@ -272,8 +275,22 @@ void App::onFrame(const LEAP_TRACKING_EVENT& frame)
                     left_was_pinched = true;
                     left_start_rotation = palm_orientation;
                 }
-                fractal_position += glm::make_vec3(left.value().palm.velocity.v) * 5e-5f;
-                fractal_rotation = glm::mix(glm::identity<glm::quat>(), palm_orientation * glm::inverse(left_start_rotation) , 0.75f) * fractal_rotation;
+                // Update camera position instead of fractal position
+                pos -= glm::make_vec3(left.value().palm.velocity.v) * 5e-5f;
+            
+                // Extract rotation changes from the palm orientation
+                glm::quat rotation_change = palm_orientation * glm::inverse(left_start_rotation);
+            
+                // Convert the quaternion rotation to changes in pitch and yaw
+                // Extract a simplified rotation around X (pitch) and Y (yaw) axes
+                glm::vec3 euler = glm::eulerAngles(rotation_change);
+            
+                // Update camera pitch and yaw
+                pitch += euler.x * 0.75f;
+                yaw += euler.y * 0.75f;
+            
+                // Keep pitch within reasonable bounds (prevent camera flipping)
+                pitch = glm::clamp(pitch, -glm::half_pi<float>() * 0.99f, glm::half_pi<float>() * 0.99f);
                 left_start_rotation = palm_orientation;
             }
             else
@@ -285,7 +302,5 @@ void App::onFrame(const LEAP_TRACKING_EVENT& frame)
         {
             left_was_pinched = false;
         }
-        hasLeftHand = false;
-        hasRightHand = false;
         std::cout << "\n";
     }
