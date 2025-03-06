@@ -21,15 +21,16 @@ RaymarchingRenderer::RaymarchingRenderer(){
     linkProgram(compute_program);
     #endif
     glUseProgram(compute_program);
-
-    offset = glm::vec3( -3.0f, 1.0f, 0.55f );
-    rotation = glm::vec3( 1.0f, 1.1f, 2.2f );
+    color_freq = 1.0;
+    rotation = glm::vec3( -3.0f, 1.0f, 0.55f );
+    offset = glm::vec3( 1.0f, 1.1f, 2.2f );
     occlusion = 4.5;
     specular = glm::vec3(1.0,1.0,1.0);
     min_light = 0.32f;
     k_d = 1.0;
     k_s = 1.0;
     alpha = 3.0;
+    scale = 1.5;
 }
 void RaymarchingRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
 
@@ -43,13 +44,13 @@ void RaymarchingRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
                 if (!right_was_pinched)
                 {
                     right_was_pinched = true;
-                    start_offset = glm::make_quat(hand.palm.orientation.v);
-                    start_rotation = glm::make_vec3(hand.palm.position.v);
+                    start_rotation = glm::make_quat(hand.palm.orientation.v);
+                    start_offset = glm::make_vec3(hand.palm.position.v);
                 }
-                offset += glm::eulerAngles(glm::make_quat(hand.palm.orientation.v) * glm::inverse(start_offset));
-                rotation += (start_rotation - glm::make_vec3(hand.palm.position.v)) / 1e2f;
-                start_offset = glm::make_quat(hand.palm.orientation.v);
-                start_rotation = glm::make_vec3(hand.palm.position.v);
+                rotation += glm::eulerAngles(glm::make_quat(hand.palm.orientation.v) * glm::inverse(start_rotation));
+                offset += (start_offset - glm::make_vec3(hand.palm.position.v)) / 1e2f;
+                start_rotation = glm::make_quat(hand.palm.orientation.v);
+                start_offset = glm::make_vec3(hand.palm.position.v);
             }
             else
             {
@@ -58,11 +59,14 @@ void RaymarchingRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
         }
     }
 }
+
 void RaymarchingRenderer::draw_ui(){
     ImGui::Begin("Raymarcher");
     ImGui::SeparatorText("params");
-    ImGui::SliderFloat3("param1", glm::value_ptr(offset), -4.0, 4.0);
-    ImGui::SliderFloat3("param2", glm::value_ptr(rotation), -4.0, 4.0);
+    ImGui::SliderFloat3("rotation", glm::value_ptr(rotation), -4.0, 4.0);
+    ImGui::SliderFloat3("offset", glm::value_ptr(offset), -4.0, 4.0);
+    ImGui::SliderFloat("scale", &scale, 1.0f, 2.0f);
+    ImGui::SliderFloat("color freq", &color_freq, 0.01f, 100.0f,"%.3f",ImGuiSliderFlags_Logarithmic);
     ImGui::SliderFloat("minimum light", &min_light, 0.0f, 2.0f);
     ImGui::SliderFloat("k_d", &k_d, 0.0f, 2.0f);
     ImGui::SliderFloat("k_s", &k_s, 0.0f, 2.0f);
@@ -102,6 +106,8 @@ void RaymarchingRenderer::render(float width,float height,glm::vec3 pos,glm::mat
             glUniform3fv(glGetUniformLocation(compute_program, "light_pos"), 1, glm::value_ptr(glm::inverse(fractal_transform)*glm::vec4(light_pos,1.0)));
             glUniform3fv(glGetUniformLocation(compute_program, "offset"), 1, glm::value_ptr(offset));
             glUniform3fv(glGetUniformLocation(compute_program, "rotation"), 1, glm::value_ptr(rotation));
+            glUniform1f(glGetUniformLocation(compute_program, "scale"), scale);
+            glUniform1f(glGetUniformLocation(compute_program, "color_freq"), color_freq);
             glUniform1f(glGetUniformLocation(compute_program, "min_light"), min_light);
             glUniform1f(glGetUniformLocation(compute_program, "k_d"), k_d);
             glUniform1f(glGetUniformLocation(compute_program, "k_s"), k_s);

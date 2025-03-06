@@ -13,10 +13,12 @@ class RaymarchingRenderer{
     private:
         GLuint compute_program;
         bool right_was_pinched;
-        glm::quat start_offset;
-        glm::vec3 start_rotation;
+        glm::quat start_rotation;
+        glm::vec3 start_offset;
         glm::vec3 offset;
         glm::vec3 rotation;
+        float scale;
+        float color_freq;
         float min_light;
         float k_d;
         float k_s;

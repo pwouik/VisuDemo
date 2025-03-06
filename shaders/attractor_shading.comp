@@ -112,12 +112,15 @@ vec3 getWorldPosition(ivec2 pos) {
 
 //this function isn't used anymore
 void computeNormals2(){
-    float d = sampleDepth(ivec2(gl_GlobalInvocationID.xy))/screen_size.x*inv_proj[0].x*4;
-    float nx = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(1,0));
-    float px = sampleDepth(ivec2(gl_GlobalInvocationID.xy)+ivec2(1,0));
-    float ny = sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(0,1));
-    float py = sampleDepth(ivec2(gl_GlobalInvocationID.xy)+ivec2(0,1));
-    ssnormal = normalize(cross(vec3(-d,0,px-nx),vec3(0,-d,py-ny)));
+    float d = sampleDepth(ivec2(gl_GlobalInvocationID.xy));
+    float s=-d/screen_size.x*inv_proj[0].x*2;
+    float nx = d-sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(1,0));
+    float px = sampleDepth(ivec2(gl_GlobalInvocationID.xy)+ivec2(1,0))-d;
+    float ny = d-sampleDepth(ivec2(gl_GlobalInvocationID.xy)-ivec2(0,1));
+    float py = sampleDepth(ivec2(gl_GlobalInvocationID.xy)+ivec2(0,1))-d;
+    float dx = (nx+px)/2;
+    float dy = (ny+py)/2;
+    ssnormal = normalize(cross(vec3(s,0,dx),vec3(0,s,dy)));
     normal = mat3(inv_view)*ssnormal;
 }
 void computeNormals(){
