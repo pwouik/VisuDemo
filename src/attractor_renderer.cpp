@@ -75,23 +75,24 @@ static glm::mat4 leapLerp(const Attractor& attractorA, const LeapToAttractorModi
     //uses fac to control how strong the influence of the hand is.
     Transform* genA = attractorA.attr_funcs[index];
 
-
+    //todo change this depending on leapInfo
     glm::vec3 l_scale_factors = genA->scale_factors;
-    glm::vec3 l_rot_axis = genA->rot_axis; //glm::normalize((1.0f-t)*genA->rot_axis + t *genB->rot_axis);
-    float l_rot_angle = genA->rot_angle + fac * leapInfo.ofs_rotate_angle;
+    glm::vec3 l_rot_axis = genA->rot_axis;//glm::normalize((1.0f-t)*genA->rot_axis + t *genB->rot_axis);
+    float l_rot_angle = genA->rot_angle + leapInfo.ofs_translate.x *0.1*fac; 
     glm::vec3 l_Sh_xy_xz_yx = genA->Sh_xy_xz_yx;
     glm::vec3 l_Sh_yz_zx_zy = genA->Sh_yz_zx_zy;
-    glm::vec3 l_translation_vector = genA->translation_vector + fac * leapInfo.ofs_translate;
+    glm::vec3 l_translation_vector = genA->translation_vector;
+    
 
     glm::mat4 matrix =
-        glm::scale(glm::mat4(1.0f), l_scale_factors) *
-        glm::rotate(glm::mat4(1.0f), l_rot_angle, l_rot_axis) *
-        glm::transpose(glm::mat4(
-            1.0f, l_Sh_xy_xz_yx.x,  l_Sh_xy_xz_yx.y, 0.0f,  //     1.0f, Shxy,  Shxz, 0.0f,
-            l_Sh_xy_xz_yx.z, 1.0f,  l_Sh_yz_zx_zy.x, 0.0f,  //     Shyx, 1.0f,  Shyz, 0.0f,
-            l_Sh_yz_zx_zy.y, l_Sh_yz_zx_zy.z,  1.0f, 0.0f,  //     Shzx, Shzy,  1.0f, 0.0f,
-            0.0f, 0.0f,  0.0f, 1.0f)) *                 //     0.0f, 0.0f,  0.0f, 1.0f))
-        glm::translate(glm::mat4(1.0f), l_translation_vector);
+                glm::scale(glm::mat4(1.0f), l_scale_factors) *
+                glm::rotate(glm::mat4(1.0f), l_rot_angle, l_rot_axis) *
+                glm::transpose(glm::mat4(
+                    1.0f, l_Sh_xy_xz_yx.x,  l_Sh_xy_xz_yx.y, 0.0f,  //     1.0f, Shxy,  Shxz, 0.0f,
+                    l_Sh_xy_xz_yx.z, 1.0f,  l_Sh_yz_zx_zy.x, 0.0f,  //     Shyx, 1.0f,  Shyz, 0.0f,
+                    l_Sh_yz_zx_zy.y, l_Sh_yz_zx_zy.z,  1.0f, 0.0f,  //     Shzx, Shzy,  1.0f, 0.0f,
+                    0.0f, 0.0f,  0.0f, 1.0f)) *                 //     0.0f, 0.0f,  0.0f, 1.0f))
+                glm::translate(glm::mat4(1.0f), l_translation_vector);
     return matrix;
 }
 
@@ -477,27 +478,17 @@ AttractorRenderer::AttractorRenderer(int w,int h, AttractorRenderArgs constructi
 
 void AttractorRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
     //todo voyage arround the seed
-    //TODO here modifié info !!!
     for (int i = 0; i < frame.nHands; i++){
         if (frame.pHands[i].type == eLeapHandType_Right && frame.pHands[i].confidence > 0.1){
             LEAP_HAND& hand = frame.pHands[i];
 
-            if (hand.pinch_distance < 25){
-                // if (!right_was_pinched)
-                // {
-                //     right_was_pinched = true;
-                //     start_offset = glm::make_quat(hand.palm.orientation.v);
-                //     start_rotation = glm::make_vec3(hand.palm.position.v);
-                // }
-                // offset += glm::eulerAngles(glm::make_quat(hand.palm.orientation.v) * glm::inverse(start_offset));
-                // rotation += (start_rotation - glm::make_vec3(hand.palm.position.v)) / 1e2f;
-                // start_offset = glm::make_quat(hand.palm.orientation.v);
-                // start_rotation = glm::make_vec3(hand.palm.position.v);
-            }
-            else
-            {
-                //right_was_pinched = false;
-            }
+            leapInfos[0].ofs_translate = glm::normalize(
+                glm::make_vec3(hand.thumb.metacarpal.next_joint.v) - glm::make_vec3(hand.thumb.metacarpal.prev_joint.v));
+            leapInfos[1].ofs_translate = glm::normalize(
+                glm::make_vec3(hand.index.metacarpal.next_joint.v) - glm::make_vec3(hand.index.metacarpal.prev_joint.v));
+            leapInfos[2].ofs_translate = glm::normalize(
+                glm::make_vec3(hand.middle.metacarpal.next_joint.v) - glm::make_vec3(hand.middle.metacarpal.prev_joint.v));
+
         }
     }
 }
