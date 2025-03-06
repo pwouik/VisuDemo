@@ -551,8 +551,8 @@ void AttractorRenderer::leap_update(const LEAP_TRACKING_EVENT& frame, glm::vec3&
                     left_start_rotation = palm_orientation;
                 }
                 // Update camera position instead of fractal position
-                cam_pos -= glm::rotateY(glm::make_vec3(frame.pHands[i].palm.velocity.v),yaw * PI / 180.0f) * 5e-4f;
-                cam_target -= glm::rotateY(glm::vec3(frame.pHands[i].palm.velocity.x, frame.pHands[i].palm.velocity.y, 0.0f), glm::radians(yaw)) * 5e-4f;
+                cam_pos -= glm::rotateY(glm::vec3(0.0f, 0.0f, frame.pHands[i].palm.velocity.z),glm::radians(yaw)) * 5e-4f;
+                // cam_target -= glm::rotateY(glm::vec3(frame.pHands[i].palm.velocity.x, frame.pHands[i].palm.velocity.y, 0.0f), glm::radians(yaw)) * 5e-4f;
                 
                 // Extract rotation changes from the palm orientation
                 glm::quat rotation_change = palm_orientation * glm::inverse(left_start_rotation);
@@ -560,12 +560,12 @@ void AttractorRenderer::leap_update(const LEAP_TRACKING_EVENT& frame, glm::vec3&
                 // Convert the quaternion rotation to changes in pitch and yaw
                 // Extract a simplified rotation around X (pitch) and Y (yaw) axes
                 glm::vec3 euler = glm::eulerAngles(rotation_change);
-                const auto sav = glm::distance(cam_target, cam_pos);
-                pitch -= glm::degrees(euler.x * 0.9f);
+                const auto sav = glm::length(cam_pos);
+                // pitch -= glm::degrees(euler.x * 0.9f);
                 yaw -= glm::degrees(euler.y * 0.9f);
-                auto pitchRad = glm::radians(-pitch);
+                // auto pitchRad = glm::radians(-pitch);
                 auto yawRad = glm::radians(yaw);
-                glm::vec3 direction{sin(yawRad) * cos(pitchRad), sin(pitchRad), cos(yawRad) * cos(pitchRad)};
+                glm::vec3 direction{sin(yawRad) /** cos(pitchRad)*/, /*sin(pitchRad)*/ 0, cos(yawRad) /** cos(pitchRad)*/};
                 cam_pos = cam_target + direction * sav;
                 left_start_rotation = palm_orientation;
                 left_start_rotation = palm_orientation;
