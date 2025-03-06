@@ -52,7 +52,7 @@ struct LeapInfluenceFacs{
 class AttractorRenderer{
 public:
     AttractorRenderer(int w,int h, AttractorRenderArgs construction_args);
-    void leap_update(const LEAP_TRACKING_EVENT& frame);
+    void leap_update(const LEAP_TRACKING_EVENT& frame, glm::vec3& cam_pos, glm::vec3& cam_target, float& yaw, float& pitch);
     void draw_ui(float& speed,glm::vec3& pos);
     void render(float width,float height, glm::vec3& pos,glm::mat4& inv_view, glm::mat4& proj, glm::vec3& light_pos);
     void resize(float w,float h);

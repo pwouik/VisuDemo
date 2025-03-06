@@ -131,6 +131,7 @@ public:
     float pitch;
     float yaw;
     glm::vec3 pos;
+    glm::vec3 target{0.0f};
     glm::vec3 light_pos;
     std::mutex leapmotion_mutex;
     float speed;

@@ -13,6 +13,8 @@
 #include <glm/gtx/quaternion.hpp>
 #include <GLFW/glfw3.h>
 
+#include "glm/gtx/rotate_vector.hpp"
+
 void randArray(float* array, int size, float range){
     for(int i=0; i<size; i+=4){
         array[i] = range * (((float)rand()/RAND_MAX) *2 -1);
@@ -489,8 +491,11 @@ AttractorRenderer::AttractorRenderer(int w,int h, AttractorRenderArgs constructi
     }
 }
 
-void AttractorRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
+void AttractorRenderer::leap_update(const LEAP_TRACKING_EVENT& frame, glm::vec3& cam_pos, glm::vec3& cam_target, float& yaw, float& pitch){
     //todo voyage arround the seed
+    static bool left_was_pinched = false;
+    static glm::quat left_start_rotation;
+
     for (int i = 0; i < frame.nHands; i++){
         if (frame.pHands[i].type == eLeapHandType_Left && frame.pHands[i].confidence > 0.1){
             LEAP_HAND& hand = frame.pHands[i];
@@ -534,6 +539,45 @@ void AttractorRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
                 leapInfos[1].ofs_rotate_angle = maprange(abs(vec_arm.y),0,1,-2,2);
                 leapInfos[2].ofs_rotate_angle = maprange(abs(vec_arm.z),0,1,-2,2);
             }  
+        }
+        if (frame.pHands[i].type == eLeapHandType_Left && frame.pHands[i].confidence > 0.1)
+        {
+            if (frame.pHands[i].pinch_distance < 25)
+            {
+                const glm::quat palm_orientation = glm::make_quat(frame.pHands[i].palm.orientation.v);
+                if (!left_was_pinched)
+                {
+                    left_was_pinched = true;
+                    left_start_rotation = palm_orientation;
+                }
+                // Update camera position instead of fractal position
+                cam_pos -= glm::rotateY(glm::make_vec3(frame.pHands[i].palm.velocity.v),yaw * PI / 180.0f) * 5e-4f;
+                cam_target -= glm::rotateY(glm::vec3(frame.pHands[i].palm.velocity.x, frame.pHands[i].palm.velocity.y, 0.0f), glm::radians(yaw)) * 5e-4f;
+                
+                // Extract rotation changes from the palm orientation
+                glm::quat rotation_change = palm_orientation * glm::inverse(left_start_rotation);
+            
+                // Convert the quaternion rotation to changes in pitch and yaw
+                // Extract a simplified rotation around X (pitch) and Y (yaw) axes
+                glm::vec3 euler = glm::eulerAngles(rotation_change);
+                const auto sav = glm::distance(cam_target, cam_pos);
+                pitch -= glm::degrees(euler.x * 0.9f);
+                yaw -= glm::degrees(euler.y * 0.9f);
+                auto pitchRad = glm::radians(-pitch);
+                auto yawRad = glm::radians(yaw);
+                glm::vec3 direction{sin(yawRad) * cos(pitchRad), sin(pitchRad), cos(yawRad) * cos(pitchRad)};
+                cam_pos = cam_target + direction * sav;
+                left_start_rotation = palm_orientation;
+                left_start_rotation = palm_orientation;
+            }
+            else
+            {
+                left_was_pinched = false;
+            }
+        }
+        else
+        {
+            left_was_pinched = false;
         }
     }
 }
