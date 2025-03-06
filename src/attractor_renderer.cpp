@@ -373,6 +373,7 @@ void AttractorRenderer::default_values(){
     for(int i=0; i<10; i++){ //todo hardcoded max func per attractor
         leapInfos[i].default_init();
     }
+    leapFacs.default_init();
     
     
     //other
@@ -525,7 +526,11 @@ void AttractorRenderer::draw_ui(float& speed,glm::vec3& pos){
                 "relevant when using more than 3 functions per attractors"
                 "keep it 0 if you don't know what your doing");
         const char* items_cb2[] = { "per matrix", "per component", "leapMotion & hand"}; //MUST MATCH ENUM "LerpMode" !
-        if(ImGui::Combo("lerping mode", (int*)&lerp_mode, items_cb2, IM_ARRAYSIZE(items_cb2))){}
+        if(ImGui::Combo("lerping mode", (int*)&lerp_mode, items_cb2, IM_ARRAYSIZE(items_cb2))){
+        }
+        if(lerp_mode == FromLeapLerp){
+            leapFacs.ui();
+        }
         
         ImGui::Checkbox("no clear", &no_clear);
             HelpMarker("Do not clear previous frame if view didn't changed");

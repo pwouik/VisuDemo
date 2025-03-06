@@ -24,7 +24,24 @@ struct LeapToAttractorModifier{
 
     void default_init(){
         ofs_translate =  glm::vec3(0.0f);
+        ofs_axis =  glm::vec3(0.0f);
         ofs_rotate_angle = ofs_rotate_angle;
+    }
+};
+struct LeapInfluenceFacs{
+    float fac_axis;
+    float fac_tr;
+
+    void default_init(){
+        fac_axis = 0.0f;
+        fac_tr = 0.0f;
+    }
+    void ui(){
+        if(ImGui::TreeNode("debug - factors")){
+            ImGui::SliderFloat("##axis_fac", &fac_axis, 0.0f, 1.0f, "axis : %.3f");
+            ImGui::SliderFloat("##tr_fac", &fac_tr, 0.0f, 1.0f, "axis : %.3f");
+            ImGui::TreePop();
+        }
     }
 };
 
@@ -95,6 +112,7 @@ private:
 
     //from leap
     LeapToAttractorModifier leapInfos[10]; //hardcoed 10 function per attractor max. Consider using a define but warning other magic number 10 in code
+    LeapInfluenceFacs leapFacs;
 
     bool skipSampleUpdt;
     GLuint ssbo_pts; //ssbo of points
