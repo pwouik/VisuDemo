@@ -22,8 +22,8 @@ RaymarchingRenderer::RaymarchingRenderer(){
     #endif
     glUseProgram(compute_program);
     color_freq = 1.0;
-    offset = glm::vec3( -3.0f, 1.0f, 0.55f );
-    rotation = glm::vec3( 1.0f, 1.1f, 2.2f );
+    rotation = glm::vec3( -3.0f, 1.0f, 0.55f );
+    offset = glm::vec3( 1.0f, 1.1f, 2.2f );
     occlusion = 4.5;
     specular = glm::vec3(1.0,1.0,1.0);
     min_light = 0.32f;
@@ -44,13 +44,13 @@ void RaymarchingRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
                 if (!right_was_pinched)
                 {
                     right_was_pinched = true;
-                    start_offset = glm::make_quat(hand.palm.orientation.v);
-                    start_rotation = glm::make_vec3(hand.palm.position.v);
+                    start_rotation = glm::make_quat(hand.palm.orientation.v);
+                    start_offset = glm::make_vec3(hand.palm.position.v);
                 }
-                offset += glm::eulerAngles(glm::make_quat(hand.palm.orientation.v) * glm::inverse(start_offset));
-                rotation += (start_rotation - glm::make_vec3(hand.palm.position.v)) / 1e2f;
-                start_offset = glm::make_quat(hand.palm.orientation.v);
-                start_rotation = glm::make_vec3(hand.palm.position.v);
+                rotation += glm::eulerAngles(glm::make_quat(hand.palm.orientation.v) * glm::inverse(start_rotation));
+                offset += (start_offset - glm::make_vec3(hand.palm.position.v)) / 1e2f;
+                start_rotation = glm::make_quat(hand.palm.orientation.v);
+                start_offset = glm::make_vec3(hand.palm.position.v);
             }
             else
             {
@@ -59,11 +59,12 @@ void RaymarchingRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
         }
     }
 }
+
 void RaymarchingRenderer::draw_ui(){
     ImGui::Begin("Raymarcher");
     ImGui::SeparatorText("params");
-    ImGui::SliderFloat3("param1", glm::value_ptr(offset), -4.0, 4.0);
-    ImGui::SliderFloat3("param2", glm::value_ptr(rotation), -4.0, 4.0);
+    ImGui::SliderFloat3("rotation", glm::value_ptr(rotation), -4.0, 4.0);
+    ImGui::SliderFloat3("offset", glm::value_ptr(offset), -4.0, 4.0);
     ImGui::SliderFloat("scale", &scale, 1.0f, 2.0f);
     ImGui::SliderFloat("color freq", &color_freq, 0.01f, 100.0f,"%.3f",ImGuiSliderFlags_Logarithmic);
     ImGui::SliderFloat("minimum light", &min_light, 0.0f, 2.0f);
