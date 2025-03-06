@@ -18,12 +18,12 @@ enum LerpMode{
 };
 
 struct LeapToAttractorModifier{
-    glm::vec3 ofs_translate;
+    float ofs_translate;
     glm::vec3 ofs_axis;
     float ofs_rotate_angle;
 
     void default_init(){
-        ofs_translate =  glm::vec3(0.0f);
+        ofs_translate =  0.0f;
         ofs_axis =  glm::vec3(0.0f);
         ofs_rotate_angle = ofs_rotate_angle;
     }
@@ -31,15 +31,19 @@ struct LeapToAttractorModifier{
 struct LeapInfluenceFacs{
     float fac_axis;
     float fac_tr;
+    float fac_angle;
 
     void default_init(){
-        fac_axis = 0.0f;
-        fac_tr = 0.0f;
+        fac_axis = 0.5f;
+        fac_tr = 1.5f;
+        fac_angle = 1.0f;
+
     }
     void ui(){
         if(ImGui::TreeNode("debug - factors")){
             ImGui::SliderFloat("##axis_fac", &fac_axis, 0.0f, 1.0f, "axis : %.3f");
-            ImGui::SliderFloat("##tr_fac", &fac_tr, 0.0f, 1.0f, "axis : %.3f");
+            ImGui::SliderFloat("##tr_fac", &fac_tr, 0.5f, 2.0f, "tr fac : %.3f");
+            ImGui::SliderFloat("##angle_fac", &fac_tr, 0.1f, 0.5f, "angle fac : %.3f");
             ImGui::TreePop();
         }
     }

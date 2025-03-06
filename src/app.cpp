@@ -248,7 +248,7 @@ void App::onFrame(const LEAP_TRACKING_EVENT& frame)
         hasRightHand = false;
         raymarching_renderer->leap_update(frame);
         attractor_renderer->leap_update(frame);
-        std::cout << "Frame " << frame.info.frame_id << " with " << frame.nHands << " hands. ";
+        //std::cout << "Frame " << frame.info.frame_id << " with " << frame.nHands << " hands. ";
         std::optional<LEAP_HAND> left = std::nullopt;
         for (int i = 0; i < frame.nHands; i++)
         {
@@ -266,7 +266,7 @@ void App::onFrame(const LEAP_TRACKING_EVENT& frame)
         if (left.has_value())
         {
             hasLeftHand = true;
-            std::cout << "Left hand velocity: " << left.value().palm.velocity.x << ", " << left.value().palm.velocity.y << ", " << left.value().palm.velocity.z << " with " << left.value().confidence << " confidence. Pinch distance: " << std::floor(left.value().pinch_distance);
+            //std::cout << "Left hand velocity: " << left.value().palm.velocity.x << ", " << left.value().palm.velocity.y << ", " << left.value().palm.velocity.z << " with " << left.value().confidence << " confidence. Pinch distance: " << std::floor(left.value().pinch_distance);
             static glm::quat left_start_rotation;
             if (left.value().pinch_distance < 25)
             {
@@ -303,5 +303,5 @@ void App::onFrame(const LEAP_TRACKING_EVENT& frame)
         {
             left_was_pinched = false;
         }
-        std::cout << "\n";
+        //std::cout << "\n";
     }

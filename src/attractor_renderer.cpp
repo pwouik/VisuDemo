@@ -33,6 +33,18 @@ void origindArray(float* array, int size){
     }
 }
 
+inline float maprange(float v, float old_min, float old_max, float new_min, float new_max) {
+    // Check for division by zero
+    if (old_max == old_min) {
+        return new_min;  // Return new_min if old range is invalid
+    }
+    
+    // Calculate the scale factor and map the value
+    float scale = (new_max - new_min) / (old_max - old_min);
+    return new_min + (v - old_min) * scale;
+}
+
+
 //todo : all those Lerp function should not take an Attractor but a transform
 
 //lerp - per matrix coefficient on 2 matrix genned by attractors A and B
@@ -71,17 +83,17 @@ static glm::mat4 componentLerp(const Attractor& attractorA, const Attractor& att
     return matrix;
 }
 
-static glm::mat4 leapLerp(const Attractor& attractorA, const LeapToAttractorModifier& leapInfo, int index, float fac) {
+static glm::mat4 leapLerp(const Attractor& attractorA, const LeapToAttractorModifier& leapInfo, int index, const LeapInfluenceFacs& facs) {
     //uses fac to control how strong the influence of the hand is.
     Transform* genA = attractorA.attr_funcs[index];
 
     //todo change this depending on leapInfo
     glm::vec3 l_scale_factors = genA->scale_factors;
-    glm::vec3 l_rot_axis = glm::normalize((1.0f-fac)*genA->rot_axis + fac * leapInfo.ofs_axis);
-    float l_rot_angle = genA->rot_angle; //+ leapInfo.ofs_translate.x *0.1*fac; 
+    glm::vec3 l_rot_axis = glm::normalize((1.0f-facs.fac_axis)*genA->rot_axis + facs.fac_axis * leapInfo.ofs_axis);
+    float l_rot_angle = genA->rot_angle + leapInfo.ofs_rotate_angle * facs.fac_angle;
     glm::vec3 l_Sh_xy_xz_yx = genA->Sh_xy_xz_yx;
     glm::vec3 l_Sh_yz_zx_zy = genA->Sh_yz_zx_zy;
-    glm::vec3 l_translation_vector = genA->translation_vector;
+    glm::vec3 l_translation_vector = genA->translation_vector * pow(leapInfo.ofs_translate, facs.fac_tr);
     
 
     glm::mat4 matrix =
@@ -111,7 +123,7 @@ void AttractorRenderer::update_ubo_matrices(){
         break;
     case FromLeapLerp:
         for(int i=0; i < matrix_per_attractor; i++){
-            ubo_matrices[i] = (leapLerp(attractorA, leapInfos[i], i,  lerp_factor));
+            ubo_matrices[i] = (leapLerp(attractorA, leapInfos[i], i,  leapFacs));
         }
         break;
     default:
@@ -343,8 +355,8 @@ void AttractorRenderer::default_values(){
     //jumpdist
     JD_FR_MIN = 0.1f;
     JD_FR_MAX = 0.9f;
-    col_jd_low = glm::vec3(0.3,1.0,0.15);
-    col_jd_high = glm::vec3(0.0,0.8,1.0);
+    col_jd_low = glm::vec3(0.7,0.35,0.15);
+    col_jd_high = glm::vec3(0.5,0.2,1.0);
 
     //phong param
     k_a = 0.2f;
@@ -354,10 +366,10 @@ void AttractorRenderer::default_values(){
     col_specular = glm::vec3(0.7,0.7,0.7);
 
     //ao
-    ssao_version = 0;
+    ssao_version = 2;
     ao_fac = 0.015f;
     ao_size = 0.2f;
-    col_ao = glm::vec3(1.0,0.3,0.1);
+    col_ao = glm::vec3(1.0,0.3,1.0);
 
     //animation
     no_clear = true;
@@ -480,7 +492,7 @@ AttractorRenderer::AttractorRenderer(int w,int h, AttractorRenderArgs constructi
 void AttractorRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
     //todo voyage arround the seed
     for (int i = 0; i < frame.nHands; i++){
-        if (frame.pHands[i].type == eLeapHandType_Right && frame.pHands[i].confidence > 0.1){
+        if (frame.pHands[i].type == eLeapHandType_Left && frame.pHands[i].confidence > 0.1){
             LEAP_HAND& hand = frame.pHands[i];
 
             glm::vec3 vec_thumb = glm::normalize(
@@ -507,6 +519,14 @@ void AttractorRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
             leapInfos[0].ofs_axis = glm::normalize(vec_index- vec_middle);
             leapInfos[1].ofs_axis = glm::normalize(vec_middle - vec_ring);
             leapInfos[2].ofs_axis = glm::normalize(vec_ring - vec_index);
+
+            leapInfos[0].ofs_translate = maprange(abs(vec_thumb.x),0,1,0.7,1.3);
+            leapInfos[1].ofs_translate = maprange(abs(vec_thumb.y),0,1,0.7,1.3);
+            leapInfos[2].ofs_translate = maprange(abs(vec_thumb.z),0,1,0.7,1.3);
+
+            leapInfos[0].ofs_rotate_angle = maprange(abs(vec_pinky.x),0,1,-2,2);
+            leapInfos[1].ofs_rotate_angle = maprange(abs(vec_pinky.y),0,1,-2,2);
+            leapInfos[2].ofs_rotate_angle = maprange(abs(vec_pinky.z),0,1,-2,2);
 
             // leapInfos[0].ofs_translate = glm::normalize(
             //     glm::make_vec3(hand.thumb.metacarpal.next_joint.v) - glm::make_vec3(hand.thumb.metacarpal.prev_joint.v));
