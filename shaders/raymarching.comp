@@ -68,7 +68,7 @@ vec3 rainbow(float i){
 
 float de4(vec3 p)
 {
-    p = p.xzy; // Swizzle the x, y, and z components
+    p = p.xzy;
     float scale = 1.1;
     for (int i=0; i < 8;i++)
     {
