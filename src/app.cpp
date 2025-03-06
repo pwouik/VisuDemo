@@ -29,7 +29,7 @@ using namespace std;
 
 App::App(int w,int h, AttractorRenderArgs args_attractor)
 {
-    pos = glm::vec3(0.0,0.0,0.0);
+    pos = glm::vec3(0.0,0.0,8.0);
     light_pos = glm::vec3(0.0,0.0,0.0);
     speed = 1.0f;
     width = w;
@@ -110,8 +110,6 @@ void App::draw_ui(){
         ImGui::SeparatorText("generic debug info");
         ImGui::Text("camera in %.2fx, %.2fy, %.2fz", pos.x, pos.y, pos.z);
         ImGui::Text("light in %.2fx, %.2fy, %.2fz . Set with L", light_pos.x, light_pos.y, light_pos.z);
-        ImGui::Text("fractal at %.2fx, %.2fy, %.2fz. Move with arrows", fractal_position.x, fractal_position.y, fractal_position.z);
-        ImGui::Text("fractal rotation at pitch: %.2f, yaw: %.2f, roll: %.2f. Change with numpad 1, 2 or 3", fractal_rotation.x, fractal_rotation.y, fractal_rotation.z);
         ImGui::Text("speed %.2e. Scroll to change", speed);
         ImGui::SeparatorText("Leap motion");
         if (!leap_connection->is_service_running())
@@ -172,25 +170,6 @@ void App::run(){
         if(glfwGetKey(window, GLFW_KEY_L)==GLFW_PRESS){
             light_pos = pos;
         }
-        if(glfwGetKey(window, GLFW_KEY_UP)==GLFW_PRESS){
-            fractal_position += glm::vec3(-1.0f ,0.0f, 0.0f) * motion;
-        }
-        if(glfwGetKey(window, GLFW_KEY_DOWN)==GLFW_PRESS){
-            fractal_position += glm::vec3(1.0f ,0.0f, 0.0f) * motion;
-        }
-        if(glfwGetKey(window, GLFW_KEY_LEFT)==GLFW_PRESS){
-            fractal_position += glm::vec3(0.0f ,0.0f, 1.0f) * motion;
-        }
-        if(glfwGetKey(window, GLFW_KEY_RIGHT)==GLFW_PRESS){
-            fractal_position += glm::vec3(0.0f ,0.0f, -1.0f) * motion;
-        }
-        if(glfwGetKey(window, GLFW_KEY_PAGE_UP)==GLFW_PRESS){
-            fractal_position += glm::vec3(0.0f ,1.0f, 0.0f) * motion;
-        }
-        if(glfwGetKey(window, GLFW_KEY_PAGE_DOWN)==GLFW_PRESS){
-            fractal_position += glm::vec3(0.0f ,-1.0f, 0.0f) * motion;
-        }
-
         glm::mat4 inv_camera_view = glm::inverse(glm::translate(glm::rotate(
                 glm::rotate(glm::identity<glm::mat4>(),
                     -glm::radians(pitch),
@@ -205,7 +184,7 @@ void App::run(){
         case Raymarching:{
             std::lock_guard<std::mutex> lock(leapmotion_mutex);
             raymarching_renderer->draw_ui();
-            raymarching_renderer->render(width, height, pos, inv_camera_view, glm::inverse(proj), light_pos, fractal_position, fractal_rotation);
+            raymarching_renderer->render(width, height, pos, inv_camera_view, glm::inverse(proj), light_pos);
             break;
         }
         case Attractor:{

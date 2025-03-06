@@ -133,8 +133,6 @@ public:
     glm::vec3 pos;
     glm::vec3 light_pos;
     std::mutex leapmotion_mutex;
-    glm::vec3 fractal_position{0.0f, 0.0f, 0.0f};
-    glm::quat fractal_rotation = glm::identity<glm::quat>();
     float speed;
     double last_tick = 0;
     //pretty sure this could (and should) be stack allocated
