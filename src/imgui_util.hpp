@@ -1,9 +1,9 @@
 /*
 You would be right to notice that there's no reason for function here to static
 
-The point is that for some reason linkage go boom if not
+The point is that for some reason linkage go boom if not (bc this file is included multiples times). Tbh we're too lazy to do thing the proper way (separate declaration and definition in .h / .cpp files)
 
-So they'll just stay static for now
+So they'll just stay static for now. Also I've tried changing all "static" to "inline" but this didn't change the binary size at all (likely because multiples includes never uses a function the same function). Gotta hand it to the compiler optimization 
 
 */
 #pragma once
