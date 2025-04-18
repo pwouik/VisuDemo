@@ -90,6 +90,7 @@ private:
     float k_s;
     float alpha;
     glm::vec3 col_specular;
+    glm::vec3 bg_color;
 
     //AO
     int ssao_version;

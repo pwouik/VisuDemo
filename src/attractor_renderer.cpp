@@ -359,6 +359,7 @@ void AttractorRenderer::default_values(){
     JD_FR_MAX = 1.3f;
     col_jd_low = glm::vec3(1.0f,0.22f,0.22f);
     col_jd_high = glm::vec3(0.05f,1.0f,0.95f);
+    bg_color = glm::vec3(0.1f, 0.2f, 0.4f);
 
     //phong param
     k_a = 0.2f;
@@ -676,6 +677,7 @@ void AttractorRenderer::draw_ui(float& speed,glm::vec3& pos){
         }
 
         if(ImGui::TreeNode("Jump Distance MapRange")){
+            ImGui::ColorEdit3("BG COLOR", glm::value_ptr(bg_color));
             ImGui::ColorEdit3("jd low color", glm::value_ptr(col_jd_low));
             ImGui::ColorEdit3("jd high color", glm::value_ptr(col_jd_high));
             ImGui::DragFloat("from min",&JD_FR_MIN, 0.005f, 0.0f, 2.0f, "%.2f");
@@ -807,6 +809,7 @@ void AttractorRenderer::render(float width,float height, glm::vec3& pos,glm::mat
     glUniform3fv(glGetUniformLocation(shading_program, "camera"), 1, glm::value_ptr(pos)); //here todo
     glUniform1f(glGetUniformLocation(shading_program, "JD_FR_MIN"), JD_FR_MIN);
     glUniform1f(glGetUniformLocation(shading_program, "JD_FR_MAX"), JD_FR_MAX);
+    glUniform3fv(glGetUniformLocation(shading_program, "BGCOLOR"), 1, glm::value_ptr(bg_color));
     glUniform3fv(glGetUniformLocation(shading_program, "col_jd_low"), 1, glm::value_ptr(col_jd_low));
     glUniform3fv(glGetUniformLocation(shading_program, "col_jd_high"), 1, glm::value_ptr(col_jd_high));
     glUniform1f(glGetUniformLocation(shading_program, "k_a"), k_a);

@@ -12,10 +12,10 @@ uniform mat4 inv_proj;
 uniform uvec2 screen_size;
 
 #define PI 3.14159265358
-#define BGCOLOR vec4(1,1,1,1)
 
 uniform vec3 col_jd_low;
 uniform vec3 col_jd_high;
+uniform vec3 BGCOLOR;
 
 uniform float JD_FR_MIN;
 uniform float JD_FR_MAX;
@@ -301,7 +301,7 @@ void main() {
 
     float d = sampleDepth(ivec2(gl_GlobalInvocationID.xy));
     if(d<-99){//early break for background
-        imageStore(target, ivec2(gl_GlobalInvocationID.xy), BGCOLOR);
+        imageStore(target, ivec2(gl_GlobalInvocationID.xy), vec4(BGCOLOR,1.0));
         return;
     }
 
