@@ -393,6 +393,7 @@ void AttractorRenderer::default_values(){
     
     //other
     skipSampleUpdt = false;
+    forceRedraw = false;
 
 
 }
@@ -532,17 +533,19 @@ void AttractorRenderer::leap_update(const LEAP_TRACKING_EVENT& frame, glm::vec3&
                     - glm::make_vec3(hand.arm.prev_joint.v)
                 );
 
-                leapInfos[0].ofs_axis = glm::normalize(vec_middle- vec_ring);
-                leapInfos[1].ofs_axis = glm::normalize(vec_ring - vec_pinky);
-                leapInfos[2].ofs_axis = glm::normalize(vec_pinky - vec_middle);
+                leapInfos[0].ofs_axis = 0.9f * leapInfos[0].ofs_axis + 0.1f * glm::normalize(vec_middle- vec_ring);
+                leapInfos[1].ofs_axis = 0.9f * leapInfos[1].ofs_axis + 0.1f * glm::normalize(vec_ring - vec_pinky);
+                leapInfos[2].ofs_axis = 0.9f * leapInfos[2].ofs_axis + 0.1f * glm::normalize(vec_pinky - vec_middle);
 
-                leapInfos[0].ofs_translate = maprange(abs(vec_thumb.x),0,1,0.7,1.3);
-                leapInfos[1].ofs_translate = maprange(abs(vec_thumb.y),0,1,0.7,1.3);
-                leapInfos[2].ofs_translate = maprange(abs(vec_thumb.z),0,1,0.7,1.3);
+                leapInfos[0].ofs_translate = 0.9f * leapInfos[0].ofs_translate + 0.1f * maprange(abs(vec_thumb.x),0,1,0.7,1.3);
+                leapInfos[1].ofs_translate = 0.9f * leapInfos[1].ofs_translate + 0.1f * maprange(abs(vec_thumb.y),0,1,0.7,1.3);
+                leapInfos[2].ofs_translate = 0.9f * leapInfos[2].ofs_translate + 0.1f * maprange(abs(vec_thumb.z),0,1,0.7,1.3);
 
-                leapInfos[0].ofs_rotate_angle = maprange(abs(vec_arm.x),0,1,-2,2);
-                leapInfos[1].ofs_rotate_angle = maprange(abs(vec_arm.y),0,1,-2,2);
-                leapInfos[2].ofs_rotate_angle = maprange(abs(vec_arm.z),0,1,-2,2);
+                leapInfos[0].ofs_rotate_angle = 0.9f * leapInfos[0].ofs_rotate_angle + 0.1f *maprange(abs(vec_arm.x),0,1,-2,2);
+                leapInfos[1].ofs_rotate_angle = 0.9f * leapInfos[1].ofs_rotate_angle + 0.1f *maprange(abs(vec_arm.y),0,1,-2,2);
+                leapInfos[2].ofs_rotate_angle = 0.9f * leapInfos[2].ofs_rotate_angle + 0.1f *maprange(abs(vec_arm.z),0,1,-2,2);
+
+                forceRedraw = true;
             }  
         }
         if (frame.pHands[i].type == eLeapHandType_Left && frame.pHands[i].confidence > 0.1)
@@ -760,10 +763,11 @@ void AttractorRenderer::resize(float w,float h){
 
 void AttractorRenderer::render(float width,float height, glm::vec3& pos,glm::mat4& inv_view, glm::mat4& proj, glm::vec3& light_pos){
 
-    if(!no_clear || inv_view!=old_view){
+    if(!no_clear || inv_view!=old_view || forceRedraw){
         int depth_clear = INT_MIN;
         glClearTexImage(depth_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
         glClearTexImage(jumpdist_texture,0, GL_RED_INTEGER,GL_INT,&depth_clear);
+        forceRedraw = false;
     }
 
     //overwrite camera view if idling

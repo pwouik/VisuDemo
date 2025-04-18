@@ -120,6 +120,7 @@ private:
     LeapInfluenceFacs leapFacs;
 
     bool skipSampleUpdt;
+    bool forceRedraw;
     GLuint ssbo_pts; //ssbo of points
 
     //glm::mat4 for attractors

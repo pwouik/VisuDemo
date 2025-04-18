@@ -118,6 +118,7 @@ acheiving world peace
 - We could store configuration in json, and add the ability to load / save configuration. Same goes for attractor configurations
 - take a screenshot 
 - better normals computation (detects voids)
+- better controlls (base principle with pinch is good but we need to enforce that user can't grief his config)
 
 
 # note for IDE/env set up
