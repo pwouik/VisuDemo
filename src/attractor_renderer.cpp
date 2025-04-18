@@ -355,23 +355,23 @@ glm::mat4 AttractorRenderer::get_idle_view(float time){
 
 void AttractorRenderer::default_values(){
     //jumpdist
-    JD_FR_MIN = 0.1f;
-    JD_FR_MAX = 0.9f;
-    col_jd_low = glm::vec3(0.7,0.35,0.15);
-    col_jd_high = glm::vec3(0.5,0.2,1.0);
+    JD_FR_MIN = 0.6f;
+    JD_FR_MAX = 1.3f;
+    col_jd_low = glm::vec3(1.0f,0.22f,0.22f);
+    col_jd_high = glm::vec3(0.05f,1.0f,0.95f);
 
     //phong param
     k_a = 0.2f;
     k_d = 0.5f;
     k_s = 1.0f;
     alpha = 0.9f;
-    col_specular = glm::vec3(0.7,0.7,0.7);
+    col_specular = glm::vec3(0.9,0.05f,1.0f);
 
     //ao
     ssao_version = 2;
     ao_fac = 0.015f;
     ao_size = 0.2f;
-    col_ao = glm::vec3(1.0,0.3,1.0);
+    col_ao = glm::vec3(0.0f,1.0f,1.0f);
 
     //animation
     no_clear = true;
