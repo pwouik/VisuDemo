@@ -497,9 +497,13 @@ void AttractorRenderer::leap_update(const LEAP_TRACKING_EVENT& frame, glm::vec3&
     static bool left_was_pinched = false;
     static glm::quat left_start_rotation;
 
+    glm::vec3 pinky_right, pinky_left;
     for (int i = 0; i < frame.nHands; i++){
+        //store pinky of both hand to generate a new seed when they touch
+
         if (frame.pHands[i].type == eLeapHandType_Right && frame.pHands[i].confidence > 0.1){
             LEAP_HAND& hand = frame.pHands[i];
+            pinky_right = glm::make_vec3(hand.pinky.distal.next_joint.v);
 
             if (hand.pinch_distance < 25){
                 //move parameter only if pinch
@@ -543,6 +547,7 @@ void AttractorRenderer::leap_update(const LEAP_TRACKING_EVENT& frame, glm::vec3&
         }
         if (frame.pHands[i].type == eLeapHandType_Left && frame.pHands[i].confidence > 0.1)
         {
+            pinky_left = glm::make_vec3(frame.pHands[i].pinky.distal.next_joint.v);
             if (frame.pHands[i].pinch_distance < 25)
             {
                 const glm::quat palm_orientation = glm::make_quat(frame.pHands[i].palm.orientation.v);
@@ -580,6 +585,11 @@ void AttractorRenderer::leap_update(const LEAP_TRACKING_EVENT& frame, glm::vec3&
         {
             left_was_pinched = false;
         }
+    }
+    //start from a new random seed if both pinky are close enough
+    if(glm::distance(pinky_left, pinky_right)< 35){
+        attractorA.setRandom(matrix_per_attractor);
+        attractorB.setRandom(matrix_per_attractor);
     }
 }
 void AttractorRenderer::draw_ui(float& speed,glm::vec3& pos){
