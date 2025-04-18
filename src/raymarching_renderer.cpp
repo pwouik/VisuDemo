@@ -37,8 +37,28 @@ RaymarchingRenderer::RaymarchingRenderer(){
     aocolor = glm::vec3(0.1f,0.2f,0.0f);
     bloomcolor = glm::vec3(1.0f,0.7f,0.0f);
     bgcolor = glm::vec3(0.8f,0.0f,1.0f);
+    
+    // Initialize smoothing variables
+    smoothing_factor = 0.1f;
+    position_smoothing_factor = 0.08f;
+    rotation_smoothing_factor = 0.15f;
+    target_fractal_position = fractal_position;
+    target_fractal_rotation = fractal_rotation;
+    
+    // Initialize time for frame-rate independent smoothing
+    last_update_time = glfwGetTime();
 }
+
 void RaymarchingRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
+    // Calculate delta time for frame-rate independent smoothing
+    double current_time = glfwGetTime();
+    float delta_time = static_cast<float>(current_time - last_update_time);
+    last_update_time = current_time;
+    
+    // Adjust smoothing factors based on delta time to ensure consistent smoothing
+    // regardless of frame rate (clamped to avoid issues with very low framerates)
+    float time_adjusted_pos_smoothing = std::min(position_smoothing_factor * delta_time * 60.0f, 1.0f);
+    float time_adjusted_rot_smoothing = std::min(rotation_smoothing_factor * delta_time * 60.0f, 1.0f);
 
     for (int i = 0; i < frame.nHands; i++)
     {
@@ -53,10 +73,24 @@ void RaymarchingRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
                     start_rotation = glm::make_quat(hand.palm.orientation.v);
                     start_offset = glm::make_vec3(hand.palm.position.v);
                 }
-                rotation += glm::eulerAngles(glm::make_quat(hand.palm.orientation.v) * glm::inverse(start_rotation));
-                offset += (start_offset - glm::make_vec3(hand.palm.position.v)) / 1e5f;
-                start_rotation = glm::make_quat(hand.palm.orientation.v);
-                start_offset = glm::make_vec3(hand.palm.position.v);
+                
+                // Calculate rotation changes
+                glm::quat current_rotation = glm::make_quat(hand.palm.orientation.v);
+                glm::vec3 rotation_delta = glm::eulerAngles(current_rotation * glm::inverse(start_rotation));
+                
+                // Apply gradual rotation change
+                rotation += rotation_delta * time_adjusted_rot_smoothing;
+                
+                // Calculate position changes with smoothing
+                glm::vec3 current_offset = glm::make_vec3(hand.palm.position.v);
+                glm::vec3 offset_delta = (start_offset - current_offset) / 1e5f;
+                
+                // Apply gradual position change
+                offset += offset_delta * time_adjusted_pos_smoothing;
+                
+                // Update starting points for next frame
+                start_rotation = current_rotation;
+                start_offset = current_offset;
             }
             else
             {
@@ -74,8 +108,18 @@ void RaymarchingRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
                     left_was_pinched = true;
                     left_start_rotation = palm_orientation;
                 }
-                fractal_position += glm::make_vec3(frame.pHands[i].palm.velocity.v) * 5e-5f;
-                fractal_rotation = glm::mix(glm::identity<glm::quat>(), palm_orientation * glm::inverse(left_start_rotation) , 0.75f) * fractal_rotation;
+                
+                // Set target position with velocity
+                glm::vec3 velocity = glm::make_vec3(frame.pHands[i].palm.velocity.v) * 5e-5f;
+                target_fractal_position += velocity;
+                
+                // Set target rotation
+                target_fractal_rotation = glm::mix(
+                    glm::identity<glm::quat>(), 
+                    palm_orientation * glm::inverse(left_start_rotation), 
+                    0.75f
+                ) * fractal_rotation;
+                
                 left_start_rotation = palm_orientation;
             }
             else
@@ -88,11 +132,29 @@ void RaymarchingRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
             left_was_pinched = false;
         }
     }
+    
+    // Apply smoothing between current and target values
+    fractal_position = glm::mix(fractal_position, target_fractal_position, time_adjusted_pos_smoothing);
+    
+    // Quaternion interpolation for smooth rotation
+    fractal_rotation = glm::slerp(fractal_rotation, target_fractal_rotation, time_adjusted_rot_smoothing);
 }
+
 void RaymarchingRenderer::draw_ui(){
     ImGui::Begin("Raymarcher");
     ImGui::Text("fractal at %.2fx, %.2fy, %.2fz. Move with arrows", fractal_position.x, fractal_position.y, fractal_position.z);
     ImGui::Text("fractal rotation at pitch: %.2f, yaw: %.2f, roll: %.2f. Change with numpad 1, 2 or 3", fractal_rotation.x, fractal_rotation.y, fractal_rotation.z);
+    
+    ImGui::SeparatorText("Movement Settings");
+    if (ImGui::SliderFloat("Position Smoothing", &position_smoothing_factor, 0.01f, 1.0f)) {
+        // Clamp to valid range
+        position_smoothing_factor = std::max(0.01f, std::min(position_smoothing_factor, 1.0f));
+    }
+    if (ImGui::SliderFloat("Rotation Smoothing", &rotation_smoothing_factor, 0.01f, 1.0f)) {
+        // Clamp to valid range
+        rotation_smoothing_factor = std::max(0.01f, std::min(rotation_smoothing_factor, 1.0f));
+    }
+    
     ImGui::SeparatorText("params");
     ImGui::SliderFloat3("rotation", glm::value_ptr(rotation), -4.0, 4.0);
     ImGui::SliderFloat3("offset", glm::value_ptr(offset), -4.0, 4.0);
