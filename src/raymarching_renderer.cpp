@@ -111,7 +111,7 @@ void RaymarchingRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
                 }
                 
                 // Set target position with velocity
-                glm::vec3 velocity = glm::make_vec3(frame.pHands[i].palm.velocity.v) * 5e-5f;
+                glm::vec3 velocity = glm::make_vec3(frame.pHands[i].palm.velocity.v) * 2e-4f;
                 target_fractal_position += velocity;
                 
                 // Set target rotation
@@ -119,7 +119,7 @@ void RaymarchingRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
                     glm::identity<glm::quat>(), 
                     palm_orientation * glm::inverse(left_start_rotation), 
                     0.75f
-                ) * fractal_rotation;
+                ) * target_fractal_rotation;
                 
                 left_start_rotation = palm_orientation;
             }
