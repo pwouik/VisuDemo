@@ -133,6 +133,11 @@ void App::draw_ui(){
             ImGui::Text(" | ");
             ImGui::SameLine();
             ImGui::TextColored(hasRightHand ? ImVec4(0.0f, 1.0f, 0.0f, 1.0f) : ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Right hand");
+            ImGui::TextColored(leftPinching ? ImVec4(0.0f, 1.0f, 0.0f, 1.0f) : ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Left pinch");
+            ImGui::SameLine();
+            ImGui::Text(" | ");
+            ImGui::SameLine();
+            ImGui::TextColored(rightPinching ? ImVec4(0.0f, 1.0f, 0.0f, 1.0f) : ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Right pinch");
             if (ImGui::Button("Stop leap service"))
             {
                 leap_connection->terminate_service();
@@ -238,11 +243,13 @@ void App::onFrame(const LEAP_TRACKING_EVENT& frame)
         {
             if (frame.pHands[i].type == eLeapHandType_Left && frame.pHands[i].confidence > 0.1)
             {
+                leftPinching = frame.pHands[i].pinch_distance < 25;
                 hasLeftHand = true;
             }
             if (frame.pHands[i].type == eLeapHandType_Right && frame.pHands[i].confidence > 0.1)
             {
                 hasRightHand = true;
+                rightPinching = frame.pHands[i].pinch_distance < 25;
             }
         }
         //std::cout << "\n";

@@ -154,6 +154,8 @@ public:
     float prevFpsUpdate = 0 ;
     float currentFPS;
     bool hasLeftHand = false;
+    bool leftPinching = false;
     bool hasRightHand = false;
+    bool rightPinching = false;
     std::unique_ptr<leap::leap_connection> leap_connection;
 };
