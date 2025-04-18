@@ -1,9 +1,13 @@
+```
+ m'envoyer les sources et un guide d'utilisation composé d'une introduction, d'une partie technique (consignes d'installation, dossiers importants, ...) et d'une partie fonctionnelle (l'objectif, les features du programme, les interactions possibles, ...). Concernant la 2e application que vous avez récupérée pour l'améliorer, vous pouvez bien entendu reprendre l'ancien guide et y ajouter vos modifications.
+ ```
+
 # Currently Working
 
 ## Shading
 
 Todo
-- fine tune light and pick beatifull ✨🎨 colors
+- DONE / fine tune light and pick beatifull ✨🎨 colors
 - better normal computation (edge cases support for aberrent values)
 - leapmotion integration
 
@@ -15,11 +19,6 @@ Maybe ?
 - Currently we're doing : 1 point -> draw 3 points from attractor / keep 1. We could potentially compute 3, compute 9, draw 3+9=12, keep 1 randomly - DONE / ~ -30% fps for 4 times the ammount of point. For some reasons perf difference differ on computer so extensive testing will be requiered
 - Lower MAX_FUNC_PER_ATTRACTOR in render_attractor.comp (may be irrelevant but get rid of useless memory in each kernel so maybe significant) (currently supports up to 10 function per attractor)
 - shared memory / tilling in SSAO
-
-## Bugs
-
-- overwrite matrix option kinda not working at some times for *reasons*
-
 
 
 # VisuDemo
@@ -38,6 +37,8 @@ cmake ..
 cmake --build . --config Release
 ```
 
+
+
 ## Ray Marching
 
 for context read : https://jbaker.graphics/writings/DEC.html
@@ -48,8 +49,9 @@ for context see https://www.youtube.com/watch?v=1L-x_DH3Uvg
 
 ### Moving points
 
-Points are only the GPU in an SSBO
+Points are only the GPU in an SSBO. The number of point can be changed when starting the proram with CLI arguments
 Position updated with a compute shader
+    - todo explain weights
 used to be displayed by concurent writting of pixels on a texture
 
 
@@ -74,7 +76,7 @@ Note that this brutforce approach produce a sh\*t ton of of useless computation 
 
 #### race condition when writting on depthmap ?
 
-We simply ignore them.
+We simply ignore them. (below an interpretation as to why we can do that)
 
 An issue can occurs if 2 kernels want's to write on the same pixel. However, this is very unlikely.
 
@@ -97,7 +99,7 @@ Well that's assuming atomic is really expensive tbf we didn't really benchmarked
 
 We also note that this calcul heavily depends on the number of kernel on the GPU.
 
-All math and assumption aside we can simply observe a decent result.
+**All math and assumption aside we can simply observe a decent result.**
 
 
 ## Leap Motion Integration
@@ -106,8 +108,80 @@ acheiving world peace
 
 ## known issue
 
-- `assert` macro expansion dependant on compiler
+- `assert` macro expansion dependant on compiler. It was fixed in a ugly way using `#IFDEF`
+- rng relies on the old `<cstdlib>` We should switch to `<random>` or smth else in order to access the seed at any given point in time (esp when generating knew attractors so we caneasily store a seed for attractory manually randomly generated after the program started) 
+- The whole class hierarchie abstraction for attractor / attractor function / matrix overriding is kinda messy but it works. However it's to note that overriding matrices was though as a debug feature, and if this part is rewritten removing it wouldn't be a major issue.
 
-## other random consideration
 
-- rng relies on the old `<cstdlib>` We should switch to `<random>` or smth else in order to access the seed at any given point in time (esp when generating knew attractors so we caneasily store a seed for attractory manually randomly generated after the program started). Or we could simply store attractor state differently (~~how about importing a some JS library to export and parse json ?~~)
+# Perspective
+
+- We could store configuration in json, and add the ability to load / save configuration. Same goes for attractor configurations
+- take a screenshot 
+- better normals computation (detects voids)
+
+
+# note for IDE/env set up
+
+## On windows / VCPKG / VS code
+
+Even if cmake should installs relevant dependencies, we recommend using a package manger such as [VPCKG](https://github.com/microsoft/vcpkg)
+
+For intellisense, update `c_cpp_properties` to contain :
+```json
+"includePath": [
+    "${workspaceFolder}/**",
+    "C:/vcpkg/installed/x64-windows/include/**",
+    "C:/Program Files/Ultraleap/LeapSDK/include/**"
+],
+```
+
+For compiling, you can use a `tasks.json` similar to this. Then run `ctrl+shift+p` in any `.cpp` file task > run task
+
+```json
+//if you're using VCPKG, update relevants paths
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "CMake Configure",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "-S ${fileDirname}/..",
+                "-B ${fileDirname}/../build",
+                "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake", 
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [],
+            "detail": "Runs cmake to configure the project."
+        },
+        {
+            "label": "CMake Build",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "${fileDirname}/../build",
+                "--config",
+                "Release"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "detail": "Builds the project in Release mode."
+        },
+        {
+            "type": "cmake",
+            "label": "CMake: clean",
+            "command": "clean",
+            "problemMatcher": [],
+            "detail": "CMake template clean task"
+        }
+    ]
+}
+```
