@@ -235,8 +235,18 @@ void App::onFrame(const LEAP_TRACKING_EVENT& frame)
     {
         hasLeftHand = false;
         hasRightHand = false;
-        raymarching_renderer->leap_update(frame);
-        attractor_renderer->leap_update(frame, pos, target, yaw, pitch);
+        std::lock_guard<std::mutex> lock(leapmotion_mutex);
+
+        switch (curr_mode) {
+        case Raymarching:{
+            raymarching_renderer->leap_update(frame);
+            break;
+        }
+        case Attractor:{
+            attractor_renderer->leap_update(frame, pos, target, yaw, pitch);
+            break;
+        }
+        }
         //std::cout << "Frame " << frame.info.frame_id << " with " << frame.nHands << " hands. ";
         std::optional<LEAP_HAND> left = std::nullopt;
         for (int i = 0; i < frame.nHands; i++)

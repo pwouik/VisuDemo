@@ -1,5 +1,6 @@
 #include "raymarching_renderer.h"
 #include "app.h"
+#include "glm/ext/quaternion_common.hpp"
 #include "glm/fwd.hpp"
 #include "imgui/imgui.h"
 #include "opengl_util.h"
@@ -146,14 +147,8 @@ void RaymarchingRenderer::draw_ui(){
     ImGui::Text("fractal rotation at pitch: %.2f, yaw: %.2f, roll: %.2f. Change with numpad 1, 2 or 3", fractal_rotation.x, fractal_rotation.y, fractal_rotation.z);
     
     ImGui::SeparatorText("Movement Settings");
-    if (ImGui::SliderFloat("Position Smoothing", &position_smoothing_factor, 0.01f, 1.0f)) {
-        // Clamp to valid range
-        position_smoothing_factor = std::max(0.01f, std::min(position_smoothing_factor, 1.0f));
-    }
-    if (ImGui::SliderFloat("Rotation Smoothing", &rotation_smoothing_factor, 0.01f, 1.0f)) {
-        // Clamp to valid range
-        rotation_smoothing_factor = std::max(0.01f, std::min(rotation_smoothing_factor, 1.0f));
-    }
+    ImGui::SliderFloat("Position Smoothing", &position_smoothing_factor, 0.01f, 1.0f);
+    ImGui::SliderFloat("Rotation Smoothing", &rotation_smoothing_factor, 0.01f, 1.0f);
     
     ImGui::SeparatorText("params");
     ImGui::SliderFloat3("rotation", glm::value_ptr(rotation), -4.0, 4.0);
@@ -192,7 +187,7 @@ void RaymarchingRenderer::draw_ui(){
 
 void RaymarchingRenderer::render(float width,float height,glm::vec3 pos,glm::mat4 inv_view, glm::mat4 inv_proj, glm::vec3 light_pos){
 
-    glm::mat4 fractal_transform =  glm::translate(glm::identity<glm::mat4>(),fractal_position) * glm::toMat4(fractal_rotation);
+    glm::mat4 fractal_transform =  glm::translate(glm::identity<glm::mat4>(), fractal_position) * glm::toMat4(fractal_rotation);
     glm::mat4 total_transform = glm::inverse(fractal_transform)*inv_view;
 
     glUseProgram(compute_program);
