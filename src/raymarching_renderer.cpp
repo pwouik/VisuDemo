@@ -147,7 +147,7 @@ void RaymarchingRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
 void RaymarchingRenderer::draw_ui(){
     ImGui::Begin("Raymarcher");
     ImGui::Text("fractal at %.2fx, %.2fy, %.2fz. Move with arrows", fractal_position.x, fractal_position.y, fractal_position.z);
-    ImGui::Text("fractal rotation at pitch: %.2f, yaw: %.2f, roll: %.2f. Change with numpad 1, 2 or 3", fractal_rotation.x, fractal_rotation.y, fractal_rotation.z);
+    ImGui::Text("fractal rotation at pitch: %.2f, yaw: %.2f, roll: %.2f.", fractal_rotation.x, fractal_rotation.y, fractal_rotation.z);
     
     ImGui::SeparatorText("Movement Settings");
     ImGui::SliderFloat("Position Smoothing", &position_smoothing_factor, 0.01f, 1.0f);
@@ -168,6 +168,8 @@ void RaymarchingRenderer::draw_ui(){
     ImGui::ColorEdit3("occlusion color", glm::value_ptr(aocolor));
     ImGui::ColorEdit3("bloom color", glm::value_ptr(bloomcolor));
     ImGui::ColorEdit3("background color", glm::value_ptr(bgcolor));
+
+    if(ImGui::Button("reset"))reset();
     if(ImGui::Button("Hot reload shader")){
         
         GLuint new_program = glCreateProgram();
