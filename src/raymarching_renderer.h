@@ -24,10 +24,14 @@ class RaymarchingRenderer{
         glm::vec3 rotation;
         float scale;
         float color_freq;
+        float hue;
         float min_light;
         float k_d;
         float k_s;
         float alpha;
         glm::vec3 specular;
+        glm::vec3 bgcolor;
+        glm::vec3 bloomcolor;
+        glm::vec3 aocolor;
         float occlusion;
 };

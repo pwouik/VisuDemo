@@ -29,8 +29,9 @@ using namespace std;
 
 App::App(int w,int h, AttractorRenderArgs args_attractor)
 {
-    pos = glm::vec3(0.0,0.0,8.0);
-    light_pos = glm::vec3(0.0,0.0,0.0);
+    pos = glm::vec3(0.0,0.0,5.0);
+    light_pos = glm::vec3(0.0,5.0,5.0);
+
     speed = 1.0f;
     width = w;
     height = h;

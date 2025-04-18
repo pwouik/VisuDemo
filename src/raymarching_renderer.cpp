@@ -23,16 +23,20 @@ RaymarchingRenderer::RaymarchingRenderer(){
     linkProgram(compute_program);
     #endif
     glUseProgram(compute_program);
-    color_freq = 1.0;
-    rotation = glm::vec3( -3.0f, 1.0f, 0.55f );
-    offset = glm::vec3( 1.0f, 1.1f, 2.2f );
-    occlusion = 4.5;
-    specular = glm::vec3(1.0,1.0,1.0);
-    min_light = 0.32f;
-    k_d = 1.0;
-    k_s = 1.0;
-    alpha = 3.0;
+    rotation = glm::vec3( 0.603f, -0.275f, -0.314f );
+    offset = glm::vec3( 0.822f, 1.261f, 0.109f );
     scale = 1.5;
+    color_freq = 0.631;
+    hue = 1.931;
+    min_light = 1.0f;
+    occlusion = 2.5;
+    specular = glm::vec3(1.0,1.0,1.0);
+    k_d = 1.0;
+    k_s = 0.8;
+    alpha = 4.0;
+    aocolor = glm::vec3(0.1f,0.2f,0.0f);
+    bloomcolor = glm::vec3(1.0f,0.7f,0.0f);
+    bgcolor = glm::vec3(0.8f,0.0f,1.0f);
 }
 void RaymarchingRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
 
@@ -50,9 +54,9 @@ void RaymarchingRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
                     start_offset = glm::make_vec3(hand.palm.position.v);
                 }
                 rotation += glm::eulerAngles(glm::make_quat(hand.palm.orientation.v) * glm::inverse(start_rotation));
-                offset += (start_offset - glm::make_vec3(hand.palm.position.v)) / 1e2f;
+                offset += (start_offset - glm::make_vec3(hand.palm.position.v)) / 1e5f;
                 start_rotation = glm::make_quat(hand.palm.orientation.v);
-                start_offset = glm::normalize(glm::make_vec3(hand.palm.position.v));
+                start_offset = glm::make_vec3(hand.palm.position.v);
             }
             else
             {
@@ -94,12 +98,16 @@ void RaymarchingRenderer::draw_ui(){
     ImGui::SliderFloat3("offset", glm::value_ptr(offset), -4.0, 4.0);
     ImGui::SliderFloat("scale", &scale, 1.0f, 2.0f);
     ImGui::SliderFloat("color freq", &color_freq, 0.01f, 100.0f,"%.3f",ImGuiSliderFlags_Logarithmic);
+    ImGui::SliderFloat("hue", &hue, 0.0f, 2.0f);
     ImGui::SliderFloat("minimum light", &min_light, 0.0f, 2.0f);
     ImGui::SliderFloat("k_d", &k_d, 0.0f, 2.0f);
     ImGui::SliderFloat("k_s", &k_s, 0.0f, 2.0f);
     ImGui::SliderFloat("alpha", &alpha, 1.0f, 5.0f);
     ImGui::ColorEdit3("specular", glm::value_ptr(specular));
     ImGui::SliderFloat("occlusion", &occlusion, -10.0f, 10.0f);
+    ImGui::ColorEdit3("occlusion color", glm::value_ptr(aocolor));
+    ImGui::ColorEdit3("bloom color", glm::value_ptr(bloomcolor));
+    ImGui::ColorEdit3("background color", glm::value_ptr(bgcolor));
     if(ImGui::Button("Hot reload shader")){
         
         GLuint new_program = glCreateProgram();
@@ -143,6 +151,10 @@ void RaymarchingRenderer::render(float width,float height,glm::vec3 pos,glm::mat
     glUniform3fv(glGetUniformLocation(compute_program, "specular"), 1, glm::value_ptr(specular));
     glUniform1f(glGetUniformLocation(compute_program, "occlusion"), occlusion);
     glUniform1f(glGetUniformLocation(compute_program, "time"), glfwGetTime());
+    glUniform1f(glGetUniformLocation(compute_program, "hue"), hue);
+    glUniform3fv(glGetUniformLocation(compute_program, "aocolor"), 1, glm::value_ptr(aocolor));
+    glUniform3fv(glGetUniformLocation(compute_program, "bloomcolor"), 1, glm::value_ptr(bloomcolor));
+    glUniform3fv(glGetUniformLocation(compute_program, "bgcolor"), 1, glm::value_ptr(bgcolor));
     glDispatchCompute((width-1)/8+1, (height-1)/8+1, 1);
 
     // make sure writing to image has finished before read

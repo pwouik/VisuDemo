@@ -12,7 +12,7 @@ uniform mat4 inv_proj;
 uniform uvec2 screen_size;
 
 #define PI 3.14159265358
-#define BGCOLOR vec4(0,0,0,1)
+#define BGCOLOR vec4(1,1,1,1)
 
 uniform vec3 col_jd_low;
 uniform vec3 col_jd_high;
