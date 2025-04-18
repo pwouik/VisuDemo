@@ -24,6 +24,11 @@ RaymarchingRenderer::RaymarchingRenderer(){
     linkProgram(compute_program);
     #endif
     glUseProgram(compute_program);
+    reset();    
+    // Initialize time for frame-rate independent smoothing
+    last_update_time = glfwGetTime();
+}
+void RaymarchingRenderer::reset(){
     rotation = glm::vec3( 0.603f, -0.275f, -0.314f );
     offset = glm::vec3( 0.822f, 1.261f, 0.109f );
     scale = 1.5;
@@ -45,9 +50,7 @@ RaymarchingRenderer::RaymarchingRenderer(){
     rotation_smoothing_factor = 0.15f;
     target_fractal_position = fractal_position;
     target_fractal_rotation = fractal_rotation;
-    
-    // Initialize time for frame-rate independent smoothing
-    last_update_time = glfwGetTime();
+
 }
 
 void RaymarchingRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
@@ -84,10 +87,10 @@ void RaymarchingRenderer::leap_update(const LEAP_TRACKING_EVENT& frame){
                 
                 // Calculate position changes with smoothing
                 glm::vec3 current_offset = glm::make_vec3(hand.palm.position.v);
-                glm::vec3 offset_delta = (start_offset - current_offset) / 1e5f;
+                glm::vec3 offset_delta = (start_offset - current_offset);
                 
                 // Apply gradual position change
-                offset += offset_delta * time_adjusted_pos_smoothing;
+                offset += offset_delta * 1e-2f;
                 
                 // Update starting points for next frame
                 start_rotation = current_rotation;

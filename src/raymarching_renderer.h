@@ -9,6 +9,7 @@ public:
     RaymarchingRenderer();
     void leap_update(const LEAP_TRACKING_EVENT& frame);
     void draw_ui();
+    void reset();
     void render(float width,float height,glm::vec3 pos,glm::mat4 inv_view, glm::mat4 inv_proj, glm::vec3 light_pos);
 private:
     GLuint compute_program;
