@@ -41,7 +41,7 @@ uniform float ao_fac;
 uniform float ao_size;
 uniform vec3 col_ao;
 
-//what ?
+//below are some utility function that were once used for debuging
 vec3 rainbow(float i){
     return min(vec3(1),max(vec3(0),sin((vec3(0,2.0/3,4.0/3)+i)*PI)+.5));
 }

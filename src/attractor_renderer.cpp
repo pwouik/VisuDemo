@@ -598,7 +598,7 @@ void AttractorRenderer::leap_update(const LEAP_TRACKING_EVENT& frame, glm::vec3&
 void AttractorRenderer::draw_ui(float& speed,glm::vec3& pos){
     ImGui::Begin("attractor");
     if(ImGui::CollapsingHeader("Debug & all", ImGuiTreeNodeFlags_DefaultOpen )){
-        ImGui::SliderFloat("##lerpfactor", &lerp_factor, 0.0f, 1.0f, "lerp : %.3f");
+        if(ImGui::SliderFloat("##lerpfactor", &lerp_factor, 0.0f, 1.0f, "lerp : %.3f")) forceRedraw = true;
             HelpMarker("Lerp between [0+x; 1-x] (stop before reaching 0 or 1)"
                 "relevant when using more than 3 functions per attractors"
                 "keep it 0 if you don't know what your doing");

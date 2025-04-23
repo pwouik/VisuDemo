@@ -1,27 +1,4 @@
-```
- m'envoyer les sources et un guide d'utilisation composé d'une introduction, d'une partie technique (consignes d'installation, dossiers importants, ...) et d'une partie fonctionnelle (l'objectif, les features du programme, les interactions possibles, ...). Concernant la 2e application que vous avez récupérée pour l'améliorer, vous pouvez bien entendu reprendre l'ancien guide et y ajouter vos modifications.
- ```
-
-# Currently Working
-
-## Shading
-
-Todo
-- DONE / fine tune light and pick beatifull ✨🎨 colors
-- better normal computation (edge cases support for aberrent values)
-- leapmotion integration
-
-Maybe ?
-- coloring based on which attractor it jumps to (tends to do ugly noise so no)
-
-## Optimization
-
-- Currently we're doing : 1 point -> draw 3 points from attractor / keep 1. We could potentially compute 3, compute 9, draw 3+9=12, keep 1 randomly - DONE / ~ -30% fps for 4 times the ammount of point. For some reasons perf difference differ on computer so extensive testing will be requiered
-- Lower MAX_FUNC_PER_ATTRACTOR in render_attractor.comp (may be irrelevant but get rid of useless memory in each kernel so maybe significant) (currently supports up to 10 function per attractor)
-- shared memory / tilling in SSAO
-
-
-# VisuDemo
+# VisuDemo / No title project
 
 ## Building the app
 
@@ -37,7 +14,23 @@ cmake ..
 cmake --build . --config Release
 ```
 
+# How to use
 
+Keyboard short cut (on azerty keyboard) :
+- `,` : lock camear angle 
+- `z`, `q`, `s` , `d`, `lshift`, `space` : move arround
+- `mousewheel` to change movement speed
+- everything else can be controlled with the UI
+
+Leap motion set up :
+- In the UI, press the `Start Leap Capture` button
+- for Attractor, you'll also need to switch the `lerping mode` to `leapmotion & hand`
+
+Below are video presenting the possibilities :
+- Raymarching :
+- Attractor : https://www.youtube.com/watch?v=wo6vJYoP6qw
+
+# Technical details
 
 ## Ray Marching
 
@@ -45,16 +38,26 @@ for context read : https://jbaker.graphics/writings/DEC.html
 
 ## Attractors
 
-for context see https://www.youtube.com/watch?v=1L-x_DH3Uvg
+### General Idea
 
-### Moving points
+For context, we would heavily recommend watching this video : https://www.youtube.com/watch?v=1L-x_DH3Uvg (The attractor part was initially an implementation. we mostly assume that you've watch the video and understood the basic principle).
 
-Points are only the GPU in an SSBO. The number of point can be changed when starting the proram with CLI arguments
-Position updated with a compute shader
-    - todo explain weights
-used to be displayed by concurent writting of pixels on a texture
+In our implementation, points are only the GPU in an SSBO. The number of point can be changed when starting the proram with CLI arguments.
 
+Position updated with a compute shader : `attractor.comp`. This compute shader does a few things :
+1. For each point, for each attractor compute its transformed position. If it's the nearest on the depthmap, updates the depthmap and the "jump distance" texture. (this may cause concurrent writting, see below why we ignore this). Note that, when the camera is still and attractor functions didn't changed, points accumulate on the depthmap (on a side note this allows us to get hight resolution renders with only 500k points on the GPU)
+2. choose randomly using weight (see below) an attractor and updates the point position with its transform
 
+The actual rendering is done within the compute shader `attractor_shading.comp`. Using the informations obtained from the previous path, it generates the colored texture that is rendered.
+
+### Weights
+
+TODO : I forgot how this works, 
+- based on relative transform sizes
+
+intuition : some attractor contribute more than other
+
+having proper math to predict exactly is impossible
 
 ### Shading
 
@@ -62,17 +65,39 @@ used to be displayed by concurent writting of pixels on a texture
 
 We write on a depthmap in the compute process.
 We approximate normals using this depthmap. (It's actually imprecise because it assume sufficient point density so each neigbhor on the texture is close enought)
-Then, using those normals, we add :
+Then, using those normals, we can add :
 - a simple phong
 - handmades dubious SSAO implementation
 
-#### SSAO
+#### Ambient Occlusion
 
-After consideration, actual SSAO as explained in the litterature seemed kinda bs to us (tbh we were too lazy to do the math requiered to sample points inside an half-sphere). So we had 2 approach, both looping over a 9 by 9 grid arround the pixel :
-1. accumulate positive depth difference between points and neighbors in the grid. This shouldn't work on paper but for some reasons it looks decent
-2. accumulate positive signed distance to tangent plane. The idea is that the bigger, the more occluded a point is (which can be easily understood with a picture). We can get this value with a dot product between the normal and the normalize vector from the point to its neighbor.
+##### Multiples AO ?
 
-Note that this brutforce approach produce a sh\*t ton of of useless computation which should probably be optimized by using some tilling approach and shared memory, but when we have millions points to handle it's actually not that much.
+After consideration, actual SSAO as explained in the litterature seemed kinda sus to us (tbh we were intially too lazy to do the math requiered to sample points inside an half-sphere, even tho we eventually ended up implementing it but weren't satisfied by it). So we tried a few things, all with the same idea of accumalting depth difference to get an SSAO factor
+
+Note that this brutforce approach produce a lot of useless computation which should probably be optimized by using some tilling approach and shared memory, but when we have millions points to handle it's actually not that much.
+
+All of the 5 approach share a size and an intensity factor with different meaning in there context. In order to get visually coherent value those parameter have been compensated with hard coded magic number.
+
+##### SSAO v1
+
+???
+
+##### SSAO v2
+
+AO factor <=> how much the neighboring sampled point are closer to the camera ?
+
+##### SSAO v3
+
+AO factor <=> how much the neighboring point are far from the tangent plane ?
+
+##### SSAO v4
+
+Inspired by the true SSAO implemtation, but compares distance of sampled point with the distance to the actual point (as this doesn't relies on the depthmap this could be acheived with less computation and 0 noise using only the normal)
+
+##### SSAO v5
+
+actual by the book implemtation of SSAO. See here : https://learnopengl.com/Advanced-Lighting/SSAO
 
 #### race condition when writting on depthmap ?
 
@@ -111,21 +136,45 @@ acheiving world peace
 - `assert` macro expansion dependant on compiler. It was fixed in a ugly way using `#IFDEF`
 - rng relies on the old `<cstdlib>` We should switch to `<random>` or smth else in order to access the seed at any given point in time (esp when generating knew attractors so we caneasily store a seed for attractory manually randomly generated after the program started) 
 - The whole class hierarchie abstraction for attractor / attractor function / matrix overriding is kinda messy but it works. However it's to note that overriding matrices was though as a debug feature, and if this part is rewritten removing it wouldn't be a major issue.
+- in some cases, `forceRedraw` isn't correctly updated so you have to move arround to clear depthmap
 
 
 # Perspective
 
-- We could store configuration in json, and add the ability to load / save configuration. Same goes for attractor configurations
-- take a screenshot 
-- better normals computation (detects voids)
-- better controlls (base principle with pinch is good but we need to enforce that user can't grief his config)
+## both
+
+- We could store configuration in json, and add the ability to load / save configuration in text file. This includes :
+    - raymarching parameters
+    - attractors parameters (including global parameter such lerp value, number of function per attractor)
+    - global settings (color)
+- add the ability to take a screenshot : The original selling point of the project was to prompt users to get a **unique** fractal (involvment feeling) and then send them by mail so we get there contact information which the communication departement was interested into. While it's entirely possible to currently just take a screenshot and send it manually, we recommend saving textures as images and store in a separate text file a list of e mail address. This would heavily simplify the e mail sending process which could later be done manually or with a simple python script.
+- Better controls (moving with left hand) with leap motion : While the general architecture for leapmotion controls is here, it should be ensured that it's impossible for a user to look at nothing. For instance :
+    - ensure that camera moves on a sphere arround the fractal and always looks towards it
+    - ensure that the camera is not too far / too close from the fractal
+- some kuwahara filter or some other kind of post processing at the end because why not, it looks pretty
+
+## Raymarching
+
+- ?
+
+## Attractor
+
+- better normals computation : Currently normal are computed using `computeNormals` in `attractor_shading.comp` which average the cross product of a cross sampling of depth with only 5 points. This works assuming the attractor cloud is sufficiently dense on it's surface. However this could easily be improved with :
+    - more sampling  (sample all depth in a 3x3 grid, or 5x5, maybe consider weighting the contribution to normals)
+    - ignoring depth too extreme : if a sampled depth is too different, then it's likely that the cloud isn't dense enought and we should ignore that sampled point for normal approximation
+- better controls : currently, the right hand allows the user to explore the neighborhood of a given seed. Movement are smoothed with an exponential lerp. The seed can be changed bringing pinky fingers together. While we acheived something satisfying, we would heavily recommend starting over the maths on this part to get have a better mapping between the fingers position and the neighborhood exploration.
+- We tried some coloring strategy based on "which attractor did the point jumped to / is comming from" without much success but we still think there's some potential in this approach
+- Optimisation : 
+    - Currently we're doing : 1 point -> draw 3 points from attractor / keep 1. We could potentially compute 3, compute 9, draw 3+9=12, keep 1 randomly. Drawing multiple genration at once is something we tried but haven't extensively benchmarked. For some reasons it seemed to su that perf difference differ depending on computer so extensive testing will be requiered.
+    - Lower `MAX_FUNC_PER_ATTRACTOR` in `attractor.comp` (may be irrelevant but get rid of useless memory in each kernel so maybe significant) (currently supports up to 10 function per attractor)
+    - shared memory / tilling in SSAO as mentionned in part above
 
 
 # note for IDE/env set up
 
 ## On windows / VCPKG / VS code
 
-Even if cmake should installs relevant dependencies, we recommend using a package manger such as [VPCKG](https://github.com/microsoft/vcpkg)
+Even if CMake should installs relevant dependencies, we recommend using a package manger such as [VPCKG](https://github.com/microsoft/vcpkg)
 
 For intellisense, update `c_cpp_properties` to contain :
 ```json
