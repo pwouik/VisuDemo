@@ -34,7 +34,27 @@ Below are video presenting the possibilities :
 
 ## Ray Marching
 
-for context read : https://jbaker.graphics/writings/DEC.html
+### General Idea
+
+- Raymarching is similar to raytracing in that we launch rays from the camera, but instead of testing all intersections, we simply estimate a distance we can advance without hitting anything and step the ray
+- We can make use of signed distance functions(SDF), which give the euclidian distance to the nearest surface for a given position, negative values being inside the object or something smaller but converging to the surface.
+- For a sphere, we can simply take the distance to the center and subtract the radius
+- Some operation can be performed on one or more SDF while conserving these properties:
+    - union : min of distances
+    - intersection : max of distances(must be orthogonal)
+    - fold: mirror the position in it is in one half of a plane, ex absolute value to mirror around zero
+- linear transformation : inverse transformation on position
+- for rendering fractals, we mainly use the fold operation because it double the amount geometry using only one operation.
+- The fractal shocased here is the Kaleidoscopic Iterated Function System (KIFS) family of fractals:
+      - it fold one three axis, conveniently using abs on a vec3
+      - then apply an orthogonal affine transformation
+      - repeat
+- here is a collection of signed distance functions to play with: https://jbaker.graphics/writings/DEC.html
+
+### Rendering
+- the shading use phong plus shadow rays
+- we make soft shadows by using the distance function along the ray to conpute the exposure on a point
+- ambient occlusion simply use the number of steps
 
 ## Attractors
 
@@ -81,7 +101,7 @@ All of the 5 approach share a size and an intensity factor with different meanin
 
 ##### SSAO v1
 
-???
+AO factor <=> difference of exposition using the ratio of the difference of depth and distance to the point
 
 ##### SSAO v2
 
@@ -89,7 +109,7 @@ AO factor <=> how much the neighboring sampled point are closer to the camera ?
 
 ##### SSAO v3
 
-AO factor <=> how much the neighboring point are far from the tangent plane ?
+AO factor <=> difference of exposition using the ratio of the difference of depth from the normal and distance to the point
 
 ##### SSAO v4
 
@@ -155,7 +175,9 @@ acheiving world peace
 
 ## Raymarching
 
-- ?
+- phong and shadow are not apparent by default because it didn't look "pretty", maybe find a way do do softer shading
+- subsurface scattering conld be done to give a tranlucent effect by stepping a bit inside the fractal and computing scattering
+- performance could be enhanced by doing cone marching: https://www.fulcrum-demo.org/wp-content/uploads/2012/04/Cone_Marching_Mandelbox_by_Seven_Fulcrum_LongVersion.pdf
 
 ## Attractor
 
@@ -171,6 +193,14 @@ acheiving world peace
 
 
 # note for IDE/env set up
+
+## Linux
+- ```mkdir build```
+- ```cd build```
+- ```cmake ..```
+- ```cmake --build . --config Release```
+- ```cd ..```
+- ```XDG_SESSION_TYPE=x11 ./build/VisuDemo```(imgui multiframe not working on wayland)
 
 ## On windows / VCPKG / VS code
 
