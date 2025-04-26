@@ -72,12 +72,24 @@ The actual rendering is done within the compute shader `attractor_shading.comp`.
 
 ### Weights
 
-TODO : I forgot how this works, 
-- based on relative transform sizes
+Idealy, we would wan't every computed point to end up as being on the surface on the fractal viewed from the camera. Because this is *obviously* impossible, we settles on a less but good enought alternative, having a somewhat uniform density of computed point. To explain this intuitively, some transformations actually contributes to the final fractal more than other, this what the weights are for.
 
-intuition : some attractor contribute more than other
+The actual logic beind it was revealed to @pwouik in a dream while he was working on Romanesco's cabbage. 
 
-having proper math to predict exactly is impossible
+Please note that the weights are actually important. While for most of randomly generated attractors, the attractors functions all contributes to same ammount to the final form so they could be ignored, having weights actually fasten convergende for Romanesco cabbage by a lot.
+
+```cpp
+//in attractor_renderer.cpp
+float total_weight=0.0;
+for(int i=0; i < matrix_per_attractor; i++){
+    glm::mat3 m = glm::mat3(ubo_matrices[i]);
+    total_weight+= glm::length(glm::cross(m[0],m[1]))+glm::length(glm::cross(m[1],m[2]))+glm::length(glm::cross(m[2],m[0]));
+    ubo_weights[i] = total_weight;
+}
+for(int i=0; i < matrix_per_attractor; i++){
+    ubo_weights[i] /= total_weight;
+}
+```
 
 ### Shading
 
