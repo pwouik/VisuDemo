@@ -158,10 +158,50 @@ We also note that this calcul heavily depends on the number of kernel on the GPU
 
 **All math and assumption aside we can simply observe a decent result.**
 
-
 ## Leap Motion Integration
 
-acheiving world peace
+The project integrates Leap Motion for intuitive hand-based control of both the raymarching and attractor rendering modes. This allows users to explore and manipulate fractals using natural hand gestures.
+
+### Raymarching Mode Controls
+
+In raymarching mode, the Leap Motion controller enables:
+
+- **Right hand (pinch gesture)**: Controls fractal parameters
+  - Rotates the fractal based on hand orientation
+  - Adjusts offset parameters based on hand position
+  - Pinch gesture must be maintained for control
+
+- **Left hand (pinch gesture)**: Controls camera/viewing position
+  - Moves the fractal position based on hand velocity
+  - Rotates the view according to hand orientation
+  - Provides smooth transitions between positions with configurable smoothing factors
+
+### Attractor Mode Controls
+
+In attractor mode, the Leap Motion controller provides:
+
+- For Attractor, you'll also need to switch the `lerping mode` to `leapmotion & hand`
+
+- The right hand allows the user to explore the neighborhood of a given seed. Movement are smoothed with an exponential lerp. The seed can be changed bringing pinky fingers together.
+
+- Left hand with pinch gesture: Controls camera movement
+  - Adjusts camera position based on palm velocity
+  - Changes view rotation based on palm orientation
+
+- When both hands are used and pinky fingers are brought close together, a new random seed is generated, creating an entirely new fractal
+
+### Implementation Details
+
+- Movement is smoothed with exponential lerp functions to provide fluid transitions
+
+- Seed changes occur when pinky fingers from both hands come close together
+
+- The implementation maps various hand features to appropriate fractal parameters:
+  - Finger positions and orientations
+  - Palm orientation and velocity
+  - Pinch detection between fingers
+
+The Leap Motion integration allows for intuitive exploration of complex mathematical structures without requiring keyboard or mouse input, creating a more immersive and natural interaction experience.
 
 ## known issue
 
