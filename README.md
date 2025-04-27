@@ -208,8 +208,8 @@ The Leap Motion integration allows for intuitive exploration of complex mathemat
 - `assert` macro expansion dependant on compiler. It was fixed in a ugly way using `#IFDEF`
 - rng relies on the old `<cstdlib>` We should switch to `<random>` or smth else in order to access the seed at any given point in time (esp when generating knew attractors so we caneasily store a seed for attractory manually randomly generated after the program started) 
 - The whole class hierarchie abstraction for attractor / attractor function / matrix overriding is kinda messy but it works. However it's to note that overriding matrices was though as a debug feature, and if this part is rewritten removing it wouldn't be a major issue.
-- in some cases, `forceRedraw` isn't correctly updated so you have to move arround to clear depthmap
-
+- attractor : in some cases, `forceRedraw` isn't correctly updated so you have to move arround to clear depthmap
+- attractor : in some cases, notably if the leap isn't correclty set up, the attractor functions will unpredictably degenerate when changing the lerping mode
 
 # Perspective
 
